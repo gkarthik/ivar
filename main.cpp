@@ -4,12 +4,18 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <cstring>
 
 #include "htslib/hts.h"
 #include "htslib/sam.h"
 #include "samtools-1.7/samtools.h"
 
 #include "primer_bed.h"
+
+struct cigar_ {
+  uint32_t *cigar;
+  int nlength;
+};
 
 std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path);
@@ -53,16 +59,17 @@ int32_t get_query_start(bam1_t *r){
   uint32_t *cigar = bam_get_cigar(r);
   int32_t qs = 0;
   for (int i = 0; i < r->core.n_cigar; ++i){
-    cig  = (cigar[i]) & BAM_CIGAR_MASK;
-    n = (cigar[i]) >> BAM_CIGAR_SHIFT;
+    cig  = bam_cigar_op(cigar[i]);
+    n = bam_cigar_oplen(cigar[i]);
     if (cig == BAM_CMATCH){
       return qs;
     }
-    qs += n;
+    if (cig != BAM_CDEL && cig != BAM_CHARD_CLIP){	// In deletion don't increment query_start
+      qs += n;
+    }
   }
   return qs;
 }
-
 
 int32_t get_query_end(bam1_t *r){
   int cig;
@@ -70,14 +77,69 @@ int32_t get_query_end(bam1_t *r){
   uint32_t *cigar = bam_get_cigar(r);
   int32_t qs = 0;
   for (int i = r->core.n_cigar - 1; i >= 0; --i){
-    cig  = (cigar[i]) & BAM_CIGAR_MASK;
-    n = (cigar[i]) >> BAM_CIGAR_SHIFT;
+    cig  = bam_cigar_op(cigar[i]);
+    n = bam_cigar_oplen(cigar[i]);
     if (cig == BAM_CMATCH){
-      return qs;
+      break;
     }
     qs += n;
   }
   return bam_cigar2qlen(r->core.n_cigar, cigar) - qs;
+}
+
+cigar_ primer_trim(bam1_t *r, int32_t new_pos){
+  uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
+    *cigar = bam_get_cigar(r);
+  int i = 0, j = 0, del_len = new_pos - r->core.pos, cig, temp;
+  std::cout << "Del Length " << del_len << std::endl;
+  int32_t n;
+  while(i < r->core.n_cigar){
+    if (del_len == 0){
+      ncigar[j] = cigar[i];
+      i++;
+      j++;
+      continue;
+    }
+    cig  = bam_cigar_op(cigar[i]);
+    n = bam_cigar_oplen(cigar[i]);
+    if (cig != BAM_CINS && cig != BAM_CHARD_CLIP && cig != BAM_CMATCH){ // Dont contribute to reference_start
+      del_len = std::max(del_len - n, 0);
+    }
+    if (cig == BAM_CMATCH){	// Clip BAM_CMATCH
+      if (del_len <= n){
+	ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
+	j++;
+      }
+      n = std::max(n - del_len, 0);
+      del_len = std::max(del_len - n, 0);
+    }
+    if(n != 0){
+      ncigar[j] = bam_cigar_gen(n, cig);
+      j++;
+    }
+    i++;
+  }
+  cigar_ t = {
+    ncigar,
+    j
+  };
+  return t;
+}
+
+static void replace_cigar(bam1_t *b, int n, uint32_t *cigar)
+{
+  if (n != b->core.n_cigar) {
+    int o = b->core.l_qname + b->core.n_cigar * 4;
+    if (b->l_data + (n - b->core.n_cigar) * 4 > b->m_data) {
+      b->m_data = b->l_data + (n - b->core.n_cigar) * 4;
+      kroundup32(b->m_data);
+      b->data = (uint8_t*)realloc(b->data, b->m_data);
+    }
+    memmove(b->data + b->core.l_qname + n * 4, b->data + o, b->l_data - o);
+    memcpy(b->data + b->core.l_qname, cigar, n * 4);
+    b->l_data += (n - b->core.n_cigar) * 4;
+    b->core.n_cigar = n;
+  } else memcpy(b->data + b->core.l_qname, cigar, n * 4);
 }
 
 int get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
@@ -105,6 +167,7 @@ int main(int argc, char* argv[]) {
   if(!bam.empty()) {
     //open BAM for reading
     samFile *in = sam_open(bam.c_str(), "r");
+    samFile *out = sam_open("temp.bam", "w");
     if(in == NULL) {
       throw std::runtime_error("Unable to open BAM/SAM file.");
     }
@@ -115,6 +178,7 @@ int main(int argc, char* argv[]) {
     }
     //Get the header
     bam_hdr_t *header = sam_hdr_read(in);
+    sam_hdr_write(out, header);
     if(header == NULL) {
       sam_close(in);
       throw std::runtime_error("Unable to open BAM header.");
@@ -163,8 +227,8 @@ int main(int argc, char* argv[]) {
       std::cout << "Cigar: ";
       int cig, ncig;
       for (int i = 0; i < aln->core.n_cigar; ++i){
-        cig  = (cigar[i]) & BAM_CIGAR_MASK;
-        ncig = (cigar[i]) >> BAM_CIGAR_SHIFT;
+        cig  = bam_cigar_op(cigar[i]);
+        ncig = bam_cigar_oplen(cigar[i]);
 	std::cout << cig << "-" << ncig << " ";
       }
       std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
@@ -174,6 +238,18 @@ int main(int argc, char* argv[]) {
       int p = get_overlapping_primer_indice(aln, primers);
       if(p != -1){
 	std::cout << "On Primer: " << primers[p].get_name()  << std::endl;
+	std::cout << "New Cigar: ";
+	cigar_ t = primer_trim(aln, primers[p].get_end() + 1);
+	int cig, ncig;
+	cigar = t.cigar;
+	for (int i = 0; i < t.nlength; ++i){
+	  cig  = (cigar[i]) & BAM_CIGAR_MASK;
+	  ncig = (cigar[i]) >> BAM_CIGAR_SHIFT;
+	  std::cout << cig << "-" << ncig << " ";
+	}
+	replace_cigar(aln, t.nlength, t.cigar);
+	aln->core.pos = primers[p].get_end() + 1;
+	std::cout << std::endl;
       } else {
 	std::cout << "On Primer: FALSE" << std::endl;
       }
@@ -181,7 +257,8 @@ int main(int argc, char* argv[]) {
       std::cout << "Name: " << name  << std::endl;
       std::cout << "Seq: " << seq << "\tQual: " << qual;
       std::cout << std::endl;
-      if (ctr > 10){
+      sam_write1(out, header, aln);
+      if (ctr > 100){
 	break;
       }
       ctr++;
@@ -191,6 +268,7 @@ int main(int argc, char* argv[]) {
     bam_destroy1(aln);
     bam_hdr_destroy(header);
     sam_close(in);
+    sam_close(out);
   }
   return 0;
 }
