@@ -14,7 +14,8 @@
 
 struct cigar_ {
   uint32_t *cigar;
-  int nlength;
+  uint32_t nlength;
+  int32_t start_pos;
 };
 
 std::vector<primer> populate_from_file(std::string path){
@@ -53,10 +54,10 @@ std::vector<primer> populate_from_file(std::string path){
   return primers;
 }
 
-int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_t ref_start){
+int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start){
   int cig;
   int32_t n;
-  uint32_t ql = 0, rl = ref_start;
+  int32_t ql = 0, rl = ref_start;
   for (uint32_t i = 0; i < ncigar; ++i){
     cig  = bam_cigar_op(cigar[i]);
     n = bam_cigar_oplen(cigar[i]);
@@ -72,6 +73,27 @@ int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_
       ql += n;
   }
   return ql;
+}
+
+int32_t get_pos_on_reference(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_t ref_start){
+  int cig;
+  int32_t n;
+  uint32_t ql = 0, rl = ref_start;
+  for (uint32_t i = 0; i < ncigar; ++i){
+    cig  = bam_cigar_op(cigar[i]);
+    n = bam_cigar_oplen(cigar[i]);
+    if (bam_cigar_type(cig) & 1) { // Only query consuming
+      if (pos <= ql + n) {
+	if (bam_cigar_type(cig) & 2) // Only reference consuming
+	  rl += (pos - ql);	   // n consumed reference, check if it consumes query too.
+	return rl;
+      }
+      ql += n;
+    }
+    if (bam_cigar_type(cig) & 2) // Only reference consuming
+      rl += n;
+  }
+  return rl;
 }
 
 void reverse_qual(uint8_t *q, int l){
@@ -90,39 +112,45 @@ void reverse_cigar(uint32_t *cigar, int l){
   }
 }
 
-uint8_t* get_quality(bam1_t *r){
-  uint8_t *qual;
-  uint8_t *quali = bam_get_qual(r);
-  for (int i = 0; i < r->core.l_qseq; i++) {
-    qual += 33 + quali[i];
-  }
-  return qual;
-}
-
-double mean(uint8_t *a, int s, int e){
+double mean_quality(uint8_t *a, int s, int e){
   double m = 0;
   for (int i = s; i < e; ++i){
-    m += a[i];
+    m += (int)a[i];
   }
-  m /= m/(e-s);
+  m = m/(e-s);
   return m;
 }
 
 cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
-  uint8_t *qual = get_quality(r);
+  uint8_t *qual = bam_get_qual(r);
+  int32_t start_pos;
   if(bam_is_rev(r)){
     reverse_qual(qual, r->core.l_qseq);
   }
-  double m;
-  int i = 0, del_len, j = 0, cig, _cig, temp;
-  while(m >= qual_threshold && i < r->core.l_qseq){
-    m = mean(qual, i, i+sliding_window);
+  double m = 60;
+  int del_len, cig, temp;
+  uint32_t i = 0, j = 0;
+  while(m >= qual_threshold && (i < r->core.l_qseq - sliding_window)){
+    m = mean_quality(qual, i, i+sliding_window);
     i++;
   }
   del_len = r->core.l_qseq - i;
+  start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos
+  if(bam_is_rev(r) && start_pos <= r->core.pos) {
+    return {
+      cigar,
+	r->core.n_cigar,
+	r->core.pos
+	};
+  }
   int32_t n;
+  i = 0;
+  if(bam_is_rev(r)){
+    reverse_cigar(cigar, r->core.n_cigar);
+  }
+  reverse_cigar(cigar, r->core.n_cigar); // Reverse cigar and trim the beginning of read.
   while(i < r->core.n_cigar){
     if (del_len == 0){
       ncigar[j] = cigar[i];
@@ -132,35 +160,31 @@ cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
     }
     cig  = bam_cigar_op(cigar[i]);
     n = bam_cigar_oplen(cigar[i]);
-    if (bam_cigar_type(cig) & 1){ // Consumes Query
-      _cig = cig;
-      if(cig == BAM_CMATCH){
-	_cig = BAM_CSOFT_CLIP;
-      }
+    if ((bam_cigar_type(cig) & 1)){ // Consumes Query
       if(del_len >= n ){
-	ncigar[j] = bam_cigar_gen(n, _cig);
+	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
       } else if (del_len < n){
-	ncigar[j] = bam_cigar_gen(del_len, _cig);
+	ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
       }
       j++;
       temp = n;
       n = std::max(n - del_len, 0);
       del_len = std::max(del_len - temp, 0);
-    } else if ((bam_cigar_type(cig) & 2)) { // Consumes only Reference
-      del_len = std::max(del_len - n, 0);
-    }
-    if(n > 0){
-      ncigar[j] = bam_cigar_gen(n, cig);
-      j++;
+      if(n > 0){
+	ncigar[j] = bam_cigar_gen(n, cig);
+	j++;
+      }
     }
     i++;
   }
+  reverse_cigar(ncigar, j);	// Reverse Back
   if(bam_is_rev(r)){
     reverse_cigar(ncigar, j);
   }
   return {
     ncigar,
-    j
+      j,
+      start_pos
   };
 }
 
@@ -174,8 +198,8 @@ cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
 cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
-  uint32_t i = 0;
-  int j = 0, del_len, cig, temp;
+  uint32_t i = 0, j = 0;
+  int del_len, cig, temp;
   if (bam_is_rev(r)){
     del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
     // print_cigar(cigar, r->core.n_cigar);
@@ -293,9 +317,9 @@ int main(int argc, char* argv[]) {
       }
       std::cout << "Using Region: " << region_ << std::endl;
     }
-    std::string t(header->text);
+    std::string temp(header->text);
     std::string sortFlag ("SO:coordinate");
-    if (t.find(sortFlag)) {
+    if (temp.find(sortFlag)) {
       std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
     } else {
       std::cout << "Not sorted" << std::endl;
@@ -311,6 +335,7 @@ int main(int argc, char* argv[]) {
     //Initiate the alignment record
     bam1_t *aln = bam_init1();
     int ctr = 0;
+    cigar_ t;
     while(sam_itr_next(in, iter, aln) >= 0) {
       // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
       // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
@@ -318,7 +343,6 @@ int main(int argc, char* argv[]) {
       // std::cout << "Query End: " << get_query_end(aln) << std::endl;
       int p = get_overlapping_primer_indice(aln, primers);
       if(p != -1){
-	cigar_ t;
 	if(bam_is_rev(aln)){
 	  t = primer_trim(aln, primers[p].get_start() - 1);
 	} else {
@@ -330,11 +354,25 @@ int main(int argc, char* argv[]) {
       } else {
 	// std::cout << "On Primer: FALSE" << std::endl;
       }
-      // std::cout << std::endl;
+      t = quality_trim(aln);
+      if(bam_is_rev(aln))
+	aln->core.pos = t.start_pos;
+      replace_cigar(aln, t.nlength, t.cigar);
       // std::cout << "Name: " << name  << std::endl;
       // std::cout << "Seq: " << seq << "\tQual: " << qual;
       // std::cout << std::endl;
-      sam_write1(out, header, aln);
+      // if (strcmp(bam_get_qname(aln), "M01244:143:000000000-BHWC7:1:1104:13925:8758") == 0){
+      // 	std::cout << "Start Pos: " << aln->core.pos << std::endl;
+      // 	uint8_t *q = bam_get_qual(aln);
+      // 	for (int i = 0; i < aln->core.l_qseq -4; ++i){
+      // 	  std::cout << mean_quality(q, i, i+4) << " ";
+      // 	}
+      // 	std::cout << std::endl;
+      // }
+      int min_length = 30;
+      if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
+	sam_write1(out, header, aln);
+      }
       ctr++;
       if(ctr % 100000 == 0){
 	std::cout << ctr << std::endl;
