@@ -6,9 +6,8 @@
 #include <sstream>
 #include <cstring>
 
-#include "htslib/hts.h"
 #include "htslib/sam.h"
-#include "samtools-1.7/samtools.h"
+#include "htslib/bgzf.h"
 
 #include "primer_bed.h"
 
@@ -289,8 +288,8 @@ int main(int argc, char* argv[]) {
   }
   if(!bam.empty()) {
     //open BAM for reading
-    samFile *in = sam_open(bam.c_str(), "r");
-    samFile *out = sam_open("temp.bam", "w");
+    samFile *in = hts_open(bam.c_str(), "r");
+    BGZF *out = bgzf_open("temp.bam", "w");
     if(in == NULL) {
       throw std::runtime_error("Unable to open BAM/SAM file.");
     }
@@ -301,7 +300,7 @@ int main(int argc, char* argv[]) {
     }
     //Get the header
     bam_hdr_t *header = sam_hdr_read(in);
-    sam_hdr_write(out, header);
+    bam_hdr_write(out, header);
     if(header == NULL) {
       sam_close(in);
       throw std::runtime_error("Unable to open BAM header.");
@@ -371,7 +370,7 @@ int main(int argc, char* argv[]) {
       // }
       int min_length = 30;
       if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-	sam_write1(out, header, aln);
+	bam_write1(out, aln);
       }
       ctr++;
       if(ctr % 100000 == 0){
@@ -383,7 +382,7 @@ int main(int argc, char* argv[]) {
     bam_destroy1(aln);
     bam_hdr_destroy(header);
     sam_close(in);
-    sam_close(out);
+    bgzf_close(out);
   }
   return 0;
 }
