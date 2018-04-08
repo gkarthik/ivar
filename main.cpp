@@ -53,38 +53,33 @@ std::vector<primer> populate_from_file(std::string path){
   return primers;
 }
 
-int32_t get_query_start(bam1_t *r){
+int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_t ref_start){
   int cig;
   int32_t n;
-  uint32_t *cigar = bam_get_cigar(r);
-  int32_t qs = 0;
-  for (int i = 0; i < r->core.n_cigar; ++i){
+  uint32_t ql = 0, rl = ref_start;
+  for (uint32_t i = 0; i < ncigar; ++i){
     cig  = bam_cigar_op(cigar[i]);
     n = bam_cigar_oplen(cigar[i]);
-    if (cig == BAM_CMATCH){
-      return qs;
+    if (bam_cigar_type(cig) & 2) { // Only reference consuming
+      if (pos <= rl + n) {
+	if (bam_cigar_type(cig) & 1) // Only query consuming
+	  ql += (pos - rl);	   // n consumed reference, check if it consumes query too.
+	return ql;
+      }
+      rl += n;
     }
-    if (cig != BAM_CDEL && cig != BAM_CHARD_CLIP){	// In deletion don't increment query_start
-      qs += n;
-    }
+    if (bam_cigar_type(cig) & 1) // Only query consuming
+      ql += n;
   }
-  return qs;
+  return ql;
 }
 
-int32_t get_query_end(bam1_t *r){
-  int cig;
-  int32_t n;
-  uint32_t *cigar = bam_get_cigar(r);
-  int32_t qs = 0;
-  for (int i = r->core.n_cigar - 1; i >= 0; --i){
-    cig  = bam_cigar_op(cigar[i]);
-    n = bam_cigar_oplen(cigar[i]);
-    if (cig == BAM_CMATCH){
-      break;
-    }
-    qs += n;
+void reverse_qual(uint8_t *q, int l){
+  for (int i = 0; i < l/2; ++i){
+    q[i]^=q[l-i-1];
+    q[l-i-1]^=q[i];
+    q[i]^=q[l-i-1];
   }
-  return bam_cigar2rlen(r->core.n_cigar, cigar) - qs;
 }
 
 void reverse_cigar(uint32_t *cigar, int l){
@@ -95,24 +90,100 @@ void reverse_cigar(uint32_t *cigar, int l){
   }
 }
 
-void print_cigar(uint32_t *cigar, int nlength){
-  for (int i = 0; i < nlength; ++i){
-    std::cout << ((cigar[i]) & BAM_CIGAR_MASK) << "-" << ((cigar[i]) >> BAM_CIGAR_SHIFT) << " ";
+uint8_t* get_quality(bam1_t *r){
+  uint8_t *qual;
+  uint8_t *quali = bam_get_qual(r);
+  for (int i = 0; i < r->core.l_qseq; i++) {
+    qual += 33 + quali[i];
   }
+  return qual;
 }
+
+double mean(uint8_t *a, int s, int e){
+  double m = 0;
+  for (int i = s; i < e; ++i){
+    m += a[i];
+  }
+  m /= m/(e-s);
+  return m;
+}
+
+cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
+  uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
+    *cigar = bam_get_cigar(r);
+  uint8_t *qual = get_quality(r);
+  if(bam_is_rev(r)){
+    reverse_qual(qual, r->core.l_qseq);
+  }
+  double m;
+  int i = 0, del_len, j = 0, cig, _cig, temp;
+  while(m >= qual_threshold && i < r->core.l_qseq){
+    m = mean(qual, i, i+sliding_window);
+    i++;
+  }
+  del_len = r->core.l_qseq - i;
+  int32_t n;
+  while(i < r->core.n_cigar){
+    if (del_len == 0){
+      ncigar[j] = cigar[i];
+      i++;
+      j++;
+      continue;
+    }
+    cig  = bam_cigar_op(cigar[i]);
+    n = bam_cigar_oplen(cigar[i]);
+    if (bam_cigar_type(cig) & 1){ // Consumes Query
+      _cig = cig;
+      if(cig == BAM_CMATCH){
+	_cig = BAM_CSOFT_CLIP;
+      }
+      if(del_len >= n ){
+	ncigar[j] = bam_cigar_gen(n, _cig);
+      } else if (del_len < n){
+	ncigar[j] = bam_cigar_gen(del_len, _cig);
+      }
+      j++;
+      temp = n;
+      n = std::max(n - del_len, 0);
+      del_len = std::max(del_len - temp, 0);
+    } else if ((bam_cigar_type(cig) & 2)) { // Consumes only Reference
+      del_len = std::max(del_len - n, 0);
+    }
+    if(n > 0){
+      ncigar[j] = bam_cigar_gen(n, cig);
+      j++;
+    }
+    i++;
+  }
+  if(bam_is_rev(r)){
+    reverse_cigar(ncigar, j);
+  }
+  return {
+    ncigar,
+    j
+  };
+}
+
+// void print_cigar(uint32_t *cigar, int nlength){
+//   for (int i = 0; i < nlength; ++i){
+//     std::cout << ((cigar[i]) & BAM_CIGAR_MASK);
+//     std::cout << "-" << ((cigar[i]) >> BAM_CIGAR_SHIFT) << " ";
+//   }
+// }
 
 cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
-  int i = 0, j = 0, del_len, cig, _cig, temp;
+  uint32_t i = 0;
+  int j = 0, del_len, cig, temp;
   if (bam_is_rev(r)){
-    del_len = bam_endpos(r) + (bam_cigar2rlen(r->core.n_cigar, bam_get_cigar(r)) - get_query_end(r)) - new_pos;
+    del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
     // print_cigar(cigar, r->core.n_cigar);
     reverse_cigar(cigar, r->core.n_cigar);
     // print_cigar(cigar, r->core.n_cigar);
     // std::cout << "Del Length " << del_len << std::endl;
   } else {
-    del_len = new_pos - (r->core.pos - get_query_start(r));
+    del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
   }
   int32_t n;
   while(i < r->core.n_cigar){
@@ -124,26 +195,20 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
     }
     cig  = bam_cigar_op(cigar[i]);
     n = bam_cigar_oplen(cigar[i]);
-    if (bam_cigar_type(cig) & 2){ // Consumes Reference
-      _cig = cig;
-      if(cig == BAM_CMATCH){
-	_cig = BAM_CSOFT_CLIP;
-      }
+    if ((bam_cigar_type(cig) & 1)){ // Consumes Query
       if(del_len >= n ){
-	ncigar[j] = bam_cigar_gen(n, cig);
+	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
       } else if (del_len < n){
-	ncigar[j] = bam_cigar_gen(del_len, cig);
+	ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
       }
       j++;
       temp = n;
       n = std::max(n - del_len, 0);
       del_len = std::max(del_len - temp, 0);
-    } else if ((bam_cigar_type(cig) & 1)) { // Consumes only Query
-      del_len = std::max(del_len - n, 0);
-    }
-    if(n > 0){
-      ncigar[j] = bam_cigar_gen(n, cig);
-      j++;
+      if(n > 0){
+	ncigar[j] = bam_cigar_gen(n, cig);
+	j++;
+      }
     }
     i++;
   }
@@ -174,14 +239,17 @@ static void replace_cigar(bam1_t *b, int n, uint32_t *cigar)
 }
 
 int get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
-  int32_t pos = r->core.pos - get_query_start(r);
+  uint32_t query_pos, start_pos, *cigar = bam_get_cigar(r);
   if(bam_is_rev(r)){
-    pos = bam_endpos(r) + (bam_cigar2rlen(r->core.n_cigar, bam_get_cigar(r)) - get_query_end(r));
+    start_pos = bam_endpos(r);
+    query_pos = start_pos + (bam_cigar2qlen(r->core.n_cigar, cigar) - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos));
+  } else {
+    start_pos = r->core.pos;
+    query_pos = start_pos - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos);
   }
   for(std::vector<int>::size_type i = 0; i!=primers.size();i++){
-    if(pos >= primers[i].get_start() && pos <= primers[i].get_end()){ // Change int to int32_t in primer_bed.cpp
+    if(query_pos >= primers[i].get_start() && query_pos <= primers[i].get_end() && start_pos >= primers[i].get_start() && start_pos <= primers[i].get_end()) // Change int to int32_t in primer_bed.cpp
       return i;
-    }
   }
   return -1;
 }
@@ -244,15 +312,6 @@ int main(int argc, char* argv[]) {
     bam1_t *aln = bam_init1();
     int ctr = 0;
     while(sam_itr_next(in, iter, aln) >= 0) {
-      std::string seq, qual;
-      uint8_t *quali = bam_get_qual(aln);
-      uint8_t *seqi = bam_get_seq(aln);
-      uint32_t *cigar = bam_get_cigar(aln);
-      char *name = bam_get_qname(aln);
-      for (int i = 0; i < aln->core.l_qseq; i++) {
-	seq += seq_nt16_str[bam_seqi(seqi, i)];
-	qual += 33 + quali[i];
-      }
       // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
       // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
       // std::cout << "Query Start: " << get_query_start(aln) << std::endl;
@@ -264,6 +323,7 @@ int main(int argc, char* argv[]) {
 	  t = primer_trim(aln, primers[p].get_start() - 1);
 	} else {
 	  t = primer_trim(aln, primers[p].get_end() + 1);
+	  aln->core.pos = primers[p].get_end() + 1;
 	}
 	replace_cigar(aln, t.nlength, t.cigar);
 	// std::cout << std::endl;
@@ -276,7 +336,7 @@ int main(int argc, char* argv[]) {
       // std::cout << std::endl;
       sam_write1(out, header, aln);
       ctr++;
-      if(ctr % 1000 == 0){
+      if(ctr % 100000 == 0){
 	std::cout << ctr << std::endl;
       }
     }
