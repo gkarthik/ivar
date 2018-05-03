@@ -2,3 +2,4 @@
 .DS_Store
 trim_primer_quality
 data/*
+pipeline/.snakemake/*

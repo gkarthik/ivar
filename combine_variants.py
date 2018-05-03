@@ -77,8 +77,8 @@ for _i,i in enumerate(df_paths):
     _ = create_variant_dataframe(_[(_["ALT"] != ".") & (_["ALT"]!=_["REF"])].reset_index(drop=True))
     vdfs.append(_)
 
-plot_variants_by_amplicon(vdfs, bed, prefix+"-variants-by-amplicon.png")
-plot_variants_by_amplicon(vdfs, bed, prefix+"-variants-by-amplicon_hist.png", kind="hist")
+plot_variants_by_amplicon(vdfs, bed, prefix+"_variants_by_amplicon.png")
+plot_variants_by_amplicon(vdfs, bed, prefix+"_variants_by_amplicon_hist.png", kind="hist")
 
 # Fisher's Exact Test
 #           | AD | DP  |
@@ -213,6 +213,6 @@ ax4.set_xlim([bed["Start"].min(), bed["End"].max()])
 
 # plt.suptitle("Threshold of "+str(threshold))
 plt.tight_layout()
-plt.savefig(prefix+"-report.pdf")
+plt.savefig(prefix+"_report.pdf")
 plt.clf()
 plt.close()

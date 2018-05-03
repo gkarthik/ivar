@@ -1,0 +1,47 @@
+from os import listdir
+from os.path import isfile, join
+
+in_dir = "/Users/karthik/hpc_downloads/2018.04.18"
+out_dir = "/Users/karthik/hpc_downloads/test"
+
+files = [f for f in listdir(in_dir) if isfile(join(in_dir, f)) and ".bam" in f]
+SAMPLES = []
+for i in files:
+    SAMPLES.append(i.split(".")[0][:-1])
+
+REPS=["a","b"]
+
+rule all:
+    input:
+        expand("{out_dir}/reports/{sample}_report.pdf", out_dir = out_dir, sample = SAMPLES),
+        expand("{out_dir}/reports/{sample}_variants_by_amplicon.png", out_dir = out_dir, sample = SAMPLES),
+        expand("{out_dir}/reports/{sample}_variants_by_amplicon_hist.png", out_dir = out_dir, sample = SAMPLES)
+
+rule filter_variants:
+    input:
+        expand("{out_dir}/variants/{{sample}}{rep}.vcf.gz", out_dir=out_dir, rep=REPS)
+    output:
+        "{out_dir}/reports/{sample}_report.pdf",
+        "{out_dir}/reports/{sample}_variants_by_amplicon.png",
+        "{out_dir}/reports/{sample}_variants_by_amplicon_hist.png"
+    shell:
+        "mkdir -p {wildcards.out_dir}/reports/ && "
+        "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -b /Users/karthik/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
+
+rule call_variants:
+    input:
+        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
+    output:
+        "{out_dir}/variants/{sample}.vcf.gz"
+    shell:
+        "mkdir -p {wildcards.out_dir}/variants/ && "
+        "~/Documents/code/ivar/ivar.sh callvariants -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/variants/{wildcards.sample} -i {input}"
+
+rule trim_primer_quality:
+    input:
+        "{in_dir}".format(in_dir = in_dir)+"/{sample}.sorted.bam"
+    output:
+        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
+    shell:
+        "mkdir -p {wildcards.out_dir}/trimmed/ && "
+        "~/Documents/code/ivar/ivar.sh trim -b ~/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input}"
