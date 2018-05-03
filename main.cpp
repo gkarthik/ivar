@@ -282,14 +282,15 @@ int main(int argc, char* argv[]) {
   std::string bam = std::string(argv[1]);
   std::string region_;
   std::string bed = std::string(argv[2]);
+  std::string bam_out = std::string(argv[3]);
   std::vector<primer> primers = populate_from_file(bed);
-  if(argc > 3) {
-    region_ = std::string(argv[2]);
+  if(argc > 4) {
+    region_ = std::string(argv[4]);
   }
   if(!bam.empty()) {
     //open BAM for reading
     samFile *in = hts_open(bam.c_str(), "r");
-    BGZF *out = bgzf_open("temp.bam", "w");
+    BGZF *out = bgzf_open(bam_out.c_str(), "w");
     if(in == NULL) {
       throw std::runtime_error("Unable to open BAM/SAM file.");
     }
