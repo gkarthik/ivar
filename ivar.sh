@@ -1,10 +1,10 @@
 #!/bin/bash
 
-usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus>]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus|createbed>]" 1>&2; exit 1; }
 usage_trim() { echo "Usage: $0 trim [-i input] [-b <bedfile>] [-p prefix]" 1>&2; exit 1; }
 usage_call_variants() { echo "Usage: $0 callvariants [-i input] [-r reference] [-p prefix]" 1>&2; exit 1; }
 usage_filter_variants() { echo "Usage: $0 filtervariants [-f <frequency cut off>] [-b <bed file>] [-p prefix] replicate1.vcf.gz replicate2.vcf.gz ... " 1>&2; exit 1; }
-usage_consensus() { echo "Usage: $0 consensus [-c <primer-csv>] [-p prefix] [-r reference] " 1>&2; exit 1; }
+usage_consensus() { echo "Usage: $0 createbed [-c <primer-csv>] [-p prefix] [-r reference] " 1>&2; exit 1; }
 
 cmd=$1; shift
 case "$cmd" in
