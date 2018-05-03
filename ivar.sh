@@ -4,6 +4,7 @@ usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus>]
 usage_trim() { echo "Usage: $0 trim [-i input] [-b <bedfile>] [-p prefix]" 1>&2; exit 1; }
 usage_call_variants() { echo "Usage: $0 callvariants [-i input] [-r reference] [-p prefix]" 1>&2; exit 1; }
 usage_filter_variants() { echo "Usage: $0 filtervariants [-f <frequency cut off>] [-b <bed file>] [-p prefix] replicate1.vcf.gz replicate2.vcf.gz ... " 1>&2; exit 1; }
+usage_consensus() { echo "Usage: $0 consensus [-i <input-vcf>] [-p prefix] [-r reference] " 1>&2; exit 1; }
 
 cmd=$1; shift
 case "$cmd" in
@@ -82,7 +83,7 @@ case "$cmd" in
 	~/Documents/code/ivar/combine_variants.py ${p} ${f} ${b} "$@"
 	;;
     consensus)
-	while getopts ":i:p:" o; do
+	while getopts ":i:p:r:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -90,17 +91,20 @@ case "$cmd" in
 		p)
 		    p=${OPTARG}
 		    ;;
+		r)
+		    r=${OPTARG}
+		    ;;
 		*)
-		    usage
+		    usage_consensus
 		    ;;
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${p}" ]; then
-	    usage
+	if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
+	    usage_consensus
 	fi
+	cat ${r} | bcftools consensus $i > ${p}.fa
 	;;
     *)
 	usage
-	;;
 esac
