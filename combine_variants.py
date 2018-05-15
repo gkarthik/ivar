@@ -211,6 +211,8 @@ ax4.spines['left'].set_visible(False)
 ax4.set_title("Amplicon Scheme")
 ax4.set_xlim([bed["Start"].min(), bed["End"].max()])
 
+df.to_csv(prefix+".csv")
+
 # plt.suptitle("Threshold of "+str(threshold))
 plt.tight_layout()
 plt.savefig(prefix+"_report.pdf")

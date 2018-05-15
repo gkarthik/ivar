@@ -1,3 +1,7 @@
+#include "htslib/sam.h"
+#include "htslib/bgzf.h"
+#include "primer_bed.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -6,52 +10,11 @@
 #include <sstream>
 #include <cstring>
 
-#include "htslib/sam.h"
-#include "htslib/bgzf.h"
-
-#include "primer_bed.h"
-
 struct cigar_ {
   uint32_t *cigar;
   uint32_t nlength;
   int32_t start_pos;
 };
-
-std::vector<primer> populate_from_file(std::string path){
-  std::ifstream  data(path);
-  std::string line;
-  std::vector<primer> primers;
-  while(std::getline(data,line)){
-    std::stringstream lineStream(line);
-    std::string cell;
-    int ctr = 0;
-    primer p;
-    while(std::getline(lineStream,cell,'\t')){
-      switch(ctr){
-      case 0:
-	p.set_region(cell);
-	break;
-      case 1:
-	p.set_start(std::stoul(cell));
-	break;
-      case 2:
-	p.set_end(std::stoul(cell));
-	break;
-      case 3:
-	p.set_name(cell);
-	break;
-      case 4:
-	p.set_score(std::stoi(cell));
-	break;
-      case 5:
-	p.set_strand(cell[0]);
-      }
-      ctr++;
-    }
-    primers.push_back(p);
-  }
-  return primers;
-}
 
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start){
   int cig;
@@ -261,7 +224,7 @@ static void replace_cigar(bam1_t *b, int n, uint32_t *cigar)
   } else memcpy(b->data + b->core.l_qname, cigar, n * 4);
 }
 
-int get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
+int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
   uint32_t query_pos, start_pos, *cigar = bam_get_cigar(r);
   if(bam_is_rev(r)){
     start_pos = bam_endpos(r);
@@ -336,24 +299,24 @@ int main(int argc, char* argv[]) {
     bam1_t *aln = bam_init1();
     int ctr = 0;
     cigar_ t;
+    int16_t *p = (int16_t*)malloc(sizeof(int16_t));
     while(sam_itr_next(in, iter, aln) >= 0) {
       // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
       // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
       // std::cout << "Query Start: " << get_query_start(aln) << std::endl;
       // std::cout << "Query End: " << get_query_end(aln) << std::endl;
-      int p = get_overlapping_primer_indice(aln, primers);
-      if(p != -1){
-	if(bam_is_rev(aln)){
-	  t = primer_trim(aln, primers[p].get_start() - 1);
-	} else {
-	  t = primer_trim(aln, primers[p].get_end() + 1);
-	  aln->core.pos = primers[p].get_end() + 1;
-	}
-	replace_cigar(aln, t.nlength, t.cigar);
-	// std::cout << std::endl;
+      *p = get_overlapping_primer_indice(aln, primers);
+      if(*p == -1)
+	continue;
+      if(bam_is_rev(aln)){
+	t = primer_trim(aln, primers[*p].get_start() - 1);
       } else {
-	// std::cout << "On Primer: FALSE" << std::endl;
+	t = primer_trim(aln, primers[*p].get_end() + 1);
+	aln->core.pos = primers[*p].get_end() + 1;
       }
+      // std::cout << *p << std::endl;
+      replace_cigar(aln, t.nlength, t.cigar);
+      // Quality Trimming
       t = quality_trim(aln);
       if(bam_is_rev(aln))
 	aln->core.pos = t.start_pos;
@@ -371,6 +334,8 @@ int main(int argc, char* argv[]) {
       // }
       int min_length = 30;
       if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
+	// bam1_t *b, const char tag[2], char type, int len, const uint8_t *data
+	bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
 	bam_write1(out, aln);
       }
       ctr++;

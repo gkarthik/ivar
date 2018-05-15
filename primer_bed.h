@@ -1,4 +1,5 @@
 #include<string>
+#include<vector>
 
 #ifndef primer_bed
 #define primer_bed
@@ -28,5 +29,7 @@ public:
   void set_name(std::string n);
   void set_score(int s);
 };
+
+std::vector<primer> populate_from_file(std::string path);
 
 #endif

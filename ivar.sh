@@ -4,7 +4,8 @@ usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus|c
 usage_trim() { echo "Usage: $0 trim [-i input] [-b <bedfile>] [-p prefix]" 1>&2; exit 1; }
 usage_call_variants() { echo "Usage: $0 callvariants [-i input] [-r reference] [-p prefix]" 1>&2; exit 1; }
 usage_filter_variants() { echo "Usage: $0 filtervariants [-f <frequency cut off>] [-b <bed file>] [-p prefix] replicate1.vcf.gz replicate2.vcf.gz ... " 1>&2; exit 1; }
-usage_consensus() { echo "Usage: $0 createbed [-c <primer-csv>] [-p prefix] [-r reference] " 1>&2; exit 1; }
+usage_consensus() { echo "Usage: $0 consensus [-i <input-vcf>] [-p prefix] [-r reference] " 1>&2; exit 1; }
+usage_create_bed() { echo "Usage: $0 createbed [-c <primer-csv>] [-p prefix] [-r reference] " 1>&2; exit 1; }
 
 cmd=$1; shift
 case "$cmd" in
@@ -103,6 +104,7 @@ case "$cmd" in
 	if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
 	    usage_consensus
 	fi
+	
 	cat ${r} | bcftools consensus $i > ${p}.fa
 	;;
     createbed)
@@ -118,13 +120,13 @@ case "$cmd" in
 		    r=${OPTARG}
 		    ;;
 		*)
-		    usage_consensus
+		    usage_create_bed
 		    ;;
 	    esac
 	done
 	shift $((OPTIND-1))
 	if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
-	    usage_consensus
+	    usage_create_bed
 	fi
 	~/Documents/code/ivar/primer_bam_to_bed.sh $c $p $r
 	;;

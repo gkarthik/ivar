@@ -56,3 +56,40 @@ void primer::set_name(std::string n){
 void primer::set_score(int s){
   score = s;
 }
+
+
+std::vector<primer> populate_from_file(std::string path){
+  std::ifstream  data(path);
+  std::string line;
+  std::vector<primer> primers;
+  while(std::getline(data,line)){
+    std::stringstream lineStream(line);
+    std::string cell;
+    int ctr = 0;
+    primer p;
+    while(std::getline(lineStream,cell,'\t')){
+      switch(ctr){
+      case 0:
+	p.set_region(cell);
+	break;
+      case 1:
+	p.set_start(std::stoul(cell));
+	break;
+      case 2:
+	p.set_end(std::stoul(cell));
+	break;
+      case 3:
+	p.set_name(cell);
+	break;
+      case 4:
+	p.set_score(std::stoi(cell));
+	break;
+      case 5:
+	p.set_strand(cell[0]);
+      }
+      ctr++;
+    }
+    primers.push_back(p);
+  }
+  return primers;
+}
