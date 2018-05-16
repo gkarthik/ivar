@@ -3,3 +3,6 @@
 trim_primer_quality
 data/*
 pipeline/.snakemake/*
+GPATH
+GRTAGS
+GTAGS

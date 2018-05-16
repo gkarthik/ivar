@@ -2,6 +2,7 @@
 
 usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus|createbed>]" 1>&2; exit 1; }
 usage_trim() { echo "Usage: $0 trim [-i input] [-b <bedfile>] [-p prefix]" 1>&2; exit 1; }
+usage_removereads() { echo "Usage: $0 removereads [-i input] [-p prefix] <amplicon-indice-1> <amplicon-indice-2> ..." 1>&2; exit 1; }
 usage_call_variants() { echo "Usage: $0 callvariants [-i input] [-r reference] [-p prefix]" 1>&2; exit 1; }
 usage_filter_variants() { echo "Usage: $0 filtervariants [-f <frequency cut off>] [-b <bed file>] [-p prefix] replicate1.vcf.gz replicate2.vcf.gz ... " 1>&2; exit 1; }
 usage_consensus() { echo "Usage: $0 consensus [-i <input-vcf>] [-p prefix] [-r reference] " 1>&2; exit 1; }
@@ -35,6 +36,30 @@ case "$cmd" in
 	samtools sort -o ${p}.trimmed.sorted.bam ${p}.trimmed.bam
 	echo "Indexing"
 	samtools index ${p}.trimmed.sorted.bam ${p}.trimmed.sorted.bai
+	;;
+    removereads)
+	while getopts ":i:p:a:" o; do
+	    case "${o}" in
+		i)
+		    i=${OPTARG}
+		    ;;
+		p)
+		    p=${OPTARG}
+		    ;;
+		*)
+		    usage_removereads
+		    ;;
+	    esac
+	done
+	shift $((OPTIND-1))
+	if [ -z "${i}" ] || [ -z "${p}" ]; then
+	    usage_removereads
+	fi
+	~/Documents/code/ivar/remove_reads_from_amplicon ${i} ${p}.filtered.bam "$@"
+	echo "Sorting"
+	samtools sort -o ${p}.filtered.sorted.bam ${p}.filtered.bam
+	echo "Indexing"
+	samtools index ${p}.filtered.sorted.bam ${p}.filtered.sorted.bai
 	;;
     callvariants)
 	while getopts ":i:p:r:" o; do
