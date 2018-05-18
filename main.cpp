@@ -150,12 +150,12 @@ cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
   };
 }
 
-// void print_cigar(uint32_t *cigar, int nlength){
-//   for (int i = 0; i < nlength; ++i){
-//     std::cout << ((cigar[i]) & BAM_CIGAR_MASK);
-//     std::cout << "-" << ((cigar[i]) >> BAM_CIGAR_SHIFT) << " ";
-//   }
-// }
+void print_cigar(uint32_t *cigar, int nlength){
+  for (int i = 0; i < nlength; ++i){
+    std::cout << ((cigar[i]) & BAM_CIGAR_MASK);
+    std::cout << "-" << ((cigar[i]) >> BAM_CIGAR_SHIFT) << " ";
+  }
+}
 
 cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
@@ -240,6 +240,29 @@ int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
   return -1;
 }
 
+cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
+  int len = 0, cig, next_cig, i = 0;
+  while(i< n -1){
+    cig = bam_cigar_op(cigar[i]);
+    next_cig = bam_cigar_op(cigar[i+1]);
+    if(cig == next_cig){
+      len = bam_cigar_oplen(cigar[i])+bam_cigar_oplen(cigar[i+1]);
+      cigar[i] = bam_cigar_gen(len, bam_cigar_op(cigar[i]));
+      for(int j = i+1; j < n - 1; j++){
+	cigar[j] = cigar[j+1];
+      }
+      n--;
+    } else {
+      i++;
+    }
+  }
+  return {
+    cigar,
+      n,
+      0
+      };
+}
+
 int main(int argc, char* argv[]) {
   std::cout << "Path " << argv[1] <<std::endl;
   std::string bam = std::string(argv[1]);
@@ -320,6 +343,13 @@ int main(int argc, char* argv[]) {
       t = quality_trim(aln);
       if(bam_is_rev(aln))
 	aln->core.pos = t.start_pos;
+      // std::cout << "Old: " << t.nlength << std::endl;
+      // print_cigar(t.cigar, t.nlength);
+      // std::cout << std::endl;
+      t = condense_cigar(t.cigar, t.nlength);
+      // std::cout << "New: " << t.nlength << std::endl;
+      // print_cigar(t.cigar, t.nlength);
+      // std::cout << std::endl;
       replace_cigar(aln, t.nlength, t.cigar);
       // std::cout << "Name: " << name  << std::endl;
       // std::cout << "Seq: " << seq << "\tQual: " << qual;

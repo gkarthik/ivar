@@ -12,64 +12,14 @@ from matplotlib.colors import Normalize
 import matplotlib.lines as mlines
 from matplotlib.collections import LineCollection
 import argparse
-
-
-def create_variant_dataframe(df):
-    # Make each variant a new row
-    d = {
-        "POS": [],
-        "REF": [],
-        "ALT": [],
-        "DP": [],
-        "AD": []
-    }
-    for _i, i in enumerate(df["ALT"].str.split(",")):
-        ref = df.ix[_i]["REF"]
-        d["ALT"].extend([j for j in i])
-        d["REF"].extend([ref] * len(i))
-        d["POS"].extend([df.ix[_i]["POS"]] * len(i))
-        ad = [int(j) for j in df.ix[_i]["SAMPLE"].split(":")[-1].split(",")]
-        d["AD"].extend(ad[1:])
-        dp = sum(ad)
-        d["DP"].extend([dp] * len(i))
-    return pd.DataFrame(d)
-
-def plot_variants_by_amplicon(vdfs, bed, filename, kind="scatter"):
-    amplicon_uniq = bed["Name"].apply(lambda x: "_".join(x.split("_")[:-1])).unique().tolist()
-    d = int(np.round(len(amplicon_uniq)**0.5))
-    f = plt.figure(figsize=(20,20))
-    gs = gridspec.GridSpec(d, d)
-    for _i, i in enumerate(amplicon_uniq):
-        ax = plt.subplot(gs[_i])
-        _ = bed[bed["Name"].str.contains(i)].sort_values("Start")
-        coords = [_["Start"].values[0], _["End"].values[1]]
-        for vdf in vdfs:
-            vdf = vdf[(vdf["POS"]>=coords[0]) & (vdf["POS"]<=coords[1])]
-            vdf["Percentage"] = (vdf["AD"]/vdf["DP"]) * 100
-            if kind == "scatter":
-                vdf.plot(x="POS", y="Percentage", ls="None", marker="o", ax = ax, alpha = 0.2, ms = 2)
-            else:
-                vdf["POS"].plot.hist(ax = ax, alpha = 0.5)
-        ax.set_title(i)
-        if ax.legend_ != None:
-            ax.legend_.remove()
-    plt.tight_layout()
-    plt.savefig(filename)
-    plt.clf()
-    plt.close()
+from variantutils import create_variant_dataframe, plot_variants_by_amplicon
 
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
 bed_path = sys.argv[3]
 df_paths = sys.argv[4:]
 
-# ./data/ZKV_primers.bed
 bed = pd.read_table(bed_path, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"])
-
-# /Users/karthik/hpc_downloads/2018.04.18/primer_trimmed/variants/ZI-49a-merge.ZIKV_PRV.sorted.trimmed.sorted.vcf.gz
-# /Users/karthik/hpc_downloads/2018.04.18/primer_trimmed/variants/ZI-49b-merge.ZIKV_PRV.sorted.trimmed.sorted.vcf.gz
-
-# "/Users/karthik/hpc_downloads/2018.04.18/primer_trimmed/variants/plots/
 
 vdfs = []
 for _i,i in enumerate(df_paths):
@@ -110,7 +60,6 @@ for i in df["POS"]:
         masked.append([_["End"].values[0], _["Start"].values[1], _n])
 
 df["masked"] = df["POS"].apply(lambda x: True if len([i for i in masked if x >= i[0] and x <= i[1]]) > 0 else False)
-df.to_csv("/Users/karthik/hpc_downloads/2018.04.18/primer_trimmed/variants/ZI-49a.merged.csv")
 
 cnorm = Normalize(vmin=0, vmax=len(cols))
 sm = cm.ScalarMappable(norm=cnorm, cmap=cm.plasma)
