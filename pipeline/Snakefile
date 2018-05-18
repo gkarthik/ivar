@@ -30,7 +30,7 @@ rule filter_variants:
 
 rule call_variants_post_removal:
     input:
-        "{out_dir}/filtered/{sample}{rep}.filtered.trimmed.sorted.bam"
+        "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
     output:
         "{out_dir}/variants/{sample}{rep}.filtered.vcf.gz"
     shell:
@@ -42,11 +42,11 @@ rule remove_reads:
         "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam",
         "{out_dir}/{sample}_masked_primer_indices.txt"
     output:
-        "{out_dir}/filtered/{sample}{rep}.filtered.trimmed.sorted.bam"
+        "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
     shell:
         "mkdir -p {wildcards.out_dir}/filtered/ && "
         "primers=$(cat {input[1]}) &&"
-        "~/Documents/code/ivar/ivar.sh removereads -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/filtered/{wildcards.sample}{wildcards.rep}.filtered $primers"
+        "~/Documents/code/ivar/ivar.sh removereads -i {input[0]} -p {wildcards.out_dir}/filtered/{wildcards.sample}{wildcards.rep} $primers"
 
 rule get_masked:
     input:
