@@ -1,12 +1,13 @@
 #!/bin/bash
 
-usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus|createbed>]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]" 1>&2; exit 1; }
 usage_trim() { echo "Usage: $0 trim [-i input] [-b <bedfile>] [-p prefix]" 1>&2; exit 1; }
 usage_removereads() { echo "Usage: $0 removereads [-i input] [-p prefix] <amplicon-indice-1> <amplicon-indice-2> ..." 1>&2; exit 1; }
 usage_call_variants() { echo "Usage: $0 callvariants [-i input] [-r reference] [-p prefix]" 1>&2; exit 1; }
 usage_filter_variants() { echo "Usage: $0 filtervariants [-f <frequency cut off>] [-b <bed file>] [-p prefix] replicate1.vcf.gz replicate2.vcf.gz ... " 1>&2; exit 1; }
 usage_consensus() { echo "Usage: $0 consensus [-i <input-vcf>] [-p prefix] [-r reference] " 1>&2; exit 1; }
 usage_create_bed() { echo "Usage: $0 createbed [-c <primer-csv>] [-p prefix] [-r reference] " 1>&2; exit 1; }
+usage_get_masked() { echo "Usage: $0 getmasked [-f <frequency-cut-off>] [-p prefix] [-b bed-file] replicate1.vcf.gz replicate2.vcf.gz ..." 1>&2; exit 1; }
 
 cmd=$1; shift
 case "$cmd" in
@@ -107,6 +108,29 @@ case "$cmd" in
 	    usage_filter_variants
 	fi
 	~/Documents/code/ivar/combine_variants.py ${p} ${f} ${b} "$@"
+	;;
+    getmasked)
+	while getopts ":p:f:b:" o; do
+	    case "${o}" in
+		p)
+		    p=${OPTARG}
+		    ;;
+		f)
+		    f=${OPTARG}
+		    ;;
+		b)
+		    b=${OPTARG}
+		    ;;
+		*)
+		    usage_get_masked
+		    ;;
+	    esac
+	done
+	shift $((OPTIND-1))
+	if [ -z "${p}" ] || [ -z "${f}" ] || [ -z "${b}" ]; then
+	    usage_get_masked
+	fi
+	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} ${b} "$@"
 	;;
     consensus)
 	while getopts ":i:p:r:" o; do

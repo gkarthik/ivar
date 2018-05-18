@@ -19,7 +19,7 @@ rule all:
 
 rule filter_variants:
     input:
-        expand("{out_dir}/variants/{{sample}}{rep}.vcf.gz", out_dir=out_dir, rep=REPS)
+        expand("{out_dir}/variants/{{sample}}{rep}.filtered.vcf.gz", out_dir=out_dir, rep=REPS)
     output:
         "{out_dir}/reports/{sample}_report.pdf",
         "{out_dir}/reports/{sample}_variants_by_amplicon.png",
@@ -27,6 +27,34 @@ rule filter_variants:
     shell:
         "mkdir -p {wildcards.out_dir}/reports/ && "
         "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -b /Users/karthik/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
+
+rule call_variants_post_removal:
+    input:
+        "{out_dir}/filtered/{sample}{rep}.filtered.trimmed.sorted.bam"
+    output:
+        "{out_dir}/variants/{sample}{rep}.filtered.vcf.gz"
+    shell:
+        "mkdir -p {wildcards.out_dir}/variants/ && "
+        "~/Documents/code/ivar/ivar.sh callvariants -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.filtered -i {input}"
+
+rule remove_reads:
+    input:
+        "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam",
+        "{out_dir}/{sample}_masked_primer_indices.txt"
+    output:
+        "{out_dir}/filtered/{sample}{rep}.filtered.trimmed.sorted.bam"
+    shell:
+        "mkdir -p {wildcards.out_dir}/filtered/ && "
+        "primers=$(cat {input[1]}) &&"
+        "~/Documents/code/ivar/ivar.sh removereads -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/filtered/{wildcards.sample}{wildcards.rep}.filtered $primers"
+
+rule get_masked:
+    input:
+        expand("{out_dir}/variants/{{sample}}{rep}.vcf.gz", out_dir=out_dir, rep=REPS)
+    output:
+        "{out_dir}/{sample}_masked_primer_indices.txt"
+    shell:
+        "~/Documents/code/ivar/ivar.sh getmasked -f 1 -b /Users/karthik/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/{wildcards.sample} {input}"
 
 rule call_variants:
     input:

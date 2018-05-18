@@ -6,7 +6,6 @@ from statsmodels.sandbox.stats.multicomp import multipletests
 
 from variantutils import create_variant_dataframe, plot_variants_by_amplicon
 
-
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
 bed_path = sys.argv[3]
@@ -50,5 +49,8 @@ for i in df["POS"]:
         masked.extend(_.index.values) # Two primers per amplicon
 
 masked = set(masked)
-print(masked)
+txt = " ".join([str(i) for i in masked])
+print(txt)
 
+with open(prefix+'_masked_primer_indices.txt', 'w') as f:
+    f.write(txt+'\n')

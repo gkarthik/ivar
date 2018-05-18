@@ -17,7 +17,7 @@ from variantutils import create_variant_dataframe, plot_variants_by_amplicon
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
 bed_path = sys.argv[3]
-df_paths = sys.argv[4:]
+df_paths = sys.argv[5:]
 
 bed = pd.read_table(bed_path, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"])
 
@@ -51,16 +51,6 @@ for _i, i in enumerate(_[1:]):
 cols = df.columns[df.columns.str.match(r"\b"+col+"\b*_pval")]
 df = df.ix[df[cols].apply(lambda x: any([i<= pval_threshold for i in x]), axis = 1)]
 
-masked = []
-for i in df["POS"]:
-    _ = bed[(bed["Start"] <= i) & (bed["End"] >= i)]
-    if _.shape[0] == 1:
-        _n = "_".join(_["Name"].values[0].split("_")[:-1])
-        _ = bed[bed["Name"].str.contains(_n)].sort_values("Start")
-        masked.append([_["End"].values[0], _["Start"].values[1], _n])
-
-df["masked"] = df["POS"].apply(lambda x: True if len([i for i in masked if x >= i[0] and x <= i[1]]) > 0 else False)
-
 cnorm = Normalize(vmin=0, vmax=len(cols))
 sm = cm.ScalarMappable(norm=cnorm, cmap=cm.plasma)
 
@@ -87,9 +77,6 @@ _ = df[df.columns[df.columns.str.contains("Percentage")]].max(axis = 1).index
 for j in range(0, len(_)):
     ax1.text(df["POS"][_[j]], _[j], df["REF"][_[j]]+" -> "+df["ALT"][_[j]], ha="left", va="bottom", zorder = 3)
 
-for i in masked:
-    ax1.axvspan(i[0], i[1], facecolor='k', alpha=0.5, zorder = 4)
-
 ax1.axhline(threshold, color="red")
 ax1.set_ylim([-5, 105])
 ax1.set_xlim([bed["Start"].min(), bed["End"].max()])
@@ -114,10 +101,6 @@ for _i, i in enumerate(pval_cols):
 _ = df[pval_cols].min(axis = 1).index
 for j in range(0, len(_)):
     ax2.text(df["POS"][_[j]], _[j], -1 * df["REF"][_[j]]+" -> "+df["ALT"][_[j]], ha="left", va="bottom", zorder = 3)
-
-
-for i in masked:
-    ax2.axvspan(i[0], i[1], facecolor='k', alpha=0.5, zorder = 4)
 
 ax2.axhline(-1 * pval_threshold, color="red")
 ax2.set_ylim([-1.1, 0.1])
@@ -145,8 +128,6 @@ for i in bed[bed["Strand"] == "+"].sort_values("Start").index:
     f = [_[_["Strand"] == "+"]["Start"].values[0], _[_["Strand"] == "+"]["End"].values[0]]
     r = [_[_["Strand"] == "-"]["Start"].values[0], _[_["Strand"] == "-"]["End"].values[0]]
     c = "black"
-    if n in [i[2] for i in masked]:
-        c = "#dedede"
     ax4.plot([f[0], r[1]], [int(y),int(y)], color=c, lw = 2)
     ax4.plot([f[0], f[1]], [int(y),int(y)], color="steelblue", lw = 4)
     ax4.plot([r[0], r[1]], [int(y),int(y)], color="indianred", lw = 4)
