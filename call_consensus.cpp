@@ -3,6 +3,52 @@
 #include<iostream>
 #include<fstream>
 
+struct ad {
+  int8_t *v8;
+  int16_t *v16;
+  int32_t *v32;
+  float *vf;
+  int type;
+  int8_t maj_v8;
+  int16_t maj_v16;
+  int32_t maj_v32;
+  float maj_vf;
+};
+
+int get_majority(bcf_fmt_t fmt, ad val){
+  int maj_ind;
+  for (int j = 0; j < fmt.n; ++j){
+    // std::cout << p[j] << ":";
+    switch(val.type){
+    case 1:
+      if(val.v8[j] > val.maj_v8){
+	maj_ind = j;
+	val.maj_v8 = val.v8[j];
+      }
+      break;
+    case 2:
+      if(val.v16[j] > val.maj_v16){
+	maj_ind = j;
+	val.maj_v16 = val.v16[j];
+      }
+      break;
+    case 3:
+      if(val.v32[j] > val.maj_v32){
+	maj_ind = j;
+	val.maj_v32 = val.v32[j];
+      }
+      break;
+    case 4:
+      if(val.vf[j] > val.maj_vf){
+	maj_ind = j;
+	val.maj_vf = val.vf[j];
+      }
+      break;
+    }
+  }
+  return maj_ind;
+}
+
 int main(int argc, char* argv[]) {
   std::cout << "Path " << argv[1] <<std::endl;
   std::string bcf = std::string(argv[1]);
@@ -35,49 +81,56 @@ int main(int argc, char* argv[]) {
     //Initialize iterator
     bcf1_t *v = bcf_init();
     int ctr = 0;
+    int prev_pos = 0;
     while(bcf_read(in, header, v) ==0){
       // std::cout << "Position: " << v->pos << std::endl;
       // std::cout << "Number of Alleles: " << v->n_allele << std::endl;
+      for (int i = prev_pos; i < v->pos - 1; ++i){
+	out << "?";
+      }
       if(v->n_allele == 1){
 	bcf_unpack(v, BCF_UN_STR);
-	char *ALT = v->d.als;
-	out << ALT[0];
+	out << v->d.allele[0];
       } else {
 	bcf_unpack(v, BCF_UN_FMT);
 	bcf_fmt_t *fmt = v->d.fmt;
-	bcf_info_t *info = v->d.info;
-	int offset = 0;
 	for (int i = 0; i < v->n_fmt; ++i){
 	  // std::cout << "ID: " << fmt[i].id << std::endl;
 	  // std::cout << " Type: " << fmt[i].type << std::endl;
 	  // std::cout <<" Size: " << fmt[i].size << std::endl;
 	  // std::cout << "String: " << header->id[BCF_DT_ID][fmt[i].id].key << std::endl;
 	  if(strcmp(header->id[BCF_DT_ID][fmt[i].id].key, "AD") == 0){
-	    int16_t *p= (int16_t *) (fmt[i].p);
 	    int maj_ind = -1;
-	    int16_t maj_val = 0;
-	    for (int j = 0; j < fmt[i].n; ++j){
-	      // std::cout << p[j] << ":";
-	      if(p[j] > maj_val){
-		maj_ind = j;
-		maj_val = p[j];
-	      }
+	    ad tmp;
+	    tmp.type = fmt[i].type;
+	    switch(fmt[i].type){
+	    case BCF_BT_INT8: tmp.v8 = (int8_t*) fmt[i].p; break;
+	    case BCF_BT_INT16: tmp.v16 = (int16_t*) fmt[i].p; break;
+	    case BCF_BT_INT32: tmp.v32 = (int32_t*) fmt[i].p; break;
+	    case BCF_BT_FLOAT: tmp.vf = (float*) fmt[i].p; break;
+	    default: hts_log_error("Unexpected type %d", fmt[i].type); exit(1);
+	    }
+	    maj_ind = get_majority(fmt[i], tmp);
+	    if(v->pos == 1903){
+	      std::cout << v->d.allele[maj_ind] << " " << maj_ind << std::endl;
 	    }
 	    // std::cout << "Indice: " << maj_ind << std::endl;
 	    bcf_unpack(v, BCF_UN_STR);
 	    // std::cout << v->d.als[maj_ind] << std::endl;
-	    out << v->d.als[maj_ind];
+	    out << v->d.allele[maj_ind];
 	    // std::cout << std::endl << std::endl;
 	  }
 	}
       }
+      prev_pos = v->pos;
       ctr++;
       if(ctr % 1000 == 0)
 	std::cout << ctr << std::endl;
     }
-    bcf_hdr_destroy(header);
     bcf_destroy(v);
+    bcf_hdr_destroy(header);
     bcf_close(in);
+    out.close();
   }
   return 0;
 }
