@@ -17,7 +17,7 @@ from variantutils import create_variant_dataframe, plot_variants_by_amplicon
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
 bed_path = sys.argv[3]
-df_paths = sys.argv[5:]
+df_paths = sys.argv[4:]
 
 bed = pd.read_table(bed_path, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"])
 
