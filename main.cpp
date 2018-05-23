@@ -241,7 +241,26 @@ int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
 }
 
 cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
-  int len = 0, cig, next_cig, i = 0;
+    // Remove any consumption of just query. Consumption of reference will be retained in lieu of excluding cigar and shift of start_posby corresponding length
+  int i = 0, len = 0, cig, next_cig, start_pos = 0;
+  while(i < n){
+    cig = bam_cigar_op(cigar[i]);
+    len = bam_cigar_oplen(cigar[i]);
+    if((bam_cigar_type(cig) & 2) && (bam_cigar_type(cig) & 1))
+      break;
+    if(bam_cigar_type(cig) & 1){	// Consumes only query - insertion
+      cigar[i] = bam_cigar_gen(len, BAM_CSOFT_CLIP);
+    }
+    if(bam_cigar_type(cig) & 2){	// Consumes only reference - deletion
+      for (int j = i; j < n-1; ++j){
+	cigar[j] = cigar[j+1];
+      }
+      n--;
+      start_pos += len;
+    }
+    i++;
+  }
+  i = 0;
   while(i< n -1){
     cig = bam_cigar_op(cigar[i]);
     next_cig = bam_cigar_op(cigar[i+1]);
@@ -259,7 +278,7 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
   return {
     cigar,
       n,
-      0
+      start_pos
       };
 }
 
@@ -347,6 +366,7 @@ int main(int argc, char* argv[]) {
       // print_cigar(t.cigar, t.nlength);
       // std::cout << std::endl;
       t = condense_cigar(t.cigar, t.nlength);
+      aln->core.pos += t.start_pos;
       // std::cout << "New: " << t.nlength << std::endl;
       // print_cigar(t.cigar, t.nlength);
       // std::cout << std::endl;

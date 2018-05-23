@@ -83,8 +83,8 @@ case "$cmd" in
 	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
 	    usage_call_variants
 	fi
-	samtools mpileup -A -B -Q 0 -d 300000 -Ou -t AD -f ${r} ${i} | bcftools call --ploidy 1 -m -A -Oz -o ${p}.vcf.gz
-	bcftools index ${p}.vcf.gz 
+	samtools mpileup -A -B -Q 0 -d 300000 -gu -t AD -pm 1 -F 0 -f ${r} ${i} | bcftools call --ploidy 1 -m -A -Oz -o ${p}.vcf.gz
+	bcftools index ${p}.vcf.gz
 	;;
     filtervariants)
 	while getopts ":p:f:b:" o; do
