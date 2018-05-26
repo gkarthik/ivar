@@ -3,32 +3,36 @@
 usage_dir="./usage"
 
 usage() {
+    exec 1>&2
+    echo
     case "$1" in
 	trim)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	removereads)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	callvariants)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	filtervariants)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	consensus)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	createbed)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	getmasked)
-	    echo `cat ${usage_dir}/usage_$1.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_$1.txt;
 	    ;;
 	*)
-	    echo `cat ${usage_dir}/usage_all.txt` 1>&2; exit 1;
+	    cat ${usage_dir}/usage_all.txt;
 	    ;;
     esac
+    echo
+    exit 1;
 }
 
 cmd=$1; shift

@@ -1,1 +1,13 @@
-Usage: ivar [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]
+Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]
+
+        Command       Description
+
+           trim       Trim reads in aligned bams
+   callvariants       Call Variants from aligned bam
+ filtervariants       Filter variants across replicates
+      consensus       Call consensus from vcf file
+      createbed       Created bed file from primer sequences
+    removereads       Remove reads from aligned bam
+      getmasked       Get amplicons with primer mismatches
+
+To view detailed usage for each command type `ivar <command>`
