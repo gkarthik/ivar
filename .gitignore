@@ -6,3 +6,4 @@ pipeline/.snakemake/*
 GPATH
 GRTAGS
 GTAGS
+*.pyc
