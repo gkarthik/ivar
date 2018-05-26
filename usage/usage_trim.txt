@@ -1,0 +1,1 @@
+Usage: ivar trim [-i input] [-b <bedfile>] [-p prefix]

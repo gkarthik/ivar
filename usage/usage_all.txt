@@ -1,0 +1,1 @@
+Usage: ivar [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]
