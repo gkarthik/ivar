@@ -23,6 +23,10 @@ struct maj {
     }							\
   }
 
+#define INDEL_SIZE 10
+
+#define GAP 'N'
+
 // From bcftools.h - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
 static inline char gt2iupac(char a, char b)
 {
@@ -42,12 +46,34 @@ static inline char gt2iupac(char a, char b)
   return iupac[(int)a][(int)b];
 }
 
-char get_maj_nuc_code(char **allele, maj m){
-  char nuc = allele[m.ind[0]][0];
-  for (int k = 1; k < m.n ; ++k){
-    nuc = gt2iupac(nuc, allele[m.ind[k + 1]][0]);
+void get_consensus_indel(char **allele, maj m, char *&nuc){
+  int max_len = 0, l = 0;
+  for (int k = 0; k <= m.n; ++k){
+    if(strlen(allele[m.ind[k]]) > max_len)
+      max_len = strlen(allele[m.ind[k]]);
   }
-  return nuc;
+  char n;
+  for (int j = 0; j < max_len; ++j){ // Iterate over base positions
+    n = 0;
+    for (int k = 0; k <= m.n ; ++k){  // Iterate over major alleles
+      if(j < strlen(allele[m.ind[k]])){
+	if(n == 0){
+	  n = allele[m.ind[k]][j];
+	} else {
+	  n = gt2iupac(n, allele[m.ind[k]][j]);
+	}
+      }
+    }
+    if(n == 0)
+      nuc[l] = GAP;
+    else
+      nuc[l] = n;
+    l++;
+    if(l % INDEL_SIZE == 0){
+      nuc = (char*) realloc(nuc, INDEL_SIZE * ((l/INDEL_SIZE) + 1) * sizeof(char));
+    }
+  }
+  nuc[l] = 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -77,15 +103,14 @@ int main(int argc, char* argv[]) {
     std::cout << ad_id << " " << std::endl;
     //Initialize iterator
     bcf1_t *v = bcf_init();
-    int ctr = 0;
-    int prev_pos = 0;
-    int s;
+    int ctr = 0, prev_pos = 0, s, d;
     maj m;
+    char *nuc =(char *) malloc(INDEL_SIZE * sizeof(char)), *r;
     while(bcf_read(in, header, v) ==0){
       // std::cout << "Position: " << v->pos << std::endl;
       // std::cout << "Number of Alleles: " << v->n_allele << std::endl;
       for (int i = prev_pos; i < v->pos - 1; ++i){
-	out << "N";
+	out << GAP;
       }
       bcf_unpack(v, BCF_UN_FMT);
       bcf_unpack(v, BCF_UN_STR);
@@ -101,41 +126,30 @@ int main(int argc, char* argv[]) {
 	  case BCF_BT_FLOAT: GET_MAX_INDICES(float, fmt[i].p, fmt[i].n, m); break;
 	  default: hts_log_error("Unexpected type %d", fmt[i].type); exit(1);
 	  }
-	  // maj_ind = get_majority(fmt[i], tmp);
 	  if(m.n == -1){
-	    out << "N";
+	    out << GAP;
 	  } else {
 	    if(bcf_get_variant_types(v) == VCF_REF){
 	      out << v->d.allele[0];
-	    } else {
-	      if(bcf_get_variant_types(v) == VCF_SNP || bcf_get_variant_types(v) == VCF_MNP){
-		char nuc = get_maj_nuc_code(v->d.allele, m);
-		out << nuc;
-		std::cout << nuc << std::endl;
-	      } else {
-		// TODO
-		int d, ind, max_len = 0;
-		for (int k = 0; i <= m.n; ++k){
-		  if(strlen(v->d.allele[m.ind[k]]) > max_len)
-		    max_len = m.ind[k];
-		}
-		for (int l = 0; l < max_len; ++l){
-		  for (int k = 0; k < m.n; ++k){
-		    d = strlen(v->d.allele[0]) - strlen(v->d.allele[m.ind[k]]); // Ref - Allele
-		    if(d > 0) { // Deletion
-		      s = strlen(v->d.allele[0]);
-		      ind = 0;//Reference Allele
-		    } else if(d < 0) { // Insertion
-		      s = strlen(v->d.allele[m.ind[k]]);
-		      d = -1 * d;
-		      ind = m.ind[k];
-		    }
-		    for (int j = d; j >0; --j){
-		      out << v->d.allele[0][s-d];
-		    }
-		  }
-		}
+	    } else if(bcf_get_variant_types(v) == VCF_SNP || bcf_get_variant_types(v) == VCF_MNP){
+	      nuc =(char *) malloc(INDEL_SIZE * sizeof(char));
+	      get_consensus_indel(v->d.allele, m, nuc);
+	      out << nuc;
+	    } else {	// For INDEL insert difference.between reference and consensus allele
+	      nuc =(char *) malloc(INDEL_SIZE * sizeof(char));
+	      get_consensus_indel(v->d.allele, m, nuc);
+	      s = strlen(v->d.allele[0]) - strlen(nuc); //  > 0 Deletion. < 0 INSERTION
+	      d = (s > 0) ? strlen(v->d.allele[0]) : strlen(nuc);
+	      r = (s > 0) ? v->d.allele[0] : nuc;
+	      s = (s < 0) ? -1 * s : s;
+	      if(v->pos == 499)
+		std::cout << "Number: " << m.n << " Maj Allele: " << v->d.allele[m.ind[0]] << strlen(nuc) << " - Nuc Length" << nuc << " " << s << " " << d << std::endl;
+	      for (int i = 0; i < s; ++i){
+		out << r[d - s];
 	      }
+	      free(m.ind);
+	      free(nuc);
+	      // std::cout << nuc << std::endl;
 	    }
 	  }
 	}
@@ -144,7 +158,6 @@ int main(int argc, char* argv[]) {
       ctr++;
       if(ctr % 1000 == 0){
 	std::cout << ctr << std::endl;
-	break;
       }
     }
     bcf_destroy(v);
