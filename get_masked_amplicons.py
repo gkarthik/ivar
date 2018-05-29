@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3.5
-import sys
+import sys, os
 import pandas as pd
 from scipy.stats import fisher_exact as fe
 from statsmodels.sandbox.stats.multicomp import multipletests
@@ -8,10 +8,19 @@ from variantutils import create_variant_dataframe, plot_variants_by_amplicon
 
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
-bed_path = sys.argv[3]
-df_paths = sys.argv[4:]
+df_bed_paths = sys.argv[3:]
+df_paths = df_bed_paths[0::2]
+bed_paths = df_bed_paths[1::2]
 
-bed = pd.read_table(bed_path, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"])
+out_paths = []
+for i in range(len(df_paths)):
+    _ = os.path.basename(df_paths[i])
+    _ = _.split(".")[0]
+    out_paths.append(_)
+
+beds = []
+for i in bed_paths:
+    beds.append(pd.read_table(i, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"]))
 
 vdfs = []
 for _i,i in enumerate(df_paths):
@@ -41,16 +50,23 @@ cols = df.columns[df.columns.str.match(r"\b"+col+"\b*_pval")]
 df = df.ix[df[cols].apply(lambda x: any([i<= pval_threshold for i in x]), axis = 1)]
 
 masked = []
+for i in range(len(beds)):
+    masked.append([])
+
 for i in df["POS"]:
-    _ = bed[(bed["Start"] <= i) & (bed["End"] >= i)]
-    if _.shape[0] == 1:
-        _n = "_".join(_["Name"].values[0].split("_")[:-1])
-        _ = bed[bed["Name"].str.contains(_n)].sort_values("Start")
-        masked.extend(_.index.values) # Two primers per amplicon
+    for j in range(len(beds)):
+        bed = beds[j]
+        _ = bed[(bed["Start"] <= i) & (bed["End"] >= i)]
+        if _.shape[0] == 1:
+            _n = "_".join(_["Name"].values[0].split("_")[:-1])
+            _ = bed[bed["Name"].str.contains(_n)].sort_values("Start")
+            masked[j].extend(_.index.values) # Two primers per amplicon
 
-masked = set(masked)
-txt = " ".join([str(i) for i in masked])
-print(txt)
+for i in range(len(masked)):
+    masked[i] = set(masked[i])
 
-with open(prefix+'_masked_primer_indices.txt', 'w') as f:
-    f.write(txt+'\n')
+for i in range(len(out_paths)):
+    txt = " ".join([str(j) for j in masked[i]])
+    print(txt)
+    with open(prefix+out_paths[i]+'_masked_primer_indices.txt', 'w') as f:
+        f.write(txt+'\n')

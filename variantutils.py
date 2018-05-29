@@ -23,16 +23,17 @@ def create_variant_dataframe(df):
         d["DP"].extend([dp] * len(i))
     return pd.DataFrame(d)
 
-def plot_variants_by_amplicon(vdfs, bed, filename, kind="scatter"):
-    amplicon_uniq = bed["Name"].apply(lambda x: "_".join(x.split("_")[:-1])).unique().tolist()
+def plot_variants_by_amplicon(vdfs, beds, filename, kind="scatter"):
+    amplicon_uniq = beds[0]["Name"].apply(lambda x: "_".join(x.split("_")[:-1])).unique().tolist()
     d = int(np.round(len(amplicon_uniq)**0.5))
     f = plt.figure(figsize=(20,20))
     gs = gridspec.GridSpec(d, d)
     for _i, i in enumerate(amplicon_uniq):
         ax = plt.subplot(gs[_i])
-        _ = bed[bed["Name"].str.contains(i)].sort_values("Start")
-        coords = [_["Start"].values[0], _["End"].values[1]]
-        for vdf in vdfs:
+        for _vdf, vdf in enumerate(vdfs):
+            bed = beds[_vdf]
+            _ = bed[bed["Name"].str.contains(i)].sort_values("Start")
+            coords = [_["Start"].values[0], _["End"].values[1]]
             vdf = vdf[(vdf["POS"]>=coords[0]) & (vdf["POS"]<=coords[1])]
             vdf["Percentage"] = (vdf["AD"]/vdf["DP"]) * 100
             if kind == "scatter":

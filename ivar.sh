@@ -121,9 +121,6 @@ case "$cmd" in
 		f)
 		    f=${OPTARG}
 		    ;;
-		b)
-		    b=${OPTARG}
-		    ;;
 		*)
 		    usage filtervariants
 		    ;;
@@ -133,10 +130,10 @@ case "$cmd" in
 	if [ -z "${p}" ] || [ -z "${f}" ] || [ -z "${b}" ]; then
 	    usage filtervariants
 	fi
-	~/Documents/code/ivar/combine_variants.py ${p} ${f} ${b} "$@"
+	~/Documents/code/ivar/combine_variants.py ${p} ${f} "$@"
 	;;
     getmasked)
-	while getopts ":p:f:b:" o; do
+	while getopts ":p:f:" o; do
 	    case "${o}" in
 		p)
 		    p=${OPTARG}
@@ -144,22 +141,19 @@ case "$cmd" in
 		f)
 		    f=${OPTARG}
 		    ;;
-		b)
-		    b=${OPTARG}
-		    ;;
 		*)
 		    usage getmasked
 		    ;;
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${p}" ] || [ -z "${f}" ] || [ -z "${b}" ]; then
+	if [ -z "${p}" ] || [ -z "${f}" ]; then
 	    usage getmasked
 	fi
-	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} ${b} "$@"
+	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} "$@"
 	;;
     consensus)
-	while getopts ":i:p:r:" o; do
+	while getopts ":i:p:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -167,19 +161,16 @@ case "$cmd" in
 		p)
 		    p=${OPTARG}
 		    ;;
-		r)
-		    r=${OPTARG}
-		    ;;
 		*)
 		    usage consensus
 		    ;;
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
+	if [ -z "${i}" ] || [ -z "${p}" ]; then
 	    usage consensus
 	fi
-	cat ${r} | bcftools consensus $i > ${p}.fa
+	~/Documents/code/ivar/call_consensus ${i} ${p}.consensus.fa
 	;;
     createbed)
 	while getopts ":c:p:r:" o; do
@@ -199,7 +190,7 @@ case "$cmd" in
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
+	if [ -z "${c}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
 	    usage createbed
 	fi
 	~/Documents/code/ivar/primer_bam_to_bed.sh $c $p $r

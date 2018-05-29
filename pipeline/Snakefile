@@ -3,6 +3,7 @@ from os.path import isfile, join
 
 in_dir = "/Users/karthik/hpc_downloads/2018.04.18"
 out_dir = "/Users/karthik/hpc_downloads/test"
+bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed"
 
 files = [f for f in listdir(in_dir) if isfile(join(in_dir, f)) and ".bam" in f]
 SAMPLES = []
@@ -19,14 +20,14 @@ rule all:
 
 rule filter_variants:
     input:
-        expand("{out_dir}/variants/{{sample}}{rep}.filtered.vcf.gz", out_dir=out_dir, rep=REPS)
+        expand("{out_dir}/variants/{{sample}}{rep}.filtered.vcf.gz {b}".split(), out_dir=out_dir, rep=REPS, b = bed)
     output:
         "{out_dir}/reports/{sample}_report.pdf",
         "{out_dir}/reports/{sample}_variants_by_amplicon.png",
         "{out_dir}/reports/{sample}_variants_by_amplicon_hist.png"
     shell:
         "mkdir -p {wildcards.out_dir}/reports/ && "
-        "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -b /Users/karthik/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
+        "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
 
 rule call_variants_post_removal:
     input:
@@ -40,7 +41,7 @@ rule call_variants_post_removal:
 rule remove_reads:
     input:
         "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam",
-        "{out_dir}/{sample}_masked_primer_indices.txt"
+        "{out_dir}/{sample}{rep}_masked_primer_indices.txt"
     output:
         "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
     shell:
@@ -50,11 +51,11 @@ rule remove_reads:
 
 rule get_masked:
     input:
-        expand("{out_dir}/variants/{{sample}}{rep}.vcf.gz", out_dir=out_dir, rep=REPS)
+        expand("{{out_dir}}/variants/{{sample}}{rep}.vcf.gz {b}".split(), rep=REPS, b = bed)
     output:
-        "{out_dir}/{sample}_masked_primer_indices.txt"
+        expand("{{out_dir}}/{{sample}}{rep}_masked_primer_indices.txt", rep=REPS)
     shell:
-        "~/Documents/code/ivar/ivar.sh getmasked -f 1 -b /Users/karthik/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/{wildcards.sample} {input}"
+        "~/Documents/code/ivar/ivar.sh getmasked -f 1 -p {wildcards.out_dir}/ {input}"
 
 rule call_variants:
     input:
@@ -67,9 +68,10 @@ rule call_variants:
 
 rule trim_primer_quality:
     input:
-        "{in_dir}".format(in_dir = in_dir)+"/{sample}.sorted.bam"
+        "{in_dir}".format(in_dir = in_dir)+"/{sample}.sorted.bam",
+        "{b}".format(b = bed)
     output:
         "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
     shell:
         "mkdir -p {wildcards.out_dir}/trimmed/ && "
-        "~/Documents/code/ivar/ivar.sh trim -b ~/Documents/code/ivar/data/ZKV_primers.bed -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input}"
+        "~/Documents/code/ivar/ivar.sh trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input[0]}"

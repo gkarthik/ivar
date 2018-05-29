@@ -16,10 +16,13 @@ from variantutils import create_variant_dataframe, plot_variants_by_amplicon
 
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
-bed_path = sys.argv[3]
-df_paths = sys.argv[4:]
+df_bed_paths = sys.argv[3:]
+df_paths = df_bed_paths[0::2]
+bed_paths = df_bed_paths[1::2]
 
-bed = pd.read_table(bed_path, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"])
+beds = []
+for i in bed_paths:
+    beds.append(pd.read_table(i, sep="\t", names=["Region", "Start", "End", "Name", "Score", "Strand"]))
 
 vdfs = []
 for _i,i in enumerate(df_paths):
@@ -27,8 +30,8 @@ for _i,i in enumerate(df_paths):
     _ = create_variant_dataframe(_[(_["ALT"] != ".") & (_["ALT"]!=_["REF"])].reset_index(drop=True))
     vdfs.append(_)
 
-plot_variants_by_amplicon(vdfs, bed, prefix+"_variants_by_amplicon.png")
-plot_variants_by_amplicon(vdfs, bed, prefix+"_variants_by_amplicon_hist.png", kind="hist")
+plot_variants_by_amplicon(vdfs, beds, prefix+"_variants_by_amplicon.png")
+plot_variants_by_amplicon(vdfs, beds, prefix+"_variants_by_amplicon_hist.png", kind="hist")
 
 # Fisher's Exact Test
 #           | AD | DP  |
@@ -79,6 +82,8 @@ for j in range(0, len(_)):
 
 ax1.axhline(threshold, color="red")
 ax1.set_ylim([-5, 105])
+
+bed = beds[0]
 ax1.set_xlim([bed["Start"].min(), bed["End"].max()])
 
 ax1.set_title("Variant Frequency vs Position")
