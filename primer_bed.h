@@ -4,9 +4,8 @@
 #ifndef primer_bed
 #define primer_bed
 
-
 class primer {
-private:
+ private:
   std::string region;
   unsigned int start;
   unsigned int end;
@@ -14,7 +13,7 @@ private:
   int score;
   char strand;
 
-public:
+ public:
   std::string get_name();
   std::string get_region();
   int get_score();

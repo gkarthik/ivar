@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage_dir="./usage"
+usage_dir="/Users/karthik/Documents/code/ivar/usage"
 
 usage() {
     exec 1>&2
@@ -127,7 +127,7 @@ case "$cmd" in
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${p}" ] || [ -z "${f}" ] || [ -z "${b}" ]; then
+	if [ -z "${p}" ] || [ -z "${f}" ]; then
 	    usage filtervariants
 	fi
 	~/Documents/code/ivar/combine_variants.py ${p} ${f} "$@"
@@ -153,10 +153,13 @@ case "$cmd" in
 	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} "$@"
 	;;
     consensus)
-	while getopts ":i:p:" o; do
+	while getopts ":i:p:r:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
+		    ;;
+		r)
+		    r=${OPTARG}
 		    ;;
 		p)
 		    p=${OPTARG}
@@ -167,10 +170,10 @@ case "$cmd" in
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${p}" ]; then
+	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
 	    usage consensus
 	fi
-	~/Documents/code/ivar/call_consensus ${i} ${p}.consensus.fa
+        samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup
 	;;
     createbed)
 	while getopts ":c:p:r:" o; do

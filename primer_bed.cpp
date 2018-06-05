@@ -57,12 +57,11 @@ void primer::set_score(int s){
   score = s;
 }
 
-
 std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path);
   std::string line;
   std::vector<primer> primers;
-  while(std::getline(data,line)){
+  while(std::getline(data,line)){ // Remove extra lineStream
     std::stringstream lineStream(line);
     std::string cell;
     int ctr = 0;

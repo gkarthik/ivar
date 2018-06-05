@@ -322,10 +322,11 @@ int main(int argc, char* argv[]) {
       }
       std::cout << "Using Region: " << region_ << std::endl;
     }
-    std::string temp(header->text);
-    std::string sortFlag ("SO:coordinate");
-    if (temp.find(sortFlag)) {
+    std::string hdr_text(header->text);
+    if (hdr_text.find(std::string("SO:coordinate"))) {
       std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
+    } if(hdr_text.find(std::string("SO:queryname"))) {
+      std::cout << "Sorted By Query Name" << std::endl; // Sort by name
     } else {
       std::cout << "Not sorted" << std::endl;
     }
