@@ -118,6 +118,9 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       } else if(asc_val>=97 && asc_val<=122){
 	b = bases[i] - 32;
 	forward = false;
+      } else {
+	i++;
+	continue;
       }
     }
     if(bases[i+1]=='+'){		// Deletions are ignored since subsequent bases take care of bases
@@ -195,6 +198,7 @@ int main(int argc, char* argv[]) {
     print_allele_depths(ad);
     std::vector<allele> mad = get_major_alleles(ad);
     fout << get_consensus_allele(mad);
+    std::cout << "Consensus: " << get_consensus_allele(mad) << std::endl;
     lineStream.clear();
   }
   fout.close();
