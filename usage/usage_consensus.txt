@@ -1,1 +1,1 @@
-Usage: ivar consensus [-i <input-vcf>] [-p prefix]
+Usage: ivar consensus [-i <input-vcf>] [-p prefix] [-r <reference>] [-R region]

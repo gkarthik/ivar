@@ -89,7 +89,7 @@ case "$cmd" in
 	samtools index ${p}.filtered.sorted.bam ${p}.filtered.sorted.bai
 	;;
     callvariants)
-	while getopts ":i:p:r:" o; do
+	while getopts ":i:p:r:R:v:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -100,17 +100,26 @@ case "$cmd" in
 		r)
 		    r=${OPTARG}
 		    ;;
+		v)
+		    v=${OPTARG}
+		    ;;
+		R)
+		    R=${OPTARG}
+		    ;;
 		*)
 		    usage callvariants
 		    ;;
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
+	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ] || [ -z "${v}" ]; then
 	    usage callvariants
 	fi
-	samtools mpileup -A -B -Q 0 -d 300000 -gu -t AD -pm 1 -F 0 -f ${r} ${i} | bcftools call -m -A -Oz -o ${p}.vcf.gz
-	bcftools index ${p}.vcf.gz
+	if [ -z "$R" ]; then
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${v}
+	else
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${v}
+	fi
 	;;
     filtervariants)
 	while getopts ":p:f:b:" o; do

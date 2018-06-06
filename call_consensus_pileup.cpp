@@ -162,10 +162,17 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
+  std::string vout_file;
+  std::ofstream vout;
+  if(argc>1){
+    vout_file = argv[2];
+    vout.open(vout_file+".tsv");
+    vout << "Position\tReference\tAllele\tReverse_Allele_Depth\tTotal_Allele_Depth\tTotal_Depth" << std::endl;
+  }
   std::ofstream fout(out_file+".fa");
   fout << ">Consensus"<<std::endl;
   std::cout << "Lines: " << std::endl;
-  int ctr = 0;
+  int ctr = 0, pos = 0, mdepth = 0;
   std::stringstream lineStream;
   char ref;
   std::string bases;
@@ -179,11 +186,13 @@ int main(int argc, char* argv[]) {
       case 0:
 	break;
       case 1:
+	pos = stoi(cell);
 	break;
       case 2:
 	ref = cell[0];
 	break;
       case 3:
+	mdepth = stoi(cell);
 	break;
       case 4:
 	bases = cell;
@@ -200,9 +209,22 @@ int main(int argc, char* argv[]) {
     // print_allele_depths(ad);
     std::vector<allele> mad = get_major_alleles(ad);
     fout << get_consensus_allele(mad);
+    if(!vout_file.empty()){
+      for(std::vector<allele>::iterator it = mad.begin(); it != mad.end(); ++it) {
+	if(it->nuc[0] == ref)
+	  continue;
+	vout << pos << "\t";
+	vout << ref << "\t";
+	vout << it->nuc << "\t";
+	vout << it->reverse << "\t";
+	vout << it->depth << "\t";
+	vout << mdepth << std::endl;
+      }
+    }
     // std::cout << "Consensus: " << get_consensus_allele(mad) << std::endl;
     lineStream.clear();
   }
   fout.close();
+  vout.close();
   return 0;
 }

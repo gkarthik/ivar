@@ -1,1 +1,1 @@
-Usage: ivar callvariants [-i input] [-r reference] [-p prefix]
+Usage: ivar callvariants [-i input] [-r reference] [-p prefix] [-R region]
