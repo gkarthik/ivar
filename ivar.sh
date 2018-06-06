@@ -109,7 +109,7 @@ case "$cmd" in
 	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
 	    usage callvariants
 	fi
-	samtools mpileup -A -B -Q 0 -d 300000 -gu -t AD -pm 1 -F 0 -f ${r} ${i} | bcftools call --ploidy 1 -m -A -Oz -o ${p}.vcf.gz
+	samtools mpileup -A -B -Q 0 -d 300000 -gu -t AD -pm 1 -F 0 -f ${r} ${i} | bcftools call -m -A -Oz -o ${p}.vcf.gz
 	bcftools index ${p}.vcf.gz
 	;;
     filtervariants)
@@ -153,7 +153,7 @@ case "$cmd" in
 	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} "$@"
 	;;
     consensus)
-	while getopts ":i:p:r:" o; do
+	while getopts ":i:p:r:R:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -164,6 +164,9 @@ case "$cmd" in
 		p)
 		    p=${OPTARG}
 		    ;;
+		R)
+		    R=${OPTARG}
+		    ;;
 		*)
 		    usage consensus
 		    ;;
@@ -173,7 +176,11 @@ case "$cmd" in
 	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
 	    usage consensus
 	fi
-        samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup
+	if [ -z "$R" ]; then
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p}
+	else
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p}
+	fi
 	;;
     createbed)
 	while getopts ":c:p:r:" o; do

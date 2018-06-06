@@ -12,6 +12,7 @@ struct allele{
   uint32_t reverse;
 };
 
+const char gap='N';
 
 // From bcftools.h - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
 static inline char gt2iupac(char a, char b)
@@ -33,6 +34,8 @@ static inline char gt2iupac(char a, char b)
 }
 
 std::string get_consensus_allele(std::vector<allele> ad){
+  if(ad.size()==0)
+    return "";
   if(ad.size() == 1)
     return ad.at(0).nuc;
   std::string cnuc = "";
@@ -64,7 +67,10 @@ std::vector<allele> get_major_alleles(std::vector<allele> ad){
   std::vector<allele> maj_ad;
   uint32_t max = 0;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
+    if(it->nuc.compare("*") == 0)
+      continue;
     if(it->depth > max){
+      maj_ad.clear();
       maj_ad.push_back(ad.at(it-ad.begin()));
       max = it->depth;
     } else if(it->depth == max){
@@ -95,7 +101,7 @@ int check_allele_exists(std::string n, std::vector<allele> ad){
 
 std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities){
   std::vector<allele> ad;
-  int i = 0, n =0;
+  int i = 0, n =0, j = 0;
   while (i < bases.length()){
     std::string b;
     allele tmp;
@@ -123,12 +129,15 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	continue;
       }
     }
-    if(bases[i+1]=='+'){		// Deletions are ignored since subsequent bases take care of bases
-      n = int(bases[i+2]) - 48;
-      b += bases.substr(i+3, n);
-      i += n + 2;
-    } else if(bases[i+1]=='-'){
-      n = int(bases[i+2]) - 48;
+    if(bases[i+1]=='+' || bases[i+1]=='-'){		// Deletions are ignored since subsequent bases take care of bases
+      j = i+2;
+      while(isdigit(bases[j])){
+	j++;
+      }
+      j = j - (i+2);
+      n = stoi(bases.substr(i+2, j));
+      if(bases[i+1]== '+')
+	b += bases.substr(i+3, n);
       i += n + 2;
     }
     int ind = check_allele_exists(b, ad);
@@ -151,10 +160,9 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 }
 
 int main(int argc, char* argv[]) {
-  std::cout << argc << std::endl;
-  std::cout << argv[0] << std::endl;
   std::string line, cell;
-  std::ofstream fout("output.fa");
+  std::string out_file = argv[1];
+  std::ofstream fout(out_file+".fa");
   fout << ">Consensus"<<std::endl;
   std::cout << "Lines: " << std::endl;
   int ctr = 0;
@@ -169,36 +177,30 @@ int main(int argc, char* argv[]) {
     while(std::getline(lineStream,cell,'\t')){
       switch(ctr){
       case 0:
-	std::cout << "Region: " << cell << std::endl;
 	break;
       case 1:
-	std::cout << "Position: " << cell << std::endl;
 	break;
       case 2:
-	std::cout << "Ref: " << cell << std::endl;
 	ref = cell[0];
 	break;
       case 3:
-	std::cout << "Depth: " << cell << std::endl;
 	break;
       case 4:
-	std::cout << "Read Bases: " << cell << std::endl;
 	bases = cell;
 	break;
       case 5:
-	std::cout << "Base Qualities: " << cell << std::endl;
 	qualities = cell;
 	break;
       case 6:
-	std::cout << "Mapping Qualities: " << cell << std::endl;
+	break;
       }
       ctr++;
     }
     ad = update_allele_depth(ref, bases, qualities);
-    print_allele_depths(ad);
+    // print_allele_depths(ad);
     std::vector<allele> mad = get_major_alleles(ad);
     fout << get_consensus_allele(mad);
-    std::cout << "Consensus: " << get_consensus_allele(mad) << std::endl;
+    // std::cout << "Consensus: " << get_consensus_allele(mad) << std::endl;
     lineStream.clear();
   }
   fout.close();
