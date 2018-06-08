@@ -172,7 +172,6 @@ int main(int argc, char* argv[]) {
   std::string out_file = argv[1];
   std::ofstream fout(out_file+".fa");
   fout << ">Consensus"<<std::endl;
-  std::cout << "Lines: " << std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
   std::stringstream lineStream;
   char ref;

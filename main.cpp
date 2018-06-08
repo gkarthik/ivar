@@ -240,9 +240,8 @@ int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
   return -1;
 }
 
-cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
-    // Remove any consumption of just query. Consumption of reference will be retained in lieu of excluding cigar and shift of start_posby corresponding length
-  int i = 0, len = 0, cig, next_cig, start_pos = 0;
+cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
+  int i = 0, len = 0, cig, start_pos = 0;
   while(i < n){
     cig = bam_cigar_op(cigar[i]);
     len = bam_cigar_oplen(cigar[i]);
@@ -260,7 +259,39 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
     }
     i++;
   }
-  i = 0;
+  reverse_cigar(cigar, n);
+  i = 0, len = 0, start_pos = 0;
+  while(i < n){
+    cig = bam_cigar_op(cigar[i]);
+    len = bam_cigar_oplen(cigar[i]);
+    if((bam_cigar_type(cig) & 2) && (bam_cigar_type(cig) & 1))
+      break;
+    if(bam_cigar_type(cig) & 1){	// Consumes only query - insertion
+      cigar[i] = bam_cigar_gen(len, BAM_CSOFT_CLIP);
+    }
+    if(bam_cigar_type(cig) & 2){	// Consumes only reference - deletion
+      for (int j = i; j < n-1; ++j){
+	cigar[j] = cigar[j+1];
+      }
+      n--;
+      start_pos += len;
+    }
+    i++;
+  }
+  reverse_cigar(cigar, n);
+  return {
+    cigar,
+      n,
+      start_pos
+  };
+}
+
+cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
+  int i = 0, len = 0, cig, next_cig, start_pos = 0;
+  cigar_ t = remove_trailing_query_ref_consumption(cigar, n);
+  cigar = t.cigar;
+  n = t.nlength;
+  start_pos = t.start_pos;
   while(i< n -1){
     cig = bam_cigar_op(cigar[i]);
     next_cig = bam_cigar_op(cigar[i+1]);
