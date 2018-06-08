@@ -10,6 +10,9 @@ struct allele{
   std::string nuc;
   uint32_t depth;
   uint32_t reverse;
+  bool operator < (const allele& a) const{
+    return (nuc.compare(a.nuc) > 0) ? true : false;
+  }
 };
 
 const char gap='N';
@@ -33,53 +36,6 @@ static inline char gt2iupac(char a, char b)
   return iupac[(int)a][(int)b];
 }
 
-std::string get_consensus_allele(std::vector<allele> ad){
-  if(ad.size()==0)
-    return "";
-  if(ad.size() == 1)
-    return ad.at(0).nuc;
-  std::string cnuc = "";
-  char n;
-  int max_l = 0;
-  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end()-1; ++it) {
-    if(it->nuc.length() > max_l){
-      max_l = it->nuc.length();
-    }
-  }
-  for (int i = 0; i < max_l; ++i){
-    n = '*';
-    for(std::vector<allele>::iterator it = ad.begin(); it != ad.end()-1; ++it) {
-      if(i < it->nuc.length() && i < (it+1)->nuc.length()){
-	n = gt2iupac(it->nuc[i], (it+1)->nuc[i]);
-      } else if(i < it->nuc.length()){
-	n = it->nuc[i];
-      } else if(i < (it+1)->nuc.length()){
-	n = (it+1)->nuc[i];
-      }
-    }
-    if(n!='*')
-      cnuc += n;
-  }
-  return cnuc;
-}
-
-std::vector<allele> get_major_alleles(std::vector<allele> ad){
-  std::vector<allele> maj_ad;
-  uint32_t max = 0;
-  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-    if(it->nuc.compare("*") == 0)
-      continue;
-    if(it->depth > max){
-      maj_ad.clear();
-      maj_ad.push_back(ad.at(it-ad.begin()));
-      max = it->depth;
-    } else if(it->depth == max){
-      maj_ad.push_back(ad.at(it-ad.begin()));
-    }
-  }
-  return maj_ad;
-}
-
 void print_allele_depths(std::vector<allele> ad){
   std::cout << "Print AD" << " ";
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
@@ -88,6 +44,53 @@ void print_allele_depths(std::vector<allele> ad){
     std::cout << it->reverse;
   }
   std::cout << std::endl;
+}
+
+std::string get_consensus_allele(std::vector<allele> ad){
+  // print_allele_depths(ad);
+  if(ad.size()==0)
+    return "";
+  if(ad.size() == 1)
+    return (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
+  std::string cnuc = "";
+  char n;
+  int max_l = 0, mdepth = 0, tdepth = 0;
+  uint32_t gaps = 0;
+  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end()-1; ++it) {
+    if(it->nuc.length() > max_l){
+      max_l = it->nuc.length();
+    }
+  }
+  for (int i = 0; i < max_l; ++i){
+    n = '*';
+    mdepth = 0;
+    tdepth = 0;
+    std::vector<allele>::iterator it = ad.begin();
+    gaps = 0;
+    while(it!=ad.end()){
+      if(!(i < it->nuc.length())){
+	gaps += it->depth;
+	it++;
+	continue;
+      }
+      tdepth = it->depth;
+      while(it!=ad.end() -1 && it->nuc[i] == (it+1)->nuc[i] && (i+1) < (it+1)->nuc.length()){ // Third condition for cases with more than 1 base in insertion.
+	tdepth += (it+1)->depth;
+	it++;
+      }
+      if(tdepth > mdepth){
+	n = it->nuc[i];
+	mdepth = tdepth;
+      } else if(tdepth == mdepth){
+	n = gt2iupac(n, it->nuc[i]);
+      }
+      it++;
+    }
+    // std::cout << i <<": " << gaps << std::endl;
+    if(n!='*' && mdepth >= gaps) // TODO: Check what to do when equal.
+      cnuc += n;
+  }
+  return cnuc;
 }
 
 int check_allele_exists(std::string n, std::vector<allele> ad){
@@ -101,6 +104,7 @@ int check_allele_exists(std::string n, std::vector<allele> ad){
 
 std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities){
   std::vector<allele> ad;
+  std::string indel;
   int i = 0, n =0, j = 0;
   while (i < bases.length()){
     std::string b;
@@ -136,8 +140,11 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       }
       j = j - (i+2);
       n = stoi(bases.substr(i+2, j));
-      if(bases[i+1]== '+')
-	b += bases.substr(i+3, n);
+      if(bases[i+1]== '+'){
+	indel = bases.substr(i+2+j, n);
+	transform(indel.begin(), indel.end(), indel.begin(),::toupper);
+	b += indel;
+      }
       i += n + 2;
     }
     int ind = check_allele_exists(b, ad);
@@ -156,19 +163,13 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     }
     i++;
   }
+  std::sort(ad.begin(), ad.end());
   return ad;
 }
 
 int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
-  std::string vout_file;
-  std::ofstream vout;
-  if(argc>1){
-    vout_file = argv[2];
-    vout.open(vout_file+".tsv");
-    vout << "Position\tReference\tAllele\tReverse_Allele_Depth\tTotal_Allele_Depth\tTotal_Depth" << std::endl;
-  }
   std::ofstream fout(out_file+".fa");
   fout << ">Consensus"<<std::endl;
   std::cout << "Lines: " << std::endl;
@@ -207,24 +208,10 @@ int main(int argc, char* argv[]) {
     }
     ad = update_allele_depth(ref, bases, qualities);
     // print_allele_depths(ad);
-    std::vector<allele> mad = get_major_alleles(ad);
-    fout << get_consensus_allele(mad);
-    if(!vout_file.empty()){
-      for(std::vector<allele>::iterator it = mad.begin(); it != mad.end(); ++it) {
-	if(it->nuc[0] == ref)
-	  continue;
-	vout << pos << "\t";
-	vout << ref << "\t";
-	vout << it->nuc << "\t";
-	vout << it->reverse << "\t";
-	vout << it->depth << "\t";
-	vout << mdepth << std::endl;
-      }
-    }
-    // std::cout << "Consensus: " << get_consensus_allele(mad) << std::endl;
+    fout << get_consensus_allele(ad);
+    // std::cout << std::endl << "Consensus: " << get_consensus_allele(ad) << std::endl;
     lineStream.clear();
   }
   fout.close();
-  vout.close();
   return 0;
 }
