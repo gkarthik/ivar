@@ -107,6 +107,14 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   std::string indel;
   int i = 0, n =0, j = 0;
   while (i < bases.length()){
+    if(bases[i] == '^'){
+      i += 2;			// Skip mapping quality as well (i+1) - 33
+      continue;
+    }
+    if(bases[i] == '$'){
+      i++;
+      continue;
+    }
     std::string b;
     allele tmp;
     bool forward= true;

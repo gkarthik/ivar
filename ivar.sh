@@ -182,7 +182,7 @@ case "$cmd" in
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
+	if [ -z "${i}" ] || [ -z "${p}" ]; then
 	    usage consensus
 	fi
 	if [ -z "$R" ]; then
