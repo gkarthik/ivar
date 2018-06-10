@@ -36,23 +36,6 @@ static inline char gt2iupac(char a, char b)
   return iupac[(int)a][(int)b];
 }
 
-std::vector<allele> get_major_alleles(std::vector<allele> ad){
-  std::vector<allele> maj_ad;
-  uint32_t max = 0;
-  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-    if(it->nuc.compare("*") == 0)
-      continue;
-    if(it->depth > max){
-      maj_ad.clear();
-      maj_ad.push_back(ad.at(it-ad.begin()));
-      max = it->depth;
-    } else if(it->depth == max){
-      maj_ad.push_back(ad.at(it-ad.begin()));
-    }
-  }
-  return maj_ad;
-}
-
 void print_allele_depths(std::vector<allele> ad){
   std::cout << "Print AD" << " ";
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
@@ -182,12 +165,6 @@ int main(int argc, char* argv[]) {
       ctr++;
     }
     ad = update_allele_depth(ref, bases, qualities);
-    print_allele_depths(ad);
-    // if(ad.size()==1 && ad.at(0).nuc.compare("*")==0){
-    //   lineStream.clear();
-    //   continue;
-    // }
-    std::vector<allele> mad = get_major_alleles(ad);
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if(it->nuc[0] == ref && it->nuc.length() == 1)
 	continue;
