@@ -89,7 +89,7 @@ case "$cmd" in
 	samtools index ${p}.filtered.sorted.bam ${p}.filtered.sorted.bai
 	;;
     callvariants)
-	while getopts ":i:p:r:R:v:" o; do
+	while getopts ":i:p:r:R:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -100,9 +100,6 @@ case "$cmd" in
 		r)
 		    r=${OPTARG}
 		    ;;
-		v)
-		    v=${OPTARG}
-		    ;;
 		R)
 		    R=${OPTARG}
 		    ;;
@@ -112,13 +109,13 @@ case "$cmd" in
 	    esac
 	done
 	shift $((OPTIND-1))
-	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ] || [ -z "${v}" ]; then
+	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${r}" ]; then
 	    usage callvariants
 	fi
 	if [ -z "$R" ]; then
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${v}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p}
 	else
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${v}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p}
 	fi
 	;;
     filtervariants)
