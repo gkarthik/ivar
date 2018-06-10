@@ -5,11 +5,13 @@
 #include<algorithm>
 #include<string>
 #include<regex>
+#include<htslib/kfunc.h>
 
 struct allele{
   std::string nuc;
   uint32_t depth;
   uint32_t reverse;
+  uint8_t mean_qual;
   bool operator < (const allele& a) const{
     return (nuc.compare(a.nuc) > 0) ? true : false;
   }
@@ -58,7 +60,8 @@ int check_allele_exists(std::string n, std::vector<allele> ad){
 std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities){
   std::vector<allele> ad;
   std::string indel;
-  int i = 0, n =0, j = 0;
+  int i = 0, n =0, j = 0, q_ind = 0;
+  uint8_t q;
   while (i < bases.length()){
     if(bases[i] == '^'){
       i += 2;			// Skip mapping quality as well (i+1) - 33
@@ -71,6 +74,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     std::string b;
     allele tmp;
     bool forward= true;
+    q = qualities[q_ind] - 33;
     switch(bases[i]){
     case '.':
       b = ref;
@@ -110,17 +114,20 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     if (ind==-1){
       tmp.nuc = b;
       tmp.depth = 1;
+      tmp.mean_qual = q;
       if(!forward)
 	tmp.reverse = 1;
       else
 	tmp.reverse = 0;
       ad.push_back(tmp);
     } else {
+      ad.at(ind).mean_qual = ((ad.at(ind).mean_qual * ad.at(ind).depth) + q)/(ad.at(ind).depth + 1);
       ad.at(ind).depth += 1;
       if(!forward)
 	ad.at(ind).reverse += 1;
     }
     i++;
+    q_ind++;
   }
   std::sort(ad.begin(), ad.end());
   return ad;
@@ -130,7 +137,7 @@ int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
   std::ofstream fout(out_file+".tsv");
-  fout << "Position\tRef\tAlt\tTotal Depth\tAllele Depth\tReverse Reads Depth"<<std::endl;
+  fout << "Position\tRef\tAlt\tAllele Depth\tReverse Reads Depth\tTotal Depth\tMean Quality"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
   std::stringstream lineStream;
   char ref;
@@ -171,9 +178,10 @@ int main(int argc, char* argv[]) {
       fout << pos << "\t";
       fout << ref << "\t";
       fout << it->nuc << "\t";
-      fout << mdepth << "\t";
       fout << it->depth << "\t";
-      fout << it->reverse << std::endl;
+      fout << it->reverse << "\t";
+      fout << mdepth << "\t";
+      fout << (uint16_t)it->mean_qual << std::endl;
     }
     lineStream.clear();
   }
