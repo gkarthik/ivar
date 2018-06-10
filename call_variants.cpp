@@ -107,7 +107,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       n = stoi(bases.substr(i+2, j));
       indel = bases.substr(i+2+j, n);
       transform(indel.begin(), indel.end(), indel.begin(),::toupper);
-      b += indel;
+      b = bases[i+1] + b + indel;	// + for Insertion and - for Deletion
       i += n + 2;
     }
     int ind = check_allele_exists(b, ad);
@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
   std::ofstream fout(out_file+".tsv");
-  fout << "Position\tRef\tAlt\tAllele Depth\tReverse Reads Depth\tTotal Depth\tMean Quality"<<std::endl;
+  fout << "POSITION\tREF\tALT\tALLELE_DEPTH\tREVERSE_DEPTH\tDEPTH\tMEAN_QUAL"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
   std::stringstream lineStream;
   char ref;
