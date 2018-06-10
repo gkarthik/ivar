@@ -83,9 +83,18 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       b = ref;
       forward = false;
       break;
-    // case '*':
-    //   b = bases[i];
-    //   break;
+    case '+': case '-':
+      j = i+1;
+      while(isdigit(bases[j])){
+	j++;
+      }
+      j = j - (i+1);
+      n = stoi(bases.substr(i+1, j));
+      indel = bases.substr(i+1+j, n);
+      transform(indel.begin(), indel.end(), indel.begin(),::toupper);
+      b = bases[i] + indel;	// + for Insertion and - for Deletion
+      i += n + 1;
+      break;
     default:
       int asc_val = bases[i];
       if(asc_val >= 65 && asc_val <= 90){
@@ -97,18 +106,6 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	i++;
 	continue;
       }
-    }
-    if(bases[i+1]=='+' || bases[i+1]=='-'){		// Deletions are ignored since subsequent bases take care of bases
-      j = i+2;
-      while(isdigit(bases[j])){
-	j++;
-      }
-      j = j - (i+2);
-      n = stoi(bases.substr(i+2, j));
-      indel = bases.substr(i+2+j, n);
-      transform(indel.begin(), indel.end(), indel.begin(),::toupper);
-      b = bases[i+1] + b + indel;	// + for Insertion and - for Deletion
-      i += n + 2;
     }
     int ind = check_allele_exists(b, ad);
     if (ind==-1){
