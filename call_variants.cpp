@@ -83,6 +83,9 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       b = ref;
       forward = false;
       break;
+    case '*':
+      b = bases[i];
+      break;
     case '+': case '-':
       j = i+1;
       while(isdigit(bases[j])){
@@ -168,7 +171,7 @@ int main(int argc, char* argv[]) {
     }
     ad = update_allele_depth(ref, bases, qualities);
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-      if(it->nuc[0] == ref && it->nuc.length() == 1)
+      if((it->nuc[0] == ref && it->nuc.length() == 1) || it->nuc[0]=='*')
 	continue;
       fout << pos << "\t";
       fout << ref << "\t";
