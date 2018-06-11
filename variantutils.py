@@ -3,26 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.gridspec as gridspec
 
-def create_variant_dataframe(df):
-    # Make each variant a new row
-    d = {
-        "POS": [],
-        "REF": [],
-        "ALT": [],
-        "DP": [],
-        "AD": []
-    }
-    for _i, i in enumerate(df["ALT"].str.split(",")):
-        ref = df.ix[_i]["REF"]
-        d["ALT"].extend([j for j in i])
-        d["REF"].extend([ref] * len(i))
-        d["POS"].extend([df.ix[_i]["POS"]] * len(i))
-        ad = [int(j) for j in df.ix[_i]["SAMPLE"].split(":")[-1].split(",")]
-        d["AD"].extend(ad[1:])
-        dp = sum(ad)
-        d["DP"].extend([dp] * len(i))
-    return pd.DataFrame(d)
-
 def plot_variants_by_amplicon(vdfs, beds, filename, kind="scatter"):
     amplicon_uniq = beds[0]["Name"].apply(lambda x: "_".join(x.split("_")[:-1])).unique().tolist()
     d = int(np.round(len(amplicon_uniq)**0.5))
@@ -36,6 +16,8 @@ def plot_variants_by_amplicon(vdfs, beds, filename, kind="scatter"):
             coords = [_["Start"].values[0], _["End"].values[1]]
             vdf = vdf[(vdf["POS"]>=coords[0]) & (vdf["POS"]<=coords[1])]
             vdf["Percentage"] = (vdf["AD"]/vdf["DP"]) * 100
+            if vdf.empty:
+                continue
             if kind == "scatter":
                 vdf.plot(x="POS", y="Percentage", ls="None", marker="o", ax = ax, alpha = 0.2, ms = 2)
             else:

@@ -4,8 +4,6 @@ import pandas as pd
 from scipy.stats import fisher_exact as fe
 from statsmodels.sandbox.stats.multicomp import multipletests
 
-from variantutils import create_variant_dataframe, plot_variants_by_amplicon
-
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
 df_bed_paths = sys.argv[3:]
@@ -24,8 +22,7 @@ for i in bed_paths:
 
 vdfs = []
 for _i,i in enumerate(df_paths):
-    _ = pd.read_table(i, comment = "#", compression="gzip", names = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"])
-    _ = create_variant_dataframe(_[(_["ALT"] != ".") & (_["ALT"]!=_["REF"])].reset_index(drop=True))
+    _ = pd.read_table(i, names=["POS", "REF", "ALT", "AD", "REV", "DP", "QUAL"], skiprows = 1)
     vdfs.append(_)
 
 # Fisher's Exact Test

@@ -12,7 +12,7 @@ from matplotlib.colors import Normalize
 import matplotlib.lines as mlines
 from matplotlib.collections import LineCollection
 import argparse
-from variantutils import create_variant_dataframe, plot_variants_by_amplicon
+from variantutils import plot_variants_by_amplicon
 
 prefix = sys.argv[1]
 freq = float(sys.argv[2])
@@ -26,8 +26,7 @@ for i in bed_paths:
 
 vdfs = []
 for _i,i in enumerate(df_paths):
-    _ = pd.read_table(i, comment = "#", compression="gzip", names = ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT", "SAMPLE"])
-    _ = create_variant_dataframe(_[(_["ALT"] != ".") & (_["ALT"]!=_["REF"])].reset_index(drop=True))
+    _ = pd.read_table(i, names=["POS", "REF", "ALT", "AD", "REV", "DP", "QUAL"], skiprows = 1)
     vdfs.append(_)
 
 plot_variants_by_amplicon(vdfs, beds, prefix+"_variants_by_amplicon.png")
@@ -78,7 +77,7 @@ for _i, i in enumerate(cols):
 
 _ = df[df.columns[df.columns.str.contains("Percentage")]].max(axis = 1).index
 for j in range(0, len(_)):
-    ax1.text(df["POS"][_[j]], _[j], df["REF"][_[j]]+" -> "+df["ALT"][_[j]], ha="left", va="bottom", zorder = 3)
+    ax1.text(df["POS"][_[j]], _[j], str(df["REF"][_[j]])+" -> "+str(df["ALT"][_[j]]), ha="left", va="bottom", zorder = 3)
 
 ax1.axhline(threshold, color="red")
 ax1.set_ylim([-5, 105])
@@ -105,7 +104,7 @@ for _i, i in enumerate(pval_cols):
 
 _ = df[pval_cols].min(axis = 1).index
 for j in range(0, len(_)):
-    ax2.text(df["POS"][_[j]], _[j], -1 * df["REF"][_[j]]+" -> "+df["ALT"][_[j]], ha="left", va="bottom", zorder = 3)
+    ax2.text(df["POS"][_[j]], _[j], str(-1 * df["REF"][_[j]])+" -> "+str(df["ALT"][_[j]]), ha="left", va="bottom", zorder = 3)
 
 ax2.axhline(-1 * pval_threshold, color="red")
 ax2.set_ylim([-1.1, 0.1])

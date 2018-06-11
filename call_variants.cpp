@@ -102,9 +102,6 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       } else if(asc_val>=97 && asc_val<=122){
 	b = bases[i] - 32;
 	forward = false;
-      } else {
-	i++;
-	continue;
       }
     }
     int ind = check_allele_exists(b, ad);
@@ -124,7 +121,8 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	ad.at(ind).reverse += 1;
     }
     i++;
-    q_ind++;
+    if(b[0]!='+' && b[0]!='-')
+      q_ind++;
   }
   std::sort(ad.begin(), ad.end());
   return ad;
@@ -134,7 +132,7 @@ int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
   std::ofstream fout(out_file+".tsv");
-  fout << "POSITION\tREF\tALT\tALLELE_DEPTH\tREVERSE_DEPTH\tDEPTH\tMEAN_QUAL"<<std::endl;
+  fout << "POS\tREF\tALT\tAD\tRAD\tDP\tQUAL"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
   std::stringstream lineStream;
   char ref;
