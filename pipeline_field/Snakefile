@@ -66,7 +66,7 @@ rule get_masked:
 
 rule create_bed:
     input:
-        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.consensus.fa",
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.fa",
         "{csv}".format(csv = primer_csv)
     output:
         "{out_dir}/bed/{sample}{rep}.bed"
@@ -75,31 +75,34 @@ rule create_bed:
 
 rule call_variants:
     input:
-        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.bam",
-        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.consensus.fa"
+        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.sorted.bam",
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.fa"
     output:
         "{out_dir}/variants/{sample}{rep}.realigned.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "~/Documents/code/ivar/ivar.sh callvariants -r {input[1]} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.realigned -i {input}"
+        "~/Documents/code/ivar/ivar.sh callvariants -r {input[1]} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.trimmed.sorted -i {input}"
 
 rule align_to_consensus:
     input:
-        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.consensus.fa",
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.fa",
         expand("{in_dir}/{{sample}}{{rep}}_R{readno}.fastq.gz", readno = [1,2], in_dir = in_dir)
     output:
-        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.bam"
+        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.bam",
+        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.sorted.bam"
     shell:
-        "mkdir -p {wildcards.out_dir}/index/ $(dirname {output}) && "
+        "mkdir -p {wildcards.out_dir}/index/ $(dirname {output[0]}) && "
         "bwa index -p {wildcards.out_dir}/index/{wildcards.sample} {input[0]} && "
-        "bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb -o {output}"
+        "bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb -o {output[0]} &&"
+        "samtools sort -o {output[1]} {output[0]} && "
+        "samtools index {output[1]}"
 
 rule call_consensus:
     input:
         "{out_dir}/trimmed/{sample}.trimmed.sorted.bam",
         "{ref}".format(ref = ref)
     output:
-        "{out_dir}/consensus/{sample}.trimmed.sorted.consensus.fa"
+        "{out_dir}/consensus/{sample}.trimmed.sorted.fa"
     shell:
         "mkdir -p $(dirname {output})/ &&"
         "~/Documents/code/ivar/ivar.sh consensus -i {input[0]} -p {wildcards.out_dir}/consensus/{wildcards.sample}.trimmed.sorted -r {input[1]}"
