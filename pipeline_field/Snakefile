@@ -38,16 +38,16 @@ rule filter_variants:
 rule call_variants_post_removal:
     input:
         "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam",
-        "{ref}".format(ref = ref)
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.fa"
     output:
         "{out_dir}/variants/{sample}{rep}.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "~/Documents/code/ivar/ivar.sh callvariants -r {ref} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.filtered -i {input}"
+        "~/Documents/code/ivar/ivar.sh callvariants -r {input[1]} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.filtered -i {input[0]}"
 
 rule remove_reads:
     input:
-        "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam",
+        "{out_dir}/realigned/{sample}{rep}.realigned.trimmed.sorted.bam",
         "{out_dir}/{sample}{rep}_masked_primer_indices.txt"
     output:
         "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
@@ -75,13 +75,23 @@ rule create_bed:
 
 rule call_variants:
     input:
-        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.sorted.bam",
+        "{out_dir}/realigned/{sample}{rep}.realigned.trimmed.sorted.bam",
         "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.fa"
     output:
         "{out_dir}/variants/{sample}{rep}.realigned.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
         "~/Documents/code/ivar/ivar.sh callvariants -r {input[1]} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.realigned -i {input}"
+
+rule realigned_trim_primer_quality:
+    input:
+        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.sorted.bam",
+        "{out_dir}/bed/{sample}{rep}.bed"
+    output:
+        "{out_dir}/realigned/{sample}{rep}.realigned.trimmed.sorted.bam",
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "~/Documents/code/ivar/ivar.sh trim -b {input[1]} -p {wildcards.out_dir}/realigned/{wildcards.sample}{wildcards.rep}.realigned -i {input[0]}"
 
 rule align_to_consensus:
     input:
