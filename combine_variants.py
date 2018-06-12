@@ -129,12 +129,15 @@ for i in bed[bed["Strand"] == "+"].sort_values("Start").index:
     n = "_".join(bed.ix[i]["Name"].split("_")[:-1])
     y = not y
     _ = bed[bed["Name"].str.contains(n)]
-    f = [_[_["Strand"] == "+"]["Start"].values[0], _[_["Strand"] == "+"]["End"].values[0]]
-    r = [_[_["Strand"] == "-"]["Start"].values[0], _[_["Strand"] == "-"]["End"].values[0]]
-    c = "black"
-    ax4.plot([f[0], r[1]], [int(y),int(y)], color=c, lw = 2)
-    ax4.plot([f[0], f[1]], [int(y),int(y)], color="steelblue", lw = 4)
-    ax4.plot([r[0], r[1]], [int(y),int(y)], color="indianred", lw = 4)
+    if _.shape[0] == 1:         # To deal with trimmed off first primer
+        continue
+    else:
+        f = [_[_["Strand"] == "+"]["Start"].values[0], _[_["Strand"] == "+"]["End"].values[0]]
+        r = [_[_["Strand"] == "-"]["Start"].values[0], _[_["Strand"] == "-"]["End"].values[0]]
+        c = "black"
+        ax4.plot([f[0], r[1]], [int(y),int(y)], color=c, lw = 2)
+        ax4.plot([f[0], f[1]], [int(y),int(y)], color="steelblue", lw = 4)
+        ax4.plot([r[0], r[1]], [int(y),int(y)], color="indianred", lw = 4)
 
 ax4.yaxis.set_visible(False)
 ax4.spines['top'].set_visible(False)

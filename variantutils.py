@@ -13,8 +13,14 @@ def plot_variants_by_amplicon(vdfs, beds, filename, kind="scatter"):
         for _vdf, vdf in enumerate(vdfs):
             bed = beds[_vdf]
             _ = bed[bed["Name"].str.contains(i)].sort_values("Start")
-            coords = [_["Start"].values[0], _["End"].values[1]]
-            vdf = vdf[(vdf["POS"]>=coords[0]) & (vdf["POS"]<=coords[1])]
+            if _.shape[0] == 1:# To deal with trimmed off first and last primer.
+                if _["Strand"].values[0] == "+":
+                    vdf = vdf[vdf["POS"]>=_["Start"].values[0]]
+                else:
+                    vdf = vdf[vdf["POS"]<= _["End"].values[0]]
+            else:
+                coords = [_["Start"].values[0], _["End"].values[1]]
+                vdf = vdf[(vdf["POS"]>=coords[0]) & (vdf["POS"]<=coords[1])]
             vdf["Percentage"] = (vdf["AD"]/vdf["DP"]) * 100
             if vdf.empty:
                 continue
