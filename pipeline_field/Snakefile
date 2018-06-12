@@ -1,0 +1,129 @@
+from os import listdir
+from os.path import isfile, join
+
+in_dir = "/Users/karthik/hpc_downloads/2018.06.11"
+out_dir = "/Users/karthik/hpc_downloads/test_field"
+bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed" # Remove this and use primer_csv
+primer_csv = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.csv"
+ref="/Users/karthik/Documents/code/ivar/data/db/ZIKV_PRV.fasta"
+
+lst = listdir(in_dir)
+lst.sort()
+files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
+
+SAMPLES = []
+for i in files:
+    SAMPLES.append(i.split("_")[0])
+SAMPLES = list(set(SAMPLES))
+
+REPS=["_a","_b"]
+
+rule all:
+    input:
+        expand("{out_dir}/reports/{sample}_report.pdf", out_dir = out_dir, sample = SAMPLES),
+        expand("{out_dir}/reports/{sample}_variants_by_amplicon.png", out_dir = out_dir, sample = SAMPLES),
+        expand("{out_dir}/reports/{sample}_variants_by_amplicon_hist.png", out_dir = out_dir, sample = SAMPLES)
+
+rule filter_variants:
+    input:
+        expand("{out_dir}/variants/{{sample}}{rep}.filtered.tsv {out_dir}/bed/{{sample}}{rep}.bed".split(), out_dir=out_dir, rep=REPS)
+    output:
+        "{out_dir}/reports/{sample}_report.pdf",
+        "{out_dir}/reports/{sample}_variants_by_amplicon.png",
+        "{out_dir}/reports/{sample}_variants_by_amplicon_hist.png"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
+
+rule call_variants_post_removal:
+    input:
+        "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam",
+        "{ref}".format(ref = ref)
+    output:
+        "{out_dir}/variants/{sample}{rep}.filtered.tsv"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "~/Documents/code/ivar/ivar.sh callvariants -r {ref} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.filtered -i {input}"
+
+rule remove_reads:
+    input:
+        "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam",
+        "{out_dir}/{sample}{rep}_masked_primer_indices.txt"
+    output:
+        "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "primers=$(cat {input[1]}) &&"
+        "~/Documents/code/ivar/ivar.sh removereads -i {input[0]} -p {wildcards.out_dir}/filtered/{wildcards.sample}{wildcards.rep} $primers"
+
+rule get_masked:
+    input:
+        expand("{out_dir}/variants/{{sample}}{rep}.realigned.tsv {out_dir}/bed/{{sample}}{rep}.bed".split(), out_dir=out_dir, rep=REPS)
+    output:
+        expand("{{out_dir}}/{{sample}}{rep}_masked_primer_indices.txt", rep=REPS)
+    shell:
+        "~/Documents/code/ivar/ivar.sh getmasked -f 1 -p {wildcards.out_dir}/ {input}"
+
+rule create_bed:
+    input:
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.consensus.fa",
+        "{csv}".format(csv = primer_csv)
+    output:
+        "{out_dir}/bed/{sample}{rep}.bed"
+    shell:
+        "~/Documents/code/ivar/ivar.sh createbed -r {input[0]} -c {input[1]} -p {wildcards.out_dir}/bed/{wildcards.sample}{wildcards.rep}"
+
+rule call_variants:
+    input:
+        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.bam",
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.consensus.fa"
+    output:
+        "{out_dir}/variants/{sample}{rep}.realigned.tsv"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "~/Documents/code/ivar/ivar.sh callvariants -r {input[1]} -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.realigned -i {input}"
+
+rule align_to_consensus:
+    input:
+        "{out_dir}/consensus/{sample}{rep}.trimmed.sorted.consensus.fa",
+        expand("{in_dir}/{{sample}}{{rep}}_R{readno}.fastq.gz", readno = [1,2], in_dir = in_dir)
+    output:
+        "{out_dir}/realigned/{sample}{rep}.trimmed.sorted.realigned.bam"
+    shell:
+        "mkdir -p {wildcards.out_dir}/index/ $(dirname {output}) && "
+        "bwa index -p {wildcards.out_dir}/index/{wildcards.sample} {input[0]} && "
+        "bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb -o {output}"
+
+rule call_consensus:
+    input:
+        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam",
+        "{ref}".format(ref = ref)
+    output:
+        "{out_dir}/consensus/{sample}.trimmed.sorted.consensus.fa"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "~/Documents/code/ivar/ivar.sh consensus -i {input[0]} -p {wildcards.out_dir}/consensus/{wildcards.sample}.trimmed.sorted -r {input[1]}"
+
+rule trim_primer_quality:
+    input:
+        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.sorted.bam",
+        "{b}".format(b = bed)
+    output:
+        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "~/Documents/code/ivar/ivar.sh trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input[0]}"
+
+rule align_reads:
+    input:
+        "{in_dir}".format(in_dir = in_dir)+"/{sample}_R1.fastq.gz",
+        "{in_dir}".format(in_dir = in_dir)+"/{sample}_R2.fastq.gz",
+        "{ref}".format(ref = ref)
+    output:
+        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.bam",
+        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.sorted.bam"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb -o {output[0]} && "
+        "samtools sort -o {output[1]} {output[0]} && "
+        "samtools index {output[1]}"

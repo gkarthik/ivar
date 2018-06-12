@@ -2,7 +2,7 @@
 .DS_Store
 trim_primer_quality
 data/*
-pipeline/.snakemake/*
+**/.snakemake/*
 GPATH
 GRTAGS
 GTAGS
