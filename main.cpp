@@ -255,12 +255,13 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
 	cigar[j] = cigar[j+1];
       }
       n--;
+      i--;
       start_pos += len;
     }
     i++;
   }
   reverse_cigar(cigar, n);
-  i = 0, len = 0, start_pos = 0;
+  i = 0, len = 0;
   while(i < n){
     cig = bam_cigar_op(cigar[i]);
     len = bam_cigar_oplen(cigar[i]);
@@ -274,7 +275,8 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
 	cigar[j] = cigar[j+1];
       }
       n--;
-      start_pos += len;
+      i--;
+      // start_pos += len;
     }
     i++;
   }
