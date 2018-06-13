@@ -1,15 +1,16 @@
 from os import listdir
 from os.path import isfile, join
 
-in_dir = "/Users/karthik/hpc_downloads/2018.06.11"
+in_dir = "/Users/karthik/hpc_downloads/2018.06.12/field"
 out_dir = "/Users/karthik/hpc_downloads/test_field"
 bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed" # Remove this and use primer_csv
 primer_csv = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.csv"
 ref="/Users/karthik/Documents/code/ivar/data/db/ZIKV_PRV.fasta"
 
+# File name format - ZI26_a_R1.fastq.gz
 lst = listdir(in_dir)
 lst.sort()
-files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
+files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f and "28" in f]
 
 SAMPLES = []
 for i in files:

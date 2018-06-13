@@ -5,10 +5,15 @@ in_dir = "/Users/karthik/hpc_downloads/2018.04.18"
 out_dir = "/Users/karthik/hpc_downloads/test"
 bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed"
 
-files = [f for f in listdir(in_dir) if isfile(join(in_dir, f)) and ".bam" in f]
+# File name format - ZI26_a_R1.fastq.gz
+lst = listdir(in_dir)
+lst.sort()
+files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
+
 SAMPLES = []
 for i in files:
-    SAMPLES.append(i.split(".")[0][:-1])
+    SAMPLES.append(i.split("_")[0])
+SAMPLES = list(set(SAMPLES))
 
 REPS=["a","b"]
 
@@ -26,7 +31,7 @@ rule filter_variants:
         "{out_dir}/reports/{sample}_variants_by_amplicon.png",
         "{out_dir}/reports/{sample}_variants_by_amplicon_hist.png"
     shell:
-        "mkdir -p {wildcards.out_dir}/reports/ && "
+        "mkdir -p $(dirname {output})/ &&"
         "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
 
 rule call_variants_post_removal:
@@ -35,7 +40,7 @@ rule call_variants_post_removal:
     output:
         "{out_dir}/variants/{sample}{rep}.filtered.tsv"
     shell:
-        "mkdir -p {wildcards.out_dir}/variants/ && "
+        "mkdir -p $(dirname {output})/ &&"
         "~/Documents/code/ivar/ivar.sh callvariants -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.filtered -i {input}"
 
 rule remove_reads:
@@ -45,7 +50,7 @@ rule remove_reads:
     output:
         "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
     shell:
-        "mkdir -p {wildcards.out_dir}/filtered/ && "
+        "mkdir -p $(dirname {output})/ &&"
         "primers=$(cat {input[1]}) &&"
         "~/Documents/code/ivar/ivar.sh removereads -i {input[0]} -p {wildcards.out_dir}/filtered/{wildcards.sample}{wildcards.rep} $primers"
 
@@ -63,15 +68,29 @@ rule call_variants:
     output:
         "{out_dir}/variants/{sample}.tsv"
     shell:
-        "mkdir -p {wildcards.out_dir}/variants/ && "
+        "mkdir -p $(dirname {output})/ &&"
         "~/Documents/code/ivar/ivar.sh callvariants -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/variants/{wildcards.sample} -i {input}"
 
 rule trim_primer_quality:
     input:
-        "{in_dir}".format(in_dir = in_dir)+"/{sample}.sorted.bam",
+        "{out_dir}/aligned/{sample}.sorted.bam",
         "{b}".format(b = bed)
     output:
         "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
     shell:
         "mkdir -p {wildcards.out_dir}/trimmed/ && "
         "~/Documents/code/ivar/ivar.sh trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input[0]}"
+
+rule align_reads:
+    input:
+        "{in_dir}".format(in_dir = in_dir)+"/{sample}_R1.fastq.gz",
+        "{in_dir}".format(in_dir = in_dir)+"/{sample}_R2.fastq.gz",
+        "{ref}".format(ref = ref)
+    output:
+        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.bam",
+        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.sorted.bam"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb -o {output[0]} && "
+        "samtools sort -o {output[1]} {output[0]} && "
+        "samtools index {output[1]}"

@@ -131,7 +131,7 @@ for i in bed[bed["Strand"] == "+"].sort_values("Start").index:
     _ = bed[bed["Name"].str.contains(n)]
     if _.shape[0] == 1:         # To deal with trimmed off first primer
         continue
-    else:
+    else if _.shape[0] == 2:
         f = [_[_["Strand"] == "+"]["Start"].values[0], _[_["Strand"] == "+"]["End"].values[0]]
         r = [_[_["Strand"] == "-"]["Start"].values[0], _[_["Strand"] == "-"]["End"].values[0]]
         c = "black"
