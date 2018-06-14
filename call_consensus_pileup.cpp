@@ -6,14 +6,16 @@
 #include<string>
 #include<regex>
 
-struct allele{
-  std::string nuc;
-  uint32_t depth;
-  uint32_t reverse;
-  bool operator < (const allele& a) const{
-    return (nuc.compare(a.nuc) > 0) ? true : false;
-  }
-};
+#include "allele_functions.h"
+
+// struct allele{
+//   std::string nuc;
+//   uint32_t depth;
+//   uint32_t reverse;
+//   bool operator < (const allele& a) const{
+//     return (nuc.compare(a.nuc) > 0) ? true : false;
+//   }
+// };
 
 const char gap='N';
 
@@ -36,18 +38,29 @@ static inline char gt2iupac(char a, char b)
   return iupac[(int)a][(int)b];
 }
 
-void print_allele_depths(std::vector<allele> ad){
-  std::cout << "Print AD" << " ";
-  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-    std::cout << it->nuc << " ";
-    std::cout << it->depth << " ";
-    std::cout << it->reverse;
+void format_alleles(std::vector<allele> &ad, char ref){
+  std::vector<allele>::iterator it = ad.begin();
+  uint32_t rdepth = 0;
+  while(it < ad.end()){
+    if(it->nuc[0] == '-'){	// Remove deletions
+      it = ad.erase(it);
+    } else if (it->nuc[0] == '+'){
+      it->nuc[0] = ref;
+      rdepth += it->depth;
+    }
+    ++it;
   }
-  std::cout << std::endl;
+  int ref_ind = find_ref_in_allele(ad, ref);
+  std::cout << ref_ind << std::endl;
+  if(ref_ind!=-1)
+    ad.at(ref_ind).depth -= rdepth;
 }
 
-std::string get_consensus_allele(std::vector<allele> ad){
-  // print_allele_depths(ad);
+std::string get_consensus_allele(std::vector<allele> ad, char ref){
+  std::cout << "Consensus ";
+  print_allele_depths(ad);
+  format_alleles(ad, ref);
+  print_allele_depths(ad);
   if(ad.size()==0)
     return "";
   if(ad.size() == 1)
@@ -68,6 +81,10 @@ std::string get_consensus_allele(std::vector<allele> ad){
     std::vector<allele>::iterator it = ad.begin();
     gaps = 0;
     while(it!=ad.end()){
+      if(it->nuc[i]=='+'){
+	it++;
+	continue;
+      }
       if(!(i < it->nuc.length())){
 	gaps += it->depth;
 	it++;
@@ -86,98 +103,106 @@ std::string get_consensus_allele(std::vector<allele> ad){
       }
       it++;
     }
-    // std::cout << i <<": " << gaps << std::endl;
     if(n!='*' && mdepth >= gaps) // TODO: Check what to do when equal.
       cnuc += n;
   }
+  std::cout << " " << cnuc << std::endl;
   return cnuc;
 }
 
-int check_allele_exists(std::string n, std::vector<allele> ad){
-  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-    if(it->nuc.compare(n) == 0){
-      return it - ad.begin();
-    }
-  }
-  return -1;
-}
+// int check_allele_exists(std::string n, std::vector<allele> ad){
+//   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
+//     if(it->nuc.compare(n) == 0){
+//       return it - ad.begin();
+//     }
+//   }
+//   return -1;
+// }
 
-std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities){
-  std::vector<allele> ad;
-  std::string indel;
-  int i = 0, n =0, j = 0;
-  while (i < bases.length()){
-    if(bases[i] == '^'){
-      i += 2;			// Skip mapping quality as well (i+1) - 33
-      continue;
-    }
-    if(bases[i] == '$'){
-      i++;
-      continue;
-    }
-    std::string b;
-    allele tmp;
-    bool forward= true;
-    switch(bases[i]){
-    case '.':
-      b = ref;
-      break;
-    case ',':
-      b = ref;
-      forward = false;
-      break;
-    case '*':
-      b = bases[i];
-      break;
-    default:
-      int asc_val = bases[i];
-      if(asc_val >= 65 && asc_val <= 90){
-	b = bases[i];
-      } else if(asc_val>=97 && asc_val<=122){
-	b = bases[i] - 32;
-	forward = false;
-      } else {
-	i++;
-	continue;
-      }
-    }
-    if(bases[i+1]=='+' || bases[i+1]=='-'){		// Deletions are ignored since subsequent bases take care of bases
-      j = i+2;
-      while(isdigit(bases[j])){
-	j++;
-      }
-      j = j - (i+2);
-      n = stoi(bases.substr(i+2, j));
-      if(bases[i+1]== '+'){
-	indel = bases.substr(i+2+j, n);
-	transform(indel.begin(), indel.end(), indel.begin(),::toupper);
-	b += indel;
-      }
-      i += n + 2;
-    }
-    int ind = check_allele_exists(b, ad);
-    if (ind==-1){
-      tmp.nuc = b;
-      tmp.depth = 1;
-      if(!forward)
-	tmp.reverse = 1;
-      else
-	tmp.reverse = 0;
-      ad.push_back(tmp);
-    } else {
-      ad.at(ind).depth += 1;
-      if(!forward)
-	ad.at(ind).reverse += 1;
-    }
-    i++;
-  }
-  std::sort(ad.begin(), ad.end());
-  return ad;
-}
+// std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities){
+//   std::vector<allele> ad;
+//   std::string indel;
+//   int i = 0, n =0, j = 0;
+//   while (i < bases.length()){
+//     if(bases[i] == '^'){
+//       i += 2;			// Skip mapping quality as well (i+1) - 33
+//       continue;
+//     }
+//     if(bases[i] == '$'){
+//       i++;
+//       continue;
+//     }
+//     std::string b;
+//     allele tmp;
+//     bool forward= true;
+//     switch(bases[i]){
+//     case '.':
+//       b = ref;
+//       break;
+//     case ',':
+//       b = ref;
+//       forward = false;
+//       break;
+//     case '*':
+//       b = bases[i];
+//       break;
+//     default:
+//       int asc_val = bases[i];
+//       if(asc_val >= 65 && asc_val <= 90){
+// 	b = bases[i];
+//       } else if(asc_val>=97 && asc_val<=122){
+// 	b = bases[i] - 32;
+// 	forward = false;
+//       } else {
+// 	i++;
+// 	continue;
+//       }
+//     }
+//     if(bases[i+1]=='+' || bases[i+1]=='-'){		// Deletions are ignored since subsequent bases take care of bases
+//       j = i+2;
+//       while(isdigit(bases[j])){
+// 	j++;
+//       }
+//       j = j - (i+2);
+//       n = stoi(bases.substr(i+2, j));
+//       if(bases[i+1]== '+'){
+// 	indel = bases.substr(i+2+j, n);
+// 	transform(indel.begin(), indel.end(), indel.begin(),::toupper);
+// 	b += indel;
+//       }
+//       i += n + 2;
+//     }
+//     int ind = check_allele_exists(b, ad);
+//     if (ind==-1){
+//       tmp.nuc = b;
+//       tmp.depth = 1;
+//       if(!forward)
+// 	tmp.reverse = 1;
+//       else
+// 	tmp.reverse = 0;
+//       ad.push_back(tmp);
+//     } else {
+//       ad.at(ind).depth += 1;
+//       if(!forward)
+// 	ad.at(ind).reverse += 1;
+//     }
+//     i++;
+//   }
+//   std::sort(ad.begin(), ad.end());
+//   return ad;
+// }
 
 int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
+  uint8_t min_qual = 20;
+  uint32_t min_depth = 10;
+  if(argc > 1){
+    min_qual = atoi(argv[2]);
+  }
+  if(argc > 2){
+    min_depth = atoi(argv[3]);
+  }
   std::ofstream fout(out_file+".fa");
   fout << ">Consensus"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
@@ -213,9 +238,9 @@ int main(int argc, char* argv[]) {
       }
       ctr++;
     }
-    ad = update_allele_depth(ref, bases, qualities);
+    ad = update_allele_depth(ref, bases, qualities, min_qual);
     // print_allele_depths(ad);
-    fout << get_consensus_allele(ad);
+    fout << get_consensus_allele(ad, ref);
     // std::cout << std::endl << "Consensus: " << get_consensus_allele(ad) << std::endl;
     lineStream.clear();
   }
