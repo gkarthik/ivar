@@ -51,16 +51,12 @@ void format_alleles(std::vector<allele> &ad, char ref){
     ++it;
   }
   int ref_ind = find_ref_in_allele(ad, ref);
-  std::cout << ref_ind << std::endl;
   if(ref_ind!=-1)
     ad.at(ref_ind).depth -= rdepth;
 }
 
 std::string get_consensus_allele(std::vector<allele> ad, char ref){
-  std::cout << "Consensus ";
-  print_allele_depths(ad);
   format_alleles(ad, ref);
-  print_allele_depths(ad);
   if(ad.size()==0)
     return "";
   if(ad.size() == 1)
@@ -91,7 +87,7 @@ std::string get_consensus_allele(std::vector<allele> ad, char ref){
 	continue;
       }
       tdepth = it->depth;
-      while(it!=ad.end() -1 && it->nuc[i] == (it+1)->nuc[i] && (i+1) < (it+1)->nuc.length()){ // Third condition for cases with more than 1 base in insertion.
+      while(it!=ad.end() -1 && it->nuc[i] == (it+1)->nuc[i] && (i+1) < (it+1)->nuc.length()){ // Third condition for cases with more than 1 base in insertion
 	tdepth += (it+1)->depth;
 	it++;
       }
@@ -106,7 +102,6 @@ std::string get_consensus_allele(std::vector<allele> ad, char ref){
     if(n!='*' && mdepth >= gaps) // TODO: Check what to do when equal.
       cnuc += n;
   }
-  std::cout << " " << cnuc << std::endl;
   return cnuc;
 }
 
@@ -196,12 +191,8 @@ int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
   uint8_t min_qual = 20;
-  uint32_t min_depth = 10;
   if(argc > 1){
     min_qual = atoi(argv[2]);
-  }
-  if(argc > 2){
-    min_depth = atoi(argv[3]);
   }
   std::ofstream fout(out_file+".fa");
   fout << ">Consensus"<<std::endl;

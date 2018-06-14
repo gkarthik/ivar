@@ -139,6 +139,9 @@ int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
   uint8_t min_qual = 20;
+  if(argc > 2)
+    min_qual = atoi(argv[2]);
+  std::cout << "Min Qual: " << (uint16_t)min_qual << std::endl;
   std::ofstream fout(out_file+".tsv");
   fout << "POS\tREF\tALT\tAD\tRAD\tDP\tQUAL"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;

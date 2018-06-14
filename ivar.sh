@@ -89,7 +89,7 @@ case "$cmd" in
 	samtools index ${p}.filtered.sorted.bam ${p}.filtered.sorted.bai
 	;;
     callvariants)
-	while getopts ":i:p:r:R:" o; do
+	while getopts ":i:p:r:R:q:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -103,6 +103,9 @@ case "$cmd" in
 		R)
 		    R=${OPTARG}
 		    ;;
+		q)
+		    q=${OPTARG}
+		    ;;
 		*)
 		    usage callvariants
 		    ;;
@@ -113,9 +116,9 @@ case "$cmd" in
 	    usage callvariants
 	fi
 	if [ -z "$R" ]; then
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p} ${q:-20}
 	else
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p} ${q:-20}
 	fi
 	;;
     filtervariants)
@@ -159,7 +162,7 @@ case "$cmd" in
 	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} "$@"
 	;;
     consensus)
-	while getopts ":i:p:r:R:" o; do
+	while getopts ":i:p:r:R:q:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
@@ -173,6 +176,9 @@ case "$cmd" in
 		R)
 		    R=${OPTARG}
 		    ;;
+		q)
+		    q=${OPTARG}
+		    ;;
 		*)
 		    usage consensus
 		    ;;
@@ -183,9 +189,9 @@ case "$cmd" in
 	    usage consensus
 	fi
 	if [ -z "$R" ]; then
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} 0 0
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${q:-20}
 	else
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} 0 0
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${q:-20}
 	fi
 	;;
     createbed)
