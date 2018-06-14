@@ -57,7 +57,7 @@ int check_allele_exists(std::string n, std::vector<allele> ad){
   return -1;
 }
 
-std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities){
+std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities, uint8_t min_qual){
   std::vector<allele> ad;
   std::string indel;
   int i = 0, n =0, j = 0, q_ind = 0;
@@ -108,23 +108,25 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       }
     }
     int ind = check_allele_exists(b, ad);
-    if (ind==-1){
-      tmp.nuc = b;
-      tmp.depth = 1;
-      tmp.mean_qual = q;
-      if(!forward)
-	tmp.reverse = 1;
-      else
-	tmp.reverse = 0;
-      ad.push_back(tmp);
-    } else {
-      ad.at(ind).mean_qual = ((ad.at(ind).mean_qual * ad.at(ind).depth) + q)/(ad.at(ind).depth + 1);
-      ad.at(ind).depth += 1;
-      if(!forward)
-	ad.at(ind).reverse += 1;
+    if(q >= min_qual){
+      if (ind==-1){
+	tmp.nuc = b;
+	tmp.depth = 1;
+	tmp.mean_qual = q;
+	if(!forward)
+	  tmp.reverse = 1;
+	else
+	  tmp.reverse = 0;
+	ad.push_back(tmp);
+      } else {
+	ad.at(ind).mean_qual = ((ad.at(ind).mean_qual * ad.at(ind).depth) + q)/(ad.at(ind).depth + 1);
+	ad.at(ind).depth += 1;
+	if(!forward)
+	  ad.at(ind).reverse += 1;
+      }
     }
     i++;
-    if(b[0]!='+' && b[0]!='-')
+    if(b[0] !='+' && b[0]!='-')
       q_ind++;
   }
   std::sort(ad.begin(), ad.end());
@@ -134,6 +136,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 int main(int argc, char* argv[]) {
   std::string line, cell;
   std::string out_file = argv[1];
+  uint8_t min_qual = 20;
   std::ofstream fout(out_file+".tsv");
   fout << "POS\tREF\tALT\tAD\tRAD\tDP\tQUAL"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
@@ -169,7 +172,7 @@ int main(int argc, char* argv[]) {
       }
       ctr++;
     }
-    ad = update_allele_depth(ref, bases, qualities);
+    ad = update_allele_depth(ref, bases, qualities, min_qual);
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((it->nuc[0] == ref && it->nuc.length() == 1) || it->nuc[0]=='*')
 	continue;
