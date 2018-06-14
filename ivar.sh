@@ -1,6 +1,7 @@
 #!/bin/bash
 
-usage_dir="/Users/karthik/Documents/code/ivar/usage"
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+usage_dir=$script_dir/usage
 
 usage() {
     exec 1>&2
@@ -58,7 +59,7 @@ case "$cmd" in
 	if [ -z "${i}" ] || [ -z "${p}" ] || [ -z "${b}" ]; then
 	    usage trim
 	fi
-	~/Documents/code/ivar/trim_primer_quality ${i} ${b} ${p}.trimmed.bam
+	$script_dir/trim_primer_quality ${i} ${b} ${p}.trimmed.bam
 	echo "Sorting"
 	samtools sort -o ${p}.trimmed.sorted.bam ${p}.trimmed.bam
 	echo "Indexing"
@@ -82,7 +83,7 @@ case "$cmd" in
 	if [ -z "${i}" ] || [ -z "${p}" ]; then
 	    usage removereads
 	fi
-	~/Documents/code/ivar/remove_reads_from_amplicon ${i} ${p}.filtered.bam "$@"
+	$script_dir/remove_reads_from_amplicon ${i} ${p}.filtered.bam "$@"
 	echo "Sorting"
 	samtools sort -o ${p}.filtered.sorted.bam ${p}.filtered.bam
 	echo "Indexing"
@@ -116,9 +117,9 @@ case "$cmd" in
 	    usage callvariants
 	fi
 	if [ -z "$R" ]; then
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p} ${q:-20}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | $script_dir/call_variants ${p} ${q:-20}
 	else
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_variants ${p} ${q:-20}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | $script_dir/call_variants ${p} ${q:-20}
 	fi
 	;;
     filtervariants)
@@ -139,7 +140,7 @@ case "$cmd" in
 	if [ -z "${p}" ] || [ -z "${f}" ]; then
 	    usage filtervariants
 	fi
-	~/Documents/code/ivar/combine_variants.py ${p} ${f} "$@"
+	$script_dir/combine_variants.py ${p} ${f} "$@"
 	;;
     getmasked)
 	while getopts ":p:f:" o; do
@@ -159,7 +160,7 @@ case "$cmd" in
 	if [ -z "${p}" ] || [ -z "${f}" ]; then
 	    usage getmasked
 	fi
-	~/Documents/code/ivar/get_masked_amplicons.py ${p} ${f} "$@"
+	$script_dir/get_masked_amplicons.py ${p} ${f} "$@"
 	;;
     consensus)
 	while getopts ":i:p:r:R:q:" o; do
@@ -189,9 +190,9 @@ case "$cmd" in
 	    usage consensus
 	fi
 	if [ -z "$R" ]; then
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${q:-20}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | $script_dir/call_consensus_pileup ${p} ${q:-20}
 	else
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | ~/Documents/code/ivar/call_consensus_pileup ${p} ${q:-20}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | $script_dir/call_consensus_pileup ${p} ${q:-20}
 	fi
 	;;
     createbed)
@@ -215,7 +216,7 @@ case "$cmd" in
 	if [ -z "${c}" ] || [ -z "${r}" ] || [ -z "${p}" ]; then
 	    usage createbed
 	fi
-	~/Documents/code/ivar/primer_bam_to_bed.sh $c $p $r
+	$script_dir/primer_bam_to_bed.sh $c $p $r
 	;;
     *)
 	usage
