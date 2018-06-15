@@ -163,13 +163,10 @@ case "$cmd" in
 	$script_dir/get_masked_amplicons.py ${p} ${f} "$@"
 	;;
     consensus)
-	while getopts ":i:p:r:R:q:" o; do
+	while getopts ":i:p:R:q:" o; do
 	    case "${o}" in
 		i)
 		    i=${OPTARG}
-		    ;;
-		r)
-		    r=${OPTARG}
 		    ;;
 		p)
 		    p=${OPTARG}
@@ -190,9 +187,9 @@ case "$cmd" in
 	    usage consensus
 	fi
 	if [ -z "$R" ]; then
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 --reference ${r} ${i} | $script_dir/call_consensus_pileup ${p} ${q:-20}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 ${i} | $script_dir/call_consensus_pileup ${p} ${q:-20}
 	else
-	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} --reference ${r} ${i} | $script_dir/call_consensus_pileup ${p} ${q:-20}
+	    samtools mpileup -A -B -Q 0 -d 300000 -pm 1 -F 0 -r ${R} ${i} | $script_dir/call_consensus_pileup ${p} ${q:-20}
 	fi
 	;;
     createbed)

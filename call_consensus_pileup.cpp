@@ -17,7 +17,7 @@
 //   }
 // };
 
-const char gap='N';
+const std::string gap="N";
 
 // From bcftools.h - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
 static inline char gt2iupac(char a, char b)
@@ -38,38 +38,40 @@ static inline char gt2iupac(char a, char b)
   return iupac[(int)a][(int)b];
 }
 
-void format_alleles(std::vector<allele> &ad, char ref){
+void format_alleles(std::vector<allele> &ad){
   std::vector<allele>::iterator it = ad.begin();
-  uint32_t rdepth = 0;
+  int prev_ind = 0;
   while(it < ad.end()){
     if(it->nuc[0] == '-'){	// Remove deletions
       it = ad.erase(it);
     } else if (it->nuc[0] == '+'){
-      it->nuc[0] = ref;
-      rdepth += it->depth;
+      it->nuc[0] = it->prev_base;
+      prev_ind = find_ref_in_allele(ad, it->prev_base);
+      if(prev_ind!=-1)
+	ad.at(prev_ind).depth -= it->depth;
     }
     ++it;
   }
-  int ref_ind = find_ref_in_allele(ad, ref);
-  if(ref_ind!=-1)
-    ad.at(ref_ind).depth -= rdepth;
 }
 
-std::string get_consensus_allele(std::vector<allele> ad, char ref){
-  format_alleles(ad, ref);
+std::string get_consensus_allele(std::vector<allele> ad){
   if(ad.size()==0)
-    return "";
+    return "N";
+  print_allele_depths(ad);
+  format_alleles(ad);
+  print_allele_depths(ad);
   if(ad.size() == 1)
     return (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
   std::string cnuc = "";
   char n;
   int max_l = 0, mdepth = 0, tdepth = 0;
   uint32_t gaps = 0;
-  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end()-1; ++it) {
+  for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     if(it->nuc.length() > max_l){
       max_l = it->nuc.length();
     }
   }
+  std::cout << max_l << std::endl;
   for (int i = 0; i < max_l; ++i){
     n = '*';
     mdepth = 0;
@@ -77,10 +79,6 @@ std::string get_consensus_allele(std::vector<allele> ad, char ref){
     std::vector<allele>::iterator it = ad.begin();
     gaps = 0;
     while(it!=ad.end()){
-      if(it->nuc[i]=='+'){
-	it++;
-	continue;
-      }
       if(!(i < it->nuc.length())){
 	gaps += it->depth;
 	it++;
@@ -102,6 +100,7 @@ std::string get_consensus_allele(std::vector<allele> ad, char ref){
     if(n!='*' && mdepth >= gaps) // TODO: Check what to do when equal.
       cnuc += n;
   }
+  std::cout << "Cns: " << cnuc << std::endl;
   return cnuc;
 }
 
@@ -231,7 +230,7 @@ int main(int argc, char* argv[]) {
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     // print_allele_depths(ad);
-    fout << get_consensus_allele(ad, ref);
+    fout << get_consensus_allele(ad);
     // std::cout << std::endl << "Consensus: " << get_consensus_allele(ad) << std::endl;
     lineStream.clear();
   }

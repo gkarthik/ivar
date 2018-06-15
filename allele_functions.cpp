@@ -6,11 +6,13 @@
 #include "allele_functions.h"
 
 void print_allele_depths(std::vector<allele> ad){
-  std::cout << "Print AD" << " ";
+  std::cout << "AD Size: " << ad.size() << " ";
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     std::cout << it->nuc << " ";
     std::cout << it->depth << " ";
-    std::cout << it->reverse;
+    std::cout << it->reverse << " ";
+    char o = (it->prev_base!=0) ? it->prev_base : '0';
+    std::cout << o  << "\t";
   }
   std::cout << std::endl;
 }
@@ -40,6 +42,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   std::string indel;
   int i = 0, n =0, j = 0, q_ind = 0;
   uint8_t q;
+  char prev_base;
   while (i < bases.length()){
     if(bases[i] == '^'){
       i += 2;			// Skip mapping quality as well (i+1) - 33
@@ -80,6 +83,8 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       transform(indel.begin(), indel.end(), indel.begin(),::toupper);
       b = bases[i] + indel;	// + for Insertion and - for Deletion
       i += n + 1;
+      if(indel[0]>=97 && indel[0] <= 122)
+	forward=false;
       break;
     default:
       int asc_val = bases[i];
@@ -93,6 +98,9 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     int ind = check_allele_exists(b, ad);
     if(q >= min_qual){
       if (ind==-1){
+	tmp.prev_base = 0;
+	if(b[0]=='+' || b[0]=='-')
+	  tmp.prev_base = prev_base;
 	tmp.nuc = b;
 	tmp.depth = 1;
 	tmp.mean_qual = q;
@@ -107,6 +115,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	if(!forward)
 	  ad.at(ind).reverse += 1;
       }
+      prev_base = b[0];
     }
     i++;
     if(b[0] !='+' && b[0]!='-')
