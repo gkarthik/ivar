@@ -48,6 +48,7 @@ static inline char gt2iupac(char a, char b)
 
 void get_consensus_indel(char **allele, maj m, char *&nuc){
   int max_len = 0, l = 0;
+  uint8_t q = 0;
   for (int k = 0; k <= m.n; ++k){
     if(strlen(allele[m.ind[k]]) > max_len)
       max_len = strlen(allele[m.ind[k]]);
@@ -76,7 +77,7 @@ void get_consensus_indel(char **allele, maj m, char *&nuc){
   nuc[l] = 0;
 }
 
-int main(int argc, char* argv[]) {
+int main_old(int argc, char* argv[]) {
   std::cout << "Path " << argv[1] <<std::endl;
   std::string bcf = std::string(argv[1]);
   std::string region_;

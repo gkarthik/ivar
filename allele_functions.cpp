@@ -124,3 +124,21 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   std::sort(ad.begin(), ad.end());
   return ad;
 }
+
+// From bcftools.h - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
+char gt2iupac(char a, char b){
+  static const char iupac[4][4] = { {'A','M','R','W'},{'M','C','S','Y'},{'R','S','G','K'},{'W','Y','K','T'} };
+  if ( a>='a' ) a -= 'a' - 'A';
+  if ( b>='a' ) b -= 'a' - 'A';
+  if ( a=='A' ) a = 0;
+  else if ( a=='C' ) a = 1;
+  else if ( a=='G' ) a = 2;
+  else if ( a=='T' ) a = 3;
+  else return 'N';
+  if ( b=='A' ) b = 0;
+  else if ( b=='C' ) b = 1;
+  else if ( b=='G' ) b = 2;
+  else if ( b=='T' ) b = 3;
+  else return 'N';
+  return iupac[(int)a][(int)b];
+}

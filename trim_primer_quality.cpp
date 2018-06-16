@@ -1,6 +1,5 @@
 #include "htslib/sam.h"
 #include "htslib/bgzf.h"
-#include "primer_bed.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -10,11 +9,8 @@
 #include <sstream>
 #include <cstring>
 
-struct cigar_ {
-  uint32_t *cigar;
-  uint32_t nlength;
-  int32_t start_pos;
-};
+#include "trim_primer_quality.h"
+#include "primer_bed.h"
 
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start){
   int cig;
@@ -208,8 +204,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   return t;
 }
 
-static void replace_cigar(bam1_t *b, int n, uint32_t *cigar)
-{
+void replace_cigar(bam1_t *b, int n, uint32_t *cigar){
   if (n != b->core.n_cigar) {
     int o = b->core.l_qname + b->core.n_cigar * 4;
     if (b->l_data + (n - b->core.n_cigar) * 4 > b->m_data) {
@@ -315,124 +310,231 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
       };
 }
 
-int main(int argc, char* argv[]) {
-  std::cout << "Path " << argv[1] <<std::endl;
-  std::string bam = std::string(argv[1]);
-  std::string region_;
-  std::string bed = std::string(argv[2]);
-  std::string bam_out = std::string(argv[3]);
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_){
   std::vector<primer> primers = populate_from_file(bed);
-  if(argc > 4) {
-    region_ = std::string(argv[4]);
+  if(bam.empty()){
+    std::cout << "Bam file in empty." << std::endl;
+    return -1;
   }
-  if(!bam.empty()) {
-    //open BAM for reading
-    samFile *in = hts_open(bam.c_str(), "r");
-    BGZF *out = bgzf_open(bam_out.c_str(), "w");
-    if(in == NULL) {
-      throw std::runtime_error("Unable to open BAM/SAM file.");
-    }
-    //Load the index
-    hts_idx_t *idx = sam_index_load(in, bam.c_str());
-    if(idx == NULL) {
-      throw std::runtime_error("Unable to open BAM/SAM index."); // Generate index
-    }
-    //Get the header
-    bam_hdr_t *header = sam_hdr_read(in);
-    bam_hdr_write(out, header);
-    if(header == NULL) {
-      sam_close(in);
-      throw std::runtime_error("Unable to open BAM header.");
-    }
-    if (region_.empty()){
-      std::cout << "Number of references: " << header->n_targets << std::endl;
-      for (int i = 0; i < header->n_targets; ++i){
-	std::cout << "Reference Name: " << header->target_name[i] << std::endl;
-	std::cout << "Reference Length: " << header->target_len[i] << std::endl;
-	if(i==0){
-	  region_.assign(header->target_name[i]);
-	}
-      }
-      std::cout << "Using Region: " << region_ << std::endl;
-    }
-    std::string hdr_text(header->text);
-    if (hdr_text.find(std::string("SO:coordinate"))) {
-      std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
-    } if(hdr_text.find(std::string("SO:queryname"))) {
-      std::cout << "Sorted By Query Name" << std::endl; // Sort by name
-    } else {
-      std::cout << "Not sorted" << std::endl;
-    }
-    //Initialize iterator
-    hts_itr_t *iter = NULL;
-    //Move the iterator to the region we are interested in
-    iter  = sam_itr_querys(idx, header, region_.c_str());
-    if(header == NULL || iter == NULL) {
-      sam_close(in);
-      throw std::runtime_error("Unable to iterate to region within BAM.");
-    }
-    //Initiate the alignment record
-    bam1_t *aln = bam_init1();
-    int ctr = 0;
-    cigar_ t;
-    int16_t *p = (int16_t*)malloc(sizeof(int16_t));
-    while(sam_itr_next(in, iter, aln) >= 0) {
-      // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
-      // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
-      // std::cout << "Query Start: " << get_query_start(aln) << std::endl;
-      // std::cout << "Query End: " << get_query_end(aln) << std::endl;
-      *p = get_overlapping_primer_indice(aln, primers);
-      if(*p == -1)
-	continue;
-      if(bam_is_rev(aln)){
-	t = primer_trim(aln, primers[*p].get_start() - 1);
-      } else {
-	t = primer_trim(aln, primers[*p].get_end() + 1);
-	aln->core.pos = primers[*p].get_end() + 1;
-      }
-      // std::cout << *p << std::endl;
-      replace_cigar(aln, t.nlength, t.cigar);
-      // Quality Trimming
-      t = quality_trim(aln);
-      if(bam_is_rev(aln))
-	aln->core.pos = t.start_pos;
-      // std::cout << "Old: " << t.nlength << std::endl;
-      // print_cigar(t.cigar, t.nlength);
-      // std::cout << std::endl;
-      t = condense_cigar(t.cigar, t.nlength);
-      aln->core.pos += t.start_pos;
-      // std::cout << "New: " << t.nlength << std::endl;
-      // print_cigar(t.cigar, t.nlength);
-      // std::cout << std::endl;
-      replace_cigar(aln, t.nlength, t.cigar);
-      // std::cout << "Name: " << name  << std::endl;
-      // std::cout << "Seq: " << seq << "\tQual: " << qual;
-      // std::cout << std::endl;
-      // if (strcmp(bam_get_qname(aln), "M01244:143:000000000-BHWC7:1:1104:13925:8758") == 0){
-      // 	std::cout << "Start Pos: " << aln->core.pos << std::endl;
-      // 	uint8_t *q = bam_get_qual(aln);
-      // 	for (int i = 0; i < aln->core.l_qseq -4; ++i){
-      // 	  std::cout << mean_quality(q, i, i+4) << " ";
-      // 	}
-      // 	std::cout << std::endl;
-      // }
-      int min_length = 30;
-      if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-	// bam1_t *b, const char tag[2], char type, int len, const uint8_t *data
-	bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
-	bam_write1(out, aln);
-      }
-      ctr++;
-      if(ctr % 100000 == 0){
-	std::cout << ctr << std::endl;
-      }
-    }
-    hts_itr_destroy(iter);
-    hts_idx_destroy(idx);
-    bam_destroy1(aln);
-    bam_hdr_destroy(header);
+  samFile *in = hts_open(bam.c_str(), "r");
+  BGZF *out = bgzf_open(bam_out.c_str(), "w");
+  if(in == NULL) {
+    std::cout << ("Unable to open BAM/SAM file.") << std::endl;
+    return -1;
+  }
+  //Load the index
+  hts_idx_t *idx = sam_index_load(in, bam.c_str());
+  if(idx == NULL) {
+    std::cout << ("Unable to open BAM/SAM index.") << std::endl; // TODO: Generate index
+    return -1;
+  }
+  //Get the header
+  bam_hdr_t *header = sam_hdr_read(in);
+  if(header == NULL) {
     sam_close(in);
-    bgzf_close(out);
+    std::cout << "Unable to open BAM/SAM header." << std::endl;
   }
+  if(bam_hdr_write(out, header) < 0){
+    std::cout << "Unable to write BAM header to path." << std::endl;
+    sam_close(in);
+    return -1;
+  }
+  if (region_.empty()){
+    std::cout << "Number of references: " << header->n_targets << std::endl;
+    for (int i = 0; i < header->n_targets; ++i){
+      std::cout << "Reference Name: " << header->target_name[i] << std::endl;
+      std::cout << "Reference Length: " << header->target_len[i] << std::endl;
+      if(i==0){
+	region_.assign(header->target_name[i]);
+      }
+    }
+    std::cout << "Using Region: " << region_ << std::endl;
+  }
+  std::string hdr_text(header->text);
+  if (hdr_text.find(std::string("SO:coordinate"))) {
+    std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
+  } if(hdr_text.find(std::string("SO:queryname"))) {
+    std::cout << "Sorted By Query Name" << std::endl; // Sort by name
+  } else {
+    std::cout << "Not sorted" << std::endl;
+  }
+  //Initialize iterator
+  hts_itr_t *iter = NULL;
+  //Move the iterator to the region we are interested in
+  iter  = sam_itr_querys(idx, header, region_.c_str());
+  if(header == NULL || iter == NULL) {
+    sam_close(in);
+    std::cout << "Unable to iterate to region within BAM/SAM." << std::endl;
+    return -1;
+  }
+  //Initiate the alignment record
+  bam1_t *aln = bam_init1();
+  int ctr = 0;
+  cigar_ t;
+  int16_t *p = (int16_t*)malloc(sizeof(int16_t));
+  while(sam_itr_next(in, iter, aln) >= 0) {
+    *p = get_overlapping_primer_indice(aln, primers);
+    if(*p == -1)
+      continue;
+    if(bam_is_rev(aln)){
+      t = primer_trim(aln, primers[*p].get_start() - 1);
+    } else {
+      t = primer_trim(aln, primers[*p].get_end() + 1);
+      aln->core.pos = primers[*p].get_end() + 1;
+    }
+    replace_cigar(aln, t.nlength, t.cigar);
+    t = quality_trim(aln);	// Quality Trimming
+    if(bam_is_rev(aln))
+      aln->core.pos = t.start_pos;
+    t = condense_cigar(t.cigar, t.nlength);
+    aln->core.pos += t.start_pos;
+    replace_cigar(aln, t.nlength, t.cigar);
+    int min_length = 30;
+    if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
+      bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
+      if(bam_write1(out, aln) < 0){
+	std::cout << "Not able to write to BAM" << std::endl;
+	hts_itr_destroy(iter);
+	hts_idx_destroy(idx);
+	bam_destroy1(aln);
+	bam_hdr_destroy(header);
+	sam_close(in);
+	bgzf_close(out);
+	return -1;
+      };
+    }
+    ctr++;
+    if(ctr % 100000 == 0){
+      std::cout << "Processed " << ctr << "reads ... " << std::endl;
+    }
+  }
+  hts_itr_destroy(iter);
+  hts_idx_destroy(idx);
+  bam_destroy1(aln);
+  bam_hdr_destroy(header);
+  sam_close(in);
+  bgzf_close(out);
   return 0;
 }
+
+// int main_old(int argc, char* argv[]) {
+//   std::cout << "Path " << argv[1] <<std::endl;
+//   std::string bam = std::string(argv[1]);
+//   std::string region_;
+//   std::string bed = std::string(argv[2]);
+//   std::string bam_out = std::string(argv[3]);
+//   std::vector<primer> primers = populate_from_file(bed);
+//   if(argc > 4) {
+//     region_ = std::string(argv[4]);
+//   }
+//   if(!bam.empty()) {
+//     //open BAM for reading
+//     samFile *in = hts_open(bam.c_str(), "r");
+//     BGZF *out = bgzf_open(bam_out.c_str(), "w");
+//     if(in == NULL) {
+//       throw std::runtime_error("Unable to open BAM/SAM file.");
+//     }
+//     //Load the index
+//     hts_idx_t *idx = sam_index_load(in, bam.c_str());
+//     if(idx == NULL) {
+//       throw std::runtime_error("Unable to open BAM/SAM index."); // Generate index
+//     }
+//     //Get the header
+//     bam_hdr_t *header = sam_hdr_read(in);
+//     bam_hdr_write(out, header);
+//     if(header == NULL) {
+//       sam_close(in);
+//       throw std::runtime_error("Unable to open BAM header.");
+//     }
+//     if (region_.empty()){
+//       std::cout << "Number of references: " << header->n_targets << std::endl;
+//       for (int i = 0; i < header->n_targets; ++i){
+// 	std::cout << "Reference Name: " << header->target_name[i] << std::endl;
+// 	std::cout << "Reference Length: " << header->target_len[i] << std::endl;
+// 	if(i==0){
+// 	  region_.assign(header->target_name[i]);
+// 	}
+//       }
+//       std::cout << "Using Region: " << region_ << std::endl;
+//     }
+//     std::string hdr_text(header->text);
+//     if (hdr_text.find(std::string("SO:coordinate"))) {
+//       std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
+//     } if(hdr_text.find(std::string("SO:queryname"))) {
+//       std::cout << "Sorted By Query Name" << std::endl; // Sort by name
+//     } else {
+//       std::cout << "Not sorted" << std::endl;
+//     }
+//     //Initialize iterator
+//     hts_itr_t *iter = NULL;
+//     //Move the iterator to the region we are interested in
+//     iter  = sam_itr_querys(idx, header, region_.c_str());
+//     if(header == NULL || iter == NULL) {
+//       sam_close(in);
+//       throw std::runtime_error("Unable to iterate to region within BAM.");
+//     }
+//     //Initiate the alignment record
+//     bam1_t *aln = bam_init1();
+//     int ctr = 0;
+//     cigar_ t;
+//     int16_t *p = (int16_t*)malloc(sizeof(int16_t));
+//     while(sam_itr_next(in, iter, aln) >= 0) {
+//       // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
+//       // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
+//       // std::cout << "Query Start: " << get_query_start(aln) << std::endl;
+//       // std::cout << "Query End: " << get_query_end(aln) << std::endl;
+//       *p = get_overlapping_primer_indice(aln, primers);
+//       if(*p == -1)
+// 	continue;
+//       if(bam_is_rev(aln)){
+// 	t = primer_trim(aln, primers[*p].get_start() - 1);
+//       } else {
+// 	t = primer_trim(aln, primers[*p].get_end() + 1);
+// 	aln->core.pos = primers[*p].get_end() + 1;
+//       }
+//       // std::cout << *p << std::endl;
+//       replace_cigar(aln, t.nlength, t.cigar);
+//       // Quality Trimming
+//       t = quality_trim(aln);
+//       if(bam_is_rev(aln))
+// 	aln->core.pos = t.start_pos;
+//       // std::cout << "Old: " << t.nlength << std::endl;
+//       // print_cigar(t.cigar, t.nlength);
+//       // std::cout << std::endl;
+//       t = condense_cigar(t.cigar, t.nlength);
+//       aln->core.pos += t.start_pos;
+//       // std::cout << "New: " << t.nlength << std::endl;
+//       // print_cigar(t.cigar, t.nlength);
+//       // std::cout << std::endl;
+//       replace_cigar(aln, t.nlength, t.cigar);
+//       // std::cout << "Name: " << name  << std::endl;
+//       // std::cout << "Seq: " << seq << "\tQual: " << qual;
+//       // std::cout << std::endl;
+//       // if (strcmp(bam_get_qname(aln), "M01244:143:000000000-BHWC7:1:1104:13925:8758") == 0){
+//       // 	std::cout << "Start Pos: " << aln->core.pos << std::endl;
+//       // 	uint8_t *q = bam_get_qual(aln);
+//       // 	for (int i = 0; i < aln->core.l_qseq -4; ++i){
+//       // 	  std::cout << mean_quality(q, i, i+4) << " ";
+//       // 	}
+//       // 	std::cout << std::endl;
+//       // }
+//       int min_length = 30;
+//       if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
+// 	// bam1_t *b, const char tag[2], char type, int len, const uint8_t *data
+// 	bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
+// 	bam_write1(out, aln);
+//       }
+//       ctr++;
+//       if(ctr % 100000 == 0){
+// 	std::cout << ctr << std::endl;
+//       }
+//     }
+//     hts_itr_destroy(iter);
+//     hts_idx_destroy(idx);
+//     bam_destroy1(aln);
+//     bam_hdr_destroy(header);
+//     sam_close(in);
+//     bgzf_close(out);
+//   }
+//   return 0;
+// }
