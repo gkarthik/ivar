@@ -5,4 +5,5 @@ build:
 	# g++ -g -L/usr/local/lib/ -lhts call_consensus.cpp -lz -lpthread -o call_consensus
 	# g++ -g -L/usr/local/lib/ call_consensus_pileup.cpp allele_functions.cpp -lz -lpthread -o call_consensus_pileup
 	# g++ -g -L/usr/local/lib/ allele_functions.cpp call_variants.cpp -lz -lpthread -o call_variants
-	g++ -g -L/usr/local/lib/ ivar.cpp call_consensus_pileup.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp -lhts -lz -lpthread -o ivar
+	g++ -g alignment.cpp -o alignment
+	# g++ -g -L/usr/local/lib/ ivar.cpp call_consensus_pileup.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp -lhts -lz -lpthread -o ivar
