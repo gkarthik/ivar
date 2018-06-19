@@ -58,7 +58,7 @@ void print_variants_usage(){
 
 void print_consensus_usage(){
   std::cout <<
-    "Usage: samtools mpileup -A -d 300000 -A -Q 0 -F 0 -i [<input-bam>] | ivar consensus [-p prefix] \n\n"
+    "Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 [<input-bam>] | ivar consensus [-p prefix] \n\n"
     "Note : samtools mpileup output must be piped into `ivar consensus`\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality threshold to count base (Default: 20)\n"

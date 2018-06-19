@@ -30,20 +30,18 @@ std::string get_consensus_allele(std::vector<allele> ad){
   if(ad.size()==0)
     return "N";
   format_alleles(ad);
-  print_allele_depths(ad);
+  // print_allele_depths(ad);
   if(ad.size() == 1)
     return (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
   std::string cnuc = "";
   char n;
-  uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, prev_depth = 0;
-  int32_t gap_depth = 0;
+  uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, prev_depth = 0, gap_depth = 0;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     if(it->nuc.length() > max_l){
       max_l = it->nuc.length();
     }
   }
-  std::cout << max_l << std::endl;
-  for (int i = 0; i < max_l; ++i){
+  for (uint16_t i = 0; i < max_l; ++i){
     n = '*';
     max_depth = 0;
     tmp_depth = 0;
@@ -62,7 +60,7 @@ std::string get_consensus_allele(std::vector<allele> ad){
 	continue;
       }
       tmp_depth = it->depth;
-      while(it<=ad.end() -1 && it->nuc[i] == (it+1)->nuc[i]){ // Third condition for cases with more than 1 base in insertion  && (i+1) < (it+1)->nuc.length()
+      while(it!=ad.end()-1 && i < (it+1)->nuc.length() && it->nuc[i] == (it+1)->nuc[i]){ // Third condition for cases with more than 1 base in insertion  && (i+1) < (it+1)->nuc.length()
 	tmp_depth += (it+1)->depth;
 	it++;
       }
@@ -72,16 +70,13 @@ std::string get_consensus_allele(std::vector<allele> ad){
 	max_depth = tmp_depth;
       } else if(tmp_depth == max_depth){
 	n = gt2iupac(n, it->nuc[i]);
-	std::cout << "Nuc: " << n << std::endl;
       }
       it++;
     }
-    gap_depth = prev_depth - cur_depth;
-    std::cout << max_depth << " " << prev_depth << " " << cur_depth <<  " " << gap_depth << " " << std::endl;
-    if(n!='*' && max_depth >= gap_depth) // TODO: Check what to do when equal.
+    gap_depth = (prev_depth > cur_depth) ? prev_depth - cur_depth : 0;
+    if(n!='*' && max_depth >= gap_depth) // TODO: Check what to do when equal.{
       cnuc += n;
   }
-  std::cout << "Cns: " << cnuc << std::endl;
   return cnuc;
 }
 
@@ -122,7 +117,6 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       }
       ctr++;
     }
-    std::cout << pos << std::endl;
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     fout << get_consensus_allele(ad);
     lineStream.clear();

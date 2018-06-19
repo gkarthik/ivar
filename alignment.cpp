@@ -1,4 +1,5 @@
 #include<iostream>
+#include <algorithm>
 
 /* Substitution Matrix
 
@@ -177,6 +178,33 @@ int align_seqs(std::string read, std::string adap){
   }
   print_alignment(_align, _align_n);
   return 0;
+}
+
+std::string get_reverse_complement(std::string rev_read){
+  char t;
+  for(int i = 0;i< rev_read.length();i++){
+    switch(rev_read[i]){
+    case 'A':
+      t = 'T';
+      break;
+    case 'G':
+      t='C';
+      break;
+    case 'C':
+      t='G';
+      break;
+    case 'T':
+      t='A';
+      break;
+    }
+    rev_read[i] = t;
+  }
+  std::reverse(rev_read.begin(), rev_read.end());
+  return rev_read;
+}
+
+int find_adapters_contaminants(std::string f, std::string rev, std::string adp_cntms__file){
+  
 }
 
 int main(){
