@@ -11,6 +11,7 @@ void print_allele_depths(std::vector<allele> ad){
     std::cout << it->nuc << " ";
     std::cout << it->depth << " ";
     std::cout << it->reverse << " ";
+    std::cout << it->mean_qual << " ";
     char o = (it->prev_base!=0) ? it->prev_base : '0';
     std::cout << o  << "\t";
   }
