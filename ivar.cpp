@@ -76,9 +76,9 @@ void print_removereads_usage(){
     "           -p    (Required) Prefix, prefix for the filtered BAM file\n";
 }
 
-static const char *trim_opt_str = "i:b:p:Rqsh?";
-static const char *variants_opt_str = "p:r:qh?";
-static const char *consensus_opt_str = "p:qh?";
+static const char *trim_opt_str = "i:b:p:R::q::s::h?";
+static const char *variants_opt_str = "p:r:q::h?";
+static const char *consensus_opt_str = "p:q::h?";
 static const char *removereads_opt_str = "i:p:h?";
 
 int main(int argc, char* argv[]){
@@ -144,11 +144,11 @@ int main(int argc, char* argv[]){
 	break;
       case 'h':
       case '?':
-	print_trim_usage();
+	print_variants_usage();
 	return 0;
 	break;
       }
-      opt = getopt( argc, argv, trim_opt_str);
+      opt = getopt( argc, argv, variants_opt_str);
     }
     if(g_args.prefix.empty() || g_args.ref.empty()){
       print_variants_usage();
@@ -168,16 +168,17 @@ int main(int argc, char* argv[]){
 	break;
       case 'h':
       case '?':
-	print_trim_usage();
+	print_consensus_usage();
 	return 0;
 	break;
       }
-      opt = getopt( argc, argv, trim_opt_str);
+      opt = getopt( argc, argv, consensus_opt_str);
     }
     if(g_args.prefix.empty()){
       print_consensus_usage();
       return -1;
     }
+    std::cout <<"Min Quality" << g_args.min_qual << std::endl;
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
     res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual);
   } else if (cmd.compare("removereads") == 0){
@@ -196,7 +197,7 @@ int main(int argc, char* argv[]){
 	return 0;
 	break;
       }
-      opt = getopt( argc, argv, trim_opt_str);
+      opt = getopt( argc, argv, removereads_opt_str);
     }
     if(argc == 0){
       print_removereads_usage();

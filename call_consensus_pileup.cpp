@@ -16,12 +16,12 @@ void format_alleles(std::vector<allele> &ad){
   while(it < ad.end()){
     if(it->nuc[0] == '-'){	// Remove deletions
       it = ad.erase(it);
-    } else if (it->nuc[0] == '+'){
-      it->nuc[0] = it->prev_base;
-      prev_ind = find_ref_in_allele(ad, it->prev_base);
-      if(prev_ind!=-1)
-	ad.at(prev_ind).depth -= it->depth;
-    }
+    } // else if (it->nuc[0] == '+'){
+    //   it->nuc[0] = it->prev_base;
+    //   prev_ind = find_ref_in_allele(ad, it->prev_base);
+    //   if(prev_ind!=-1)
+    // 	ad.at(prev_ind).depth -= it->depth;
+    // }
     ++it;
   }
 }
@@ -29,15 +29,14 @@ void format_alleles(std::vector<allele> &ad){
 std::string get_consensus_allele(std::vector<allele> ad){
   if(ad.size()==0)
     return "N";
-  print_allele_depths(ad);
   format_alleles(ad);
   print_allele_depths(ad);
   if(ad.size() == 1)
     return (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
   std::string cnuc = "";
   char n;
-  int max_l = 0, mdepth = 0, tdepth = 0;
-  uint32_t gaps = 0;
+  uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, prev_depth = 0;
+  int32_t gap_depth = 0;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     if(it->nuc.length() > max_l){
       max_l = it->nuc.length();
@@ -46,30 +45,40 @@ std::string get_consensus_allele(std::vector<allele> ad){
   std::cout << max_l << std::endl;
   for (int i = 0; i < max_l; ++i){
     n = '*';
-    mdepth = 0;
-    tdepth = 0;
+    max_depth = 0;
+    tmp_depth = 0;
+    cur_depth = 0;
+    prev_depth = 0;
     std::vector<allele>::iterator it = ad.begin();
-    gaps = 0;
+    gap_depth = 0;
     while(it!=ad.end()){
       if(!(i < it->nuc.length())){
-	gaps += it->depth;
+	prev_depth += it->depth;
 	it++;
 	continue;
       }
-      tdepth = it->depth;
-      while(it!=ad.end() -1 && it->nuc[i] == (it+1)->nuc[i] && (i+1) < (it+1)->nuc.length()){ // Third condition for cases with more than 1 base in insertion
-	tdepth += (it+1)->depth;
+      if(it->nuc[i] == '+'){
+	it++;
+	continue;
+      }
+      tmp_depth = it->depth;
+      while(it<=ad.end() -1 && it->nuc[i] == (it+1)->nuc[i]){ // Third condition for cases with more than 1 base in insertion  && (i+1) < (it+1)->nuc.length()
+	tmp_depth += (it+1)->depth;
 	it++;
       }
-      if(tdepth > mdepth){
+      cur_depth += tmp_depth;
+      if(tmp_depth > max_depth){
 	n = it->nuc[i];
-	mdepth = tdepth;
-      } else if(tdepth == mdepth){
+	max_depth = tmp_depth;
+      } else if(tmp_depth == max_depth){
 	n = gt2iupac(n, it->nuc[i]);
+	std::cout << "Nuc: " << n << std::endl;
       }
       it++;
     }
-    if(n!='*' && mdepth >= gaps) // TODO: Check what to do when equal.
+    gap_depth = prev_depth - cur_depth;
+    std::cout << max_depth << " " << prev_depth << " " << cur_depth <<  " " << gap_depth << " " << std::endl;
+    if(n!='*' && max_depth >= gap_depth) // TODO: Check what to do when equal.
       cnuc += n;
   }
   std::cout << "Cns: " << cnuc << std::endl;
@@ -113,6 +122,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       }
       ctr++;
     }
+    std::cout << pos << std::endl;
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     fout << get_consensus_allele(ad);
     lineStream.clear();
