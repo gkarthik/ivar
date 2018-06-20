@@ -9,3 +9,4 @@ GTAGS
 *.pyc
 **/.dSYM/*
 .dSYM/*
+**/.deps/*
