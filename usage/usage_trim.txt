@@ -1,8 +1,0 @@
-Usage: ivar trim [-i input] [-b <bedfile>] [-p prefix]
-
-Input Options    Description
-           -i    Input, aligned bam file to trim primers and quality
-           -b    Bed File, Bed file with primer sequences and positions.
-
-Output Options   Description
-           -p    Prefix, prefix for the output file

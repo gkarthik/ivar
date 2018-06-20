@@ -7,3 +7,5 @@ GPATH
 GRTAGS
 GTAGS
 *.pyc
+**/.dSYM/*
+.dSYM/*

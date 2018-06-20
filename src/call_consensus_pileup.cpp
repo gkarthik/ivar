@@ -31,17 +31,17 @@ void format_alleles(std::vector<allele> &ad){
   }
 }
 
-ret_t get_consensus_allele(std::vector<allele> ad){
+ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
   ret_t t;
   t.nuc="N";
-  t.q = "33";
+  t.q = min_qual+33;
   if(ad.size()==0)
     return t;
   format_alleles(ad);
   // print_allele_depths(ad);
   if(ad.size() == 1){
     t.nuc = (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
-    t.q = (ad.at(0).nuc.compare("*") == 0) ? 33 : ad.at(0).mean_qual + 33;
+    t.q = (ad.at(0).nuc.compare("*") == 0) ? min_qual + 33 : ad.at(0).mean_qual + 33;
     return t;
   }
   std::string cnuc = "";
@@ -99,7 +99,7 @@ ret_t get_consensus_allele(std::vector<allele> ad){
       q+=33;
       t.q += q;
       for(int i = 0; i <(t.nuc.length() - t.q.length()); i++){
-	t.q+=" ";
+	t.q+=(min_qual+33);
       }
     }
   }
@@ -145,7 +145,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       ctr++;
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
-    ret_t t = get_consensus_allele(ad);
+    ret_t t = get_consensus_allele(ad, min_qual);
     fout << t.nuc;
     tmp_qout << t.q;
     lineStream.clear();

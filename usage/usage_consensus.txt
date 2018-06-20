@@ -1,1 +1,0 @@
-Usage: ivar consensus [-i <input-bam>] [-p prefix] [-R region] [-q min quality threshold (default 20)]
