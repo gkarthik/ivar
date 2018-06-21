@@ -25,6 +25,12 @@ make
 make install
 ```
 
+Also, please add the following to your .bashrc.
+
+```
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
+```
+
 If you're using autotools version < 1.16 or if you get a version error with the ./configure script, please run the following code to install.
 
 ```
