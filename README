@@ -1,1 +1,30 @@
 ## IVAR
+
+Dependencies:
+
+* [htslib](https://github.com/samtools/htslib)
+
+To install, run the following commands.
+
+```
+./configure
+make
+make install
+```
+
+If you're using autotools version < 1.16 or if you get a version error with the ./configure script, please run the following code to install.
+
+```
+./autogen.sh
+./configure
+make
+make install
+```
+
+If htslib has been installed in a non standard location, please run,
+
+```
+./configure --with-hts=/prefix/to/bin/folder/with/htslib
+make
+make install
+```
