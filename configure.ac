@@ -1,9 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.63])
 AC_INIT([ivar], [0.1.0], [gkarthik@scripps.edu])
-AC_CONFIG_SRCDIR([src/primer_bed.h])
+AC_CONFIG_SRCDIR([src/alignment.cpp])
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([foreign])
@@ -13,6 +13,22 @@ AC_PROG_AWK
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
+AC_PROG_CPP
+AC_PROG_MKDIR_P
+
+# introduce the optional configure parameter for a non-standard install prefix of XXX
+AC_ARG_WITH([hts],
+    [AS_HELP_STRING([--with-hts=prefix],
+        [use this to specify a non-standard install prefix of the htslib])],
+    [HTSPATHSET=1],
+    [HTSPATHSET=0])
+
+# if optional parameter used, extend path flags for compliler and linker
+if test $HTSPATHSET = 1 ; then
+    # extend the compiler and linker flags according to the path set
+    AM_CXXFLAGS="$AM_CXXFLAGS -I$with_HTS/include"
+    AM_LDFLAGS="$AM_LDFLAGS -L$with_HTS/lib"
+fi
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhts':
@@ -26,7 +42,7 @@ AC_CHECK_LIB([z], [main])
 AC_CHECK_HEADERS([unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
+AC_HEADER_STDBOOL
 AC_C_INLINE
 AC_TYPE_INT16_T
 AC_TYPE_INT32_T
