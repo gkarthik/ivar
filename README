@@ -1,8 +1,13 @@
-## IVAR
+IVAR
+----
 
-Dependencies:
+Dependencies
+------------
 
 * [htslib](https://github.com/samtools/htslib)
+
+Installation
+------------
 
 To install, run the following commands.
 
@@ -28,3 +33,5 @@ If htslib has been installed in a non standard location, please run,
 make
 make install
 ```
+
+For bug reports please email gkarthik[at]scripps.edu.
