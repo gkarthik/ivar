@@ -16,6 +16,8 @@ AC_PROG_INSTALL
 AC_PROG_CPP
 AC_PROG_MKDIR_P
 
+LIBS="-lhts -lp -lpthread"
+
 # introduce the optional configure parameter for a non-standard install prefix of XXX
 AC_ARG_WITH([hts],
     [AS_HELP_STRING([--with-hts=prefix],
@@ -26,9 +28,13 @@ AC_ARG_WITH([hts],
 # if optional parameter used, extend path flags for compliler and linker
 if test $HTSPATHSET = 1 ; then
     # extend the compiler and linker flags according to the path set
-    AM_CXXFLAGS="$AM_CXXFLAGS -I$with_HTS/include"
-    AM_LDFLAGS="$AM_LDFLAGS -L$with_HTS/lib"
+    AM_CPPLAGS="$AM_CPPFLAGS -I$with_hts/include"
+    AM_LDFLAGS="$AM_LDFLAGS -L$with_hts/lib"
 fi
+
+AC_SUBST([LIBS])
+AC_SUBST([AM_CPPFLAGS])
+AC_SUBST([AM_LDFLAGS])
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhts':
