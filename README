@@ -9,10 +9,18 @@ Dependencies
 Installation
 ------------
 
-To install, run the following commands.
+To install ivar, run the following commands.
 
 ```
 ./configure
+make
+make install
+```
+
+If htslib has been installed in a non standard location, please run,
+
+```
+./configure --with-hts=/prefix/to/bin/folder/with/htslib
 make
 make install
 ```
@@ -26,12 +34,16 @@ make
 make install
 ```
 
-If htslib has been installed in a non standard location, please run,
+To install autotools on OSX,
 
 ```
-./configure --with-hts=/prefix/to/bin/folder/with/htslib
-make
-make install
+brew install autotools
+```
+
+To install autotools using aptitude on Ubuntu,
+
+```
+apt-get install autoconf
 ```
 
 For bug reports please email gkarthik[at]scripps.edu.
