@@ -56,6 +56,13 @@ void print_variants_usage(){
     "           -p    (Required) Prefix, prefix for the output tsv file\n";
 }
 
+void print_filtervariants_usage(){
+  std::cout <<
+    "Usage: ivar filtervariants [-p prefix] replicate-one.tsv replicate-two.csv ... \n\n"
+    "Output Options   Description\n"
+    "           -p    (Required) Prefix, prefix for the filtered tsv file\n";
+}
+
 void print_consensus_usage(){
   std::cout <<
     "Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 [<input-bam>] | ivar consensus [-p prefix] \n\n"
@@ -65,7 +72,6 @@ void print_consensus_usage(){
     "Output Options   Description\n"
     "           -p    (Required) Prefix, prefix for the output tsv file\n";
 }
-
 
 void print_removereads_usage(){
   std::cout <<
@@ -80,6 +86,7 @@ static const char *trim_opt_str = "i:b:p:R::q::s::h?";
 static const char *variants_opt_str = "p:r:q::h?";
 static const char *consensus_opt_str = "p:q::h?";
 static const char *removereads_opt_str = "i:p:h?";
+static const char *filtervariants_opt_str = "p:h?";
 
 int main(int argc, char* argv[]){
   if(argc == 1){
@@ -199,12 +206,12 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, removereads_opt_str);
     }
-    if(argc == 0){
+    if(optind >= argc){
       print_removereads_usage();
       return -1;
     }
     uint16_t amp[100];
-    for(int i = 0; i<argc;i++){
+    for(int i = optind; i<argc;i++){
       amp[i] = atoi(argv[i]);
       std::cout << amp[i];
     }
@@ -212,8 +219,38 @@ int main(int argc, char* argv[]){
       print_removereads_usage();
       return -1;
     }
-    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, argc);
-  } else if(cmd.compare("help")){
+    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, argc - optind);
+  } else if(cmd.compare("filtervariants") == 0){
+    opt = getopt( argc, argv, filtervariants_opt_str);
+    while( opt != -1 ) {
+      switch( opt ) {
+      case 'p':
+	g_args.prefix = optarg;
+	break;
+      case 'h':
+      case '?':
+	print_filtervariants_usage();
+	return 0;
+	break;
+      }
+      opt = getopt( argc, argv, filtervariants_opt_str);
+    }
+    if(optind >= argc){
+      print_filtervariants_usage();
+      return -1;
+    }
+    if(g_args.prefix.empty()){
+      print_filtervariants_usage();
+      return -1;
+    }
+    std::string rep = "get_common_variants.sh ";
+    for(int i = optind; i<argc;i++){
+      rep += argv[i];
+      rep += " ";
+    }
+    rep += "> "+g_args.prefix+".tsv";
+    system(rep.c_str());
+  } else if(cmd.compare("help") == 0){
     print_usage();
   }
   return res;
