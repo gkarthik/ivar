@@ -18,9 +18,12 @@ awk '
     END {
         num_files = ARGC -1
 	printf "POS\tREF\tALT\t"
+	ORS="\t"
 	for(k in FILES){
-	      print "AD_" FILES[k] "\tRAD_" FILES[k] "\tDP_" FILES[k] "\tQUAL_" FILES[k] "\t"
+	      print "AD_" FILES[k] "\tRAD_" FILES[k] "\tDP_" FILES[k] "\tFREQ_" FILES[k] "\tQUAL_" FILES[k] "\tPVAL_" FILES[k] "\tPASS_" FILES[k]
 	}
+	ORS="\n"
+	printf "\n"
         for ( key in arr ) {
             if ( arr[key] < num_files ) { continue }
 	    printf "%s\t", line[FILES[1],key]

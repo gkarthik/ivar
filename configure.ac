@@ -3,10 +3,9 @@
 
 AC_PREREQ([2.63])
 AC_INIT([ivar], [0.1.0], [gkarthik@scripps.edu])
+AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_SRCDIR([src/alignment.cpp])
 AC_CONFIG_HEADERS([config.h])
-
-AM_INIT_AUTOMAKE([foreign])
 
 # Checks for programs.
 AC_PROG_AWK
@@ -28,13 +27,12 @@ AC_ARG_WITH([hts],
 # if optional parameter used, extend path flags for compliler and linker
 if test $HTSPATHSET = 1 ; then
     # extend the compiler and linker flags according to the path set
-    AM_CPPLAGS="$AM_CPPFLAGS -I$with_hts/include"
+    AM_CXXFLAGS="$AM_CXXFLAGS -I$with_hts/include"
     AM_LDFLAGS="$AM_LDFLAGS -L$with_hts/lib"
+    AC_SUBST([LIBS])
+    AC_SUBST([AM_CXXFLAGS])
+    AC_SUBST([AM_LDFLAGS])
 fi
-
-AC_SUBST([LIBS])
-AC_SUBST([AM_CPPFLAGS])
-AC_SUBST([AM_LDFLAGS])
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-lhts':
@@ -62,6 +60,5 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove])
 
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile scripts/Makefile])
 AC_OUTPUT

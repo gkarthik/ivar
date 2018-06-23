@@ -13,7 +13,8 @@ struct args_t {
   std::string ref;		// -r
   std::string region;		// -R
   uint8_t min_qual;		// -q
-  uint8_t sliding_window;
+  uint8_t sliding_window;	// -s
+  double min_threshold;	// -t
 } g_args;
 
 void print_usage(){
@@ -47,11 +48,12 @@ void print_trim_usage(){
 
 void print_variants_usage(){
   std::cout <<
-    "Usage: samtools mpileup -A -d 300000 -A -Q 0 -F 0 -i <input-bam> | ivar variants [-p prefix] [-r <reference-fasta>]\n\n"
+    "Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -Q 0 -F 0 -i <input-bam> | ivar variants [-p prefix]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
     "           -r    (Required) Reference fasta file\n"
     "           -q    Minimum quality threshold to count base (Default: 20)\n"
+    "           -t    Minimum Frequency Threshold(0 - 1) to call variants (Default: 0.03)."
     "Output Options   Description\n"
     "           -p    (Required) Prefix, prefix for the output tsv file\n";
 }
@@ -83,7 +85,7 @@ void print_removereads_usage(){
 }
 
 static const char *trim_opt_str = "i:b:p:R::q::s::h?";
-static const char *variants_opt_str = "p:r:q::h?";
+static const char *variants_opt_str = "p:t::q::h?";
 static const char *consensus_opt_str = "p:q::h?";
 static const char *removereads_opt_str = "i:p:h?";
 static const char *filtervariants_opt_str = "p:h?";
@@ -101,6 +103,7 @@ int main(int argc, char* argv[]){
   argc--;
   g_args.min_qual = 255;
   g_args.sliding_window = 255;
+  g_args.min_threshold = -1;
   if (cmd.compare("trim") == 0){
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
@@ -143,8 +146,8 @@ int main(int argc, char* argv[]){
       case 'p':
 	g_args.prefix = optarg;
 	break;
-      case 'r':
-	g_args.ref = optarg;
+      case 't':
+	g_args.min_threshold = atof(optarg);
 	break;
       case 'q':
 	g_args.min_qual = atoi(optarg);
@@ -157,12 +160,13 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, variants_opt_str);
     }
-    if(g_args.prefix.empty() || g_args.ref.empty()){
+    if(g_args.prefix.empty()){
       print_variants_usage();
       return -1;
     }
+    g_args.min_threshold = (g_args.min_threshold == -1 || g_args.min_threshold < 0 || g_args.min_threshold >= 1) ? 0.03: g_args.min_threshold;
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
-    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual);
+    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     while( opt != -1 ) {
@@ -250,7 +254,7 @@ int main(int argc, char* argv[]){
     }
     rep += "> "+g_args.prefix+".tsv";
     system(rep.c_str());
-  } else if(cmd.compare("help") == 0){
+  } else {
     print_usage();
   }
   return res;
