@@ -13,6 +13,9 @@ struct allele{
   bool operator < (const allele& a) const{
     return (nuc.compare(a.nuc) > 0) ? true : false;
   }
+  bool operator == (const allele& a) const{
+    return (nuc.compare(a.nuc) == 0) ? true : false;
+  }
 };
 
 int check_allele_exists(std::string n, std::vector<allele> ad);
