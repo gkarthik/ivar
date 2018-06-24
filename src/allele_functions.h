@@ -9,7 +9,6 @@ struct allele{
   uint32_t depth;
   uint32_t reverse;
   uint8_t mean_qual;
-  char prev_base;		/* To calculat depth of gaps for insertions */
   bool operator < (const allele& a) const{
     return (nuc.compare(a.nuc) > 0) ? true : false;
   }
