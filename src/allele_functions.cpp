@@ -88,8 +88,8 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       int asc_val = bases[i];
       if(asc_val >= 65 && asc_val <= 90){
 	b = bases[i];
-      } else if(asc_val>=97 && asc_val<=122){
-	b = bases[i] - 32;
+      } else if(bases[i]>=97 && bases[i]<=122){
+	b = bases[i] - ('a' - 'A');
 	forward = false;
       }
     }
@@ -119,20 +119,79 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   return ad;
 }
 
-// From bcftools.h - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
+int get_index(char a){
+  switch(a){
+  case'Y':
+    a = 0;
+    break;
+  case'R':
+    a = 1;
+    break;
+  case'W':
+    a = 2;
+    break;
+  case'S':
+    a = 3;
+    break;
+  case'K':
+    a = 4;
+    break;
+  case'M':
+    a = 5;
+    break;
+  case'A':
+    a = 6;
+    break;
+  case'T':
+    a = 7;
+    break;
+  case'G':
+    a = 8;
+    break;
+  case'C':
+    a = 9;
+    break;
+  default:
+    a = -1;
+  }
+  return (int) a;
+}
+
+// Modified gt2iupac from bcftools.h. Expanded iupac matrix to include all ambigious nucleotides(added Y, R, Q, S, K, M)  - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
+/*
+Expanded IUPAC matrix:
+
+Y N H B B H H Y B Y
+N R D V D V R D R V
+H D W N D H W W D H
+B V N S B V V B S S
+B D D B K N D K K B
+H V H V N M M H V M
+H R W V D M A W R M
+Y D W B K H W T K Y
+B R D S K V R K G S
+Y V H S B M M Y S C
+
+ */
 char gt2iupac(char a, char b){
-  static const char iupac[4][4] = { {'A','M','R','W'},{'M','C','S','Y'},{'R','S','G','K'},{'W','Y','K','T'} };
+  static const char iupac[10][10] = {
+    {'Y', 'N', 'H', 'B', 'B', 'H', 'H', 'Y', 'B', 'Y'},
+    {'N', 'R', 'D', 'V', 'D', 'V', 'R', 'D', 'R', 'V'},
+    {'H', 'D', 'W', 'N', 'D', 'H', 'W', 'W', 'D', 'H'},
+    {'B', 'V', 'N', 'S', 'B', 'V', 'V', 'B', 'S', 'S'},
+    {'B', 'D', 'D', 'B', 'K', 'N', 'D', 'K', 'K', 'B'},
+    {'H', 'V', 'H', 'V', 'N', 'M', 'M', 'H', 'V', 'M'},
+    {'H', 'R', 'W', 'V', 'D', 'M', 'A', 'W', 'R', 'M'},
+    {'Y', 'D', 'W', 'B', 'K', 'H', 'W', 'T', 'K', 'Y'},
+    {'B', 'R', 'D', 'S', 'K', 'V', 'R', 'K', 'G', 'S'},
+    {'Y', 'V', 'H', 'S', 'B', 'M', 'M', 'Y', 'S', 'C'}
+  };
   if ( a>='a' ) a -= 'a' - 'A';
   if ( b>='a' ) b -= 'a' - 'A';
-  if ( a=='A' ) a = 0;
-  else if ( a=='C' ) a = 1;
-  else if ( a=='G' ) a = 2;
-  else if ( a=='T' ) a = 3;
-  else return 'N';
-  if ( b=='A' ) b = 0;
-  else if ( b=='C' ) b = 1;
-  else if ( b=='G' ) b = 2;
-  else if ( b=='T' ) b = 3;
-  else return 'N';
-  return iupac[(int)a][(int)b];
+  int _a, _b;
+  _a = get_index(a);
+  _b = get_index(b);
+  if(a == -1 || b == -1)
+    return 'N';
+  return iupac[_a][_b];
 }

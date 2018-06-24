@@ -4,8 +4,13 @@
 #ifndef call_consensus_from_pileup
 #define call_consensus_from_pileup
 
+struct ret_t {
+  std::string nuc;
+  std::string q;
+};
+
 void format_alleles(std::vector<allele> &ad);
-std::string get_consensus_allele(std::vector<allele> ad, uint8_t min_qual);
 int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual);
+ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual);
 
 #endif

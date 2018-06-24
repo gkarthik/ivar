@@ -7,13 +7,9 @@
 #include<regex>
 
 #include "allele_functions.h"
+#include "call_consensus_pileup.h"
 
 const std::string gap="N";
-
-struct ret_t {
-  std::string nuc;
-  std::string q;
-};
 
 void format_alleles(std::vector<allele> &ad){
   std::vector<allele>::iterator it = ad.begin();
