@@ -151,40 +151,60 @@ int get_index(char a){
   case'C':
     a = 9;
     break;
+  case'D':
+    a = 10;
+    break;
+  case'V':
+    a = 11;
+    break;
+  case'H':
+    a = 12;
+    break;
+  case'B':
+    a = 13;
+    break;
   default:
     a = -1;
   }
   return (int) a;
 }
 
-// Modified gt2iupac from bcftools.h. Expanded iupac matrix to include all ambigious nucleotides(added Y, R, Q, S, K, M)  - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
+// Modified gt2iupac from bcftools.h. Expanded iupac matrix to include all ambigious nucleotides(added Y, R, W, S, K, M, A, T, G, C, D, V, H, B)  - https://github.com/samtools/bcftools/blob/b0376dff1ed70603c9490802f37883b9009215d2/bcftools.h#L48
 /*
 Expanded IUPAC matrix:
 
-Y N H B B H H Y B Y
-N R D V D V R D R V
-H D W N D H W W D H
-B V N S B V V B S S
-B D D B K N D K K B
-H V H V N M M H V M
-H R W V D M A W R M
-Y D W B K H W T K Y
-B R D S K V R K G S
-Y V H S B M M Y S C
+Y N H B B H H Y B Y N N H B
+N R D V D V R D R V D V N N
+H D W N D H W W D H D N H N
+B V N S B V V B S S N V N B
+B D D B K N D K K B D N N B
+H V H V N M M H V M N V H N
+H R W V D M A W R M D V H N
+Y D W B K H W T K Y D N H B
+B R D S K V R K G S D V N B
+Y V H S B M M Y S C N V H B
+N D D N D N D D D N D N N N
+N V N V N V V N V V N V N N
+H N H N N H H H N H N N H N
+B N N B B N N B B B N N N B
 
  */
 char gt2iupac(char a, char b){
-  static const char iupac[10][10] = {
-    {'Y', 'N', 'H', 'B', 'B', 'H', 'H', 'Y', 'B', 'Y'},
-    {'N', 'R', 'D', 'V', 'D', 'V', 'R', 'D', 'R', 'V'},
-    {'H', 'D', 'W', 'N', 'D', 'H', 'W', 'W', 'D', 'H'},
-    {'B', 'V', 'N', 'S', 'B', 'V', 'V', 'B', 'S', 'S'},
-    {'B', 'D', 'D', 'B', 'K', 'N', 'D', 'K', 'K', 'B'},
-    {'H', 'V', 'H', 'V', 'N', 'M', 'M', 'H', 'V', 'M'},
-    {'H', 'R', 'W', 'V', 'D', 'M', 'A', 'W', 'R', 'M'},
-    {'Y', 'D', 'W', 'B', 'K', 'H', 'W', 'T', 'K', 'Y'},
-    {'B', 'R', 'D', 'S', 'K', 'V', 'R', 'K', 'G', 'S'},
-    {'Y', 'V', 'H', 'S', 'B', 'M', 'M', 'Y', 'S', 'C'}
+  static const char iupac[14][14] = {
+    {'Y', 'N', 'H', 'B', 'B', 'H', 'H', 'Y', 'B', 'Y', 'N', 'N', 'H', 'B'},
+    {'N', 'R', 'D', 'V', 'D', 'V', 'R', 'D', 'R', 'V', 'D', 'V', 'N', 'N'},
+    {'H', 'D', 'W', 'N', 'D', 'H', 'W', 'W', 'D', 'H', 'D', 'N', 'H', 'N'},
+    {'B', 'V', 'N', 'S', 'B', 'V', 'V', 'B', 'S', 'S', 'N', 'V', 'N', 'B'},
+    {'B', 'D', 'D', 'B', 'K', 'N', 'D', 'K', 'K', 'B', 'D', 'N', 'N', 'B'},
+    {'H', 'V', 'H', 'V', 'N', 'M', 'M', 'H', 'V', 'M', 'N', 'V', 'H', 'N'},
+    {'H', 'R', 'W', 'V', 'D', 'M', 'A', 'W', 'R', 'M', 'D', 'V', 'H', 'N'},
+    {'Y', 'D', 'W', 'B', 'K', 'H', 'W', 'T', 'K', 'Y', 'D', 'N', 'H', 'B'},
+    {'B', 'R', 'D', 'S', 'K', 'V', 'R', 'K', 'G', 'S', 'D', 'V', 'N', 'B'},
+    {'Y', 'V', 'H', 'S', 'B', 'M', 'M', 'Y', 'S', 'C', 'N', 'V', 'H', 'B'},
+    {'N', 'D', 'D', 'N', 'D', 'N', 'D', 'D', 'D', 'N', 'D', 'N', 'N', 'N'},
+    {'N', 'V', 'N', 'V', 'N', 'V', 'V', 'N', 'V', 'V', 'N', 'V', 'N', 'N'},
+    {'H', 'N', 'H', 'N', 'N', 'H', 'H', 'H', 'N', 'H', 'N', 'N', 'H', 'N'},
+    {'B', 'N', 'N', 'B', 'B', 'N', 'N', 'B', 'B', 'B', 'N', 'N', 'N', 'B'}
   };
   if ( a>='a' ) a -= 'a' - 'A';
   if ( b>='a' ) b -= 'a' - 'A';
