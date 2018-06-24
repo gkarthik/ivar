@@ -43,7 +43,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
   std::string cnuc = "";
   char n;
   uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, prev_depth = 0, gap_depth = 0;
-  uint8_t q = 0, tq = 0;
+  uint8_t q = 0, tq = 0, ambg_n = 0, ctr = 0;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     if(it->nuc.length() > max_l){
       max_l = it->nuc.length();
@@ -59,6 +59,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
     tmp_depth = 0;
     cur_depth = 0;
     prev_depth = 0;
+    ambg_n = 0;
     std::vector<allele>::iterator it = ad.begin();
     gap_depth = 0;
     while(it!=ad.end()){
@@ -73,19 +74,23 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
       }
       tmp_depth = it->depth;
       tq = it->mean_qual;
+      ctr = 1;
       while(it!=ad.end()-1 && i < (it+1)->nuc.length() && it->nuc[i] == (it+1)->nuc[i]){ // Third condition for cases with more than 1 base in insertion  && (i+1) < (it+1)->nuc.length()
 	tmp_depth += (it+1)->depth;
-	tq += ((tq + it->mean_qual)/2);
+	tq += (((tq * (ctr)) + it->mean_qual)/(ctr + 1));
 	it++;
+	ctr++;
       }
       cur_depth += tmp_depth;
       if(tmp_depth > max_depth){
 	n = it->nuc[i];
 	max_depth = tmp_depth;
 	q = tq;
+	ambg_n = 0;
       } else if(tmp_depth == max_depth){
 	n = gt2iupac(n, it->nuc[i]);
-	q = (q + tq)/2;
+	q = ((q * ambg_n) + tq)/(ambg_n+1);
+	ambg_n += 1;
       }
       it++;
     }
@@ -93,9 +98,9 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
     if(n!='*' && max_depth >= gap_depth){ // TODO: Check what to do when equal.{
       t.nuc += n;
       q+=33;
-      t.q += q;
+      t.q = (char)q;
       for(int i = 0; i <(t.nuc.length() - t.q.length()); i++){
-	t.q+=(min_qual+33);
+	t.q+=(char)(min_qual+33);
       }
     }
   }
