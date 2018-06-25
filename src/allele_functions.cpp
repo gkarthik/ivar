@@ -6,14 +6,13 @@
 #include "allele_functions.h"
 
 void print_allele_depths(std::vector<allele> ad){
-  std::cout << "AD Size: " << ad.size() << " ";
+  std::cout << "AD Size: " << ad.size() << " " << std::endl;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     std::cout << it->nuc << " ";
     std::cout << it->depth << " ";
     std::cout << it->reverse << " ";
-    std::cout << (uint16_t) it->mean_qual << " ";
+    std::cout << (uint16_t) it->mean_qual << std::endl;
   }
-  std::cout << std::endl;
 }
 
 int check_allele_exists(std::string n, std::vector<allele> ad){
