@@ -74,8 +74,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       if((*it == *ref_it) || it->nuc[0]=='*')
 	continue;
       freq = it->depth/(double)mdepth;
-      // if(freq < min_threshold)
-      // 	continue;
+      if(freq < min_threshold)
+	continue;
       fout << region << "\t";
       fout << pos << "\t";
       fout << ref << "\t";

@@ -8,6 +8,7 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
   for (int i = 0; i < amp_n; ++i){
     std::cout << "Amplicon: " << amplicon[i] << " ";
   }
+  bam_out += ".bam";
   std::cout << std::endl;
   std::cout << bam_out << std::endl;
   if(bam.empty()){
