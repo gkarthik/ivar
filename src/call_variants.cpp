@@ -26,16 +26,14 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
 }
 
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
-  std::string line, cell;
+  std::string line, cell, bases, qualities, region;
   std::cout << "Min Qual: " << (uint16_t)min_qual << std::endl;
   std::ofstream fout(out_file+".tsv");
-  fout << "POS\tREF\tALT\tAD\tRAD\tDP\tFREQ\tQUAL\tPVAL\tPASS"<<std::endl;
+  fout << "REGION\tPOS\tREF\tALT\tAD\tRAD\tDP\tFREQ\tQUAL\tPVAL\tPASS"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
   double pval_left, pval_right, pval_twotailed, freq, err;
   std::stringstream lineStream;
   char ref;
-  std::string bases;
-  std::string qualities;
   std::vector<allele> ad;
   std::vector<allele>::iterator ref_it;
   while (std::getline(cin, line)){
@@ -44,6 +42,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     while(std::getline(lineStream,cell,'\t')){
       switch(ctr){
       case 0:
+	region = cell;
 	break;
       case 1:
 	pos = stoi(cell);
@@ -77,6 +76,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       freq = it->depth/(double)mdepth;
       // if(freq < min_threshold)
       // 	continue;
+      fout << region << "\t";
       fout << pos << "\t";
       fout << ref << "\t";
       fout << it->nuc << "\t";

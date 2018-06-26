@@ -8,16 +8,16 @@ awk '
 	FILES[length(FILES) +1] = FILENAME
     }
     {
-	if(arr[$1,$2,$3]){
-		arr[$1,$2,$3]++
+	if(arr[$1,$2,$3,$4]){
+		arr[$1,$2,$3,$4]++
 	} else {
-		arr[$1,$2,$3] = 1
+		arr[$1,$2,$3,$4] = 1
 	}
-	line[FILENAME,$1,$2,$3] = $0
+	line[FILENAME,$1,$2,$3,$4] = $0
     }
     END {
         num_files = ARGC -1
-	printf "POS\tREF\tALT\t"
+	printf "REGION\tPOS\tREF\tALT\t"
 	ORS="\t"
 	for(k in FILES){
 	      print "AD_" FILES[k] "\tRAD_" FILES[k] "\tDP_" FILES[k] "\tFREQ_" FILES[k] "\tQUAL_" FILES[k] "\tPVAL_" FILES[k] "\tPASS_" FILES[k]

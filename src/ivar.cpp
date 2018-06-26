@@ -5,6 +5,7 @@
 #include "call_consensus_pileup.h"
 #include "call_variants.h"
 #include "trim_primer_quality.h"
+#include "get_masked_amplicons.h"
 
 struct args_t {
   std::string bam;		// -i
@@ -84,11 +85,20 @@ void print_removereads_usage(){
     "           -p    (Required) Prefix, prefix for the filtered BAM file\n";
 }
 
+void print_getmasked_usage(){
+  std::cout <<
+    "Usage: ivar getmasked [-i <input-filtered-tsv>] [-b <bed-file>]\n\n"
+    "Input Options    Description\n"
+    "           -i    (Required) Input filtered variants tsv generated from `ivar filtervariants`\n"
+    "           -b    (Required) Bed file with primer indices\n";
+}
+
 static const char *trim_opt_str = "i:b:p:R::q::s::h?";
 static const char *variants_opt_str = "p:t::q::h?";
 static const char *consensus_opt_str = "p:q::h?";
 static const char *removereads_opt_str = "i:p:h?";
 static const char *filtervariants_opt_str = "p:h?";
+static const char *getmasked_opt_str = "i:b:h?";
 
 int main(int argc, char* argv[]){
   if(argc == 1){
@@ -254,6 +264,29 @@ int main(int argc, char* argv[]){
     }
     rep += "> "+g_args.prefix+".tsv";
     system(rep.c_str());
+  } else if(cmd.compare("getmasked") == 0){
+    opt = getopt( argc, argv, getmasked_opt_str);
+    while( opt != -1 ) {
+      switch( opt ) {
+      case 'i':
+	g_args.bam = optarg;
+	break;
+      case 'b':
+	g_args.bed = optarg;
+	break;
+      case 'h':
+      case '?':
+	print_getmasked_usage();
+	return 0;
+	break;
+      }
+      opt = getopt( argc, argv, getmasked_opt_str);
+    }
+    if(g_args.bed.empty() || g_args.bam.empty()){
+      print_getmasked_usage();
+      return -1;
+    }
+    res = get_primers_with_mismatches(g_args.bed, g_args.bam);
   } else {
     print_usage();
   }
