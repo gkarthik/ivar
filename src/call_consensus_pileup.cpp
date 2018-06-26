@@ -42,12 +42,15 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
   }
   std::string cnuc = "";
   char n;
-  uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, prev_depth = 0, gap_depth = 0;
-  uint8_t q = 0, tq = 0, ambg_n = 0, ctr = 0;
+  uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, total_max_depth = 0, gap_depth = 0;
+  uint8_t ambg_n = 0, ctr = 0;
+  double q = 0, tq = 0;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     if(it->nuc.length() > max_l){
       max_l = it->nuc.length();
     }
+    if(it->nuc.length() == 1)
+      total_max_depth += it->depth;
   }
   t.nuc = "";
   t.q = "";
@@ -58,17 +61,17 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
     max_depth = 0;
     tmp_depth = 0;
     cur_depth = 0;
-    prev_depth = 0;
-    ambg_n = 0;
+    // prev_depth = 0;
+    ambg_n = 1;
+    ctr = 1;
     std::vector<allele>::iterator it = ad.begin();
     gap_depth = 0;
     while(it!=ad.end()){
       if(!(i < it->nuc.length())){
-	prev_depth += it->depth;
 	it++;
 	continue;
       }
-      if(it->nuc[i] == '+'){
+      if(it->nuc[i] == '+' || it->nuc[i] == '-'){
 	it++;
 	continue;
       }
@@ -77,7 +80,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
       ctr = 1;
       while(it!=ad.end()-1 && i < (it+1)->nuc.length() && it->nuc[i] == (it+1)->nuc[i]){ // Third condition for cases with more than 1 base in insertion  && (i+1) < (it+1)->nuc.length()
 	tmp_depth += (it+1)->depth;
-	tq += (((tq * (ctr)) + it->mean_qual)/(ctr + 1));
+	tq = ((tq * (ctr)) + (it+1)->mean_qual)/(ctr + 1);
 	it++;
 	ctr++;
       }
@@ -86,7 +89,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
 	n = it->nuc[i];
 	max_depth = tmp_depth;
 	q = tq;
-	ambg_n = 0;
+	ambg_n = 1;
       } else if(tmp_depth == max_depth){
 	n = gt2iupac(n, it->nuc[i]);
 	q = ((q * ambg_n) + tq)/(ambg_n+1);
@@ -94,14 +97,11 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
       }
       it++;
     }
-    gap_depth = (prev_depth > cur_depth) ? prev_depth - cur_depth : 0;
+    gap_depth = (total_max_depth > cur_depth) ? total_max_depth - cur_depth : 0;
     if(n!='*' && max_depth >= gap_depth){ // TODO: Check what to do when equal.{
       t.nuc += n;
-      q+=33;
-      t.q = (char)q;
-      for(int i = 0; i <(t.nuc.length() - t.q.length()); i++){
-	t.q+=(char)(min_qual+33);
-      }
+      q += 0.5;
+      t.q += (((uint8_t)q)+33);
     }
   }
   return t;

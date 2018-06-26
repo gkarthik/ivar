@@ -3,22 +3,22 @@
 #include "../src/allele_functions.h"
 
 int main() {
-  int num_tests = 4;
+  int num_tests = 6;
   allele a1 = {
     "A",
-    30,
+    40,
     0,
     30
   };
   allele a2 = {
     "T",
-    30,
+    40,
     10,
     30
   };
   allele a3 = {
     "G",
-    30,
+    40,
     10,
     10
   };
@@ -56,15 +56,17 @@ int main() {
   }
   s = get_consensus_allele(ad, 0);
   std::cout << s.nuc << ": " << s.q << std::endl;
-  success += (s.nuc.compare("DW") == 0) ? 1: 0;
+  success += (s.nuc.compare("D") == 0) ? 1: 0;
+  success += (s.q.compare("8") == 0) ? 1 : 0;
   ad.push_back(a6);
   s = get_consensus_allele(ad, 0);
   std::cout << s.nuc << ": " << s.q << std::endl;
   success += (s.nuc.compare("DA") == 0) ? 1: 0;
-  success += ((int)s.q[0] == 35) ? 0 : -1;
+  success += (s.q.compare("8+") == 0) ? 1 : 0;
   ad.push_back(a7);
   s = get_consensus_allele(ad, 0);
   std::cout << s.nuc << ": " << s.q << std::endl;
   success += (s.nuc.compare("DAB") == 0) ? 1: 0;
+  success += (s.q.compare("8++") == 0) ? 1 : 0;
   return (success == num_tests) ? 0 : -1;
 }
