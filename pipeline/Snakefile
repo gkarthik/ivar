@@ -33,12 +33,13 @@ rule filter_variants:
 
 rule call_variants_post_removal:
     input:
-        "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
+        "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam",
+        "{ref}".format(ref=ref)
     output:
         "{out_dir}/masked_variants/{sample}_{rep}.masked.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 -i {input[0]} | ivar variants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}.masked -t 0.3"
+        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}_{wildcards.rep}.masked -t 0.03"
 
 rule remove_reads:
     input:
@@ -55,11 +56,12 @@ rule remove_reads:
 
 rule get_masked:
     input:
-        "{out_dir}/variants/{sample}.filtered.tsv"
+        "{out_dir}/variants/{sample}.filtered.tsv",
+        "{b}".format(b = bed)
     output:
         "{out_dir}/{sample}_masked_primer_indices.txt"
     shell:
-        "ivar getmasked -f 1 -p {wildcards.out_dir}/ {input} > {output}"
+        "ivar getmasked -i {input[0]} -b {input[1]} > {output}"
 
 rule filter_variants_before_masking:
     input:
@@ -68,7 +70,7 @@ rule filter_variants_before_masking:
         "{out_dir}/variants/{sample}.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar filtervariants -p {wildcards.out_dir}/reports/{wildcards.sample}.filtered {input}"
+        "ivar filtervariants -p {wildcards.out_dir}/variants/{wildcards.sample}.filtered {input}"
 
 rule call_variants:
     input:
@@ -78,17 +80,19 @@ rule call_variants:
         "{out_dir}/variants/{sample}.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 -i {input[0]} | ivar variants -p {wildcards.out_dir}/variants/{wildcards.sample} -t 0.3"
+        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {wildcards.out_dir}/variants/{wildcards.sample} -t 0.03"
 
 rule trim_primer_quality:
     input:
-        "{out_dir}/aligned/{sample}{rep}.sorted.bam",
+        "{out_dir}/aligned/{sample}.sorted.bam",
         "{b}".format(b = bed)
     output:
-        "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam"
+        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
     shell:
         "mkdir -p {wildcards.out_dir}/trimmed/ && "
-        "ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input[0]}"
+        "ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample}.trimmed -i {input[0]} &&"
+        "samtools sort -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}.trimmed.bam &&"
+        "samtools index {output}"
 
 rule align_reads:
     input:

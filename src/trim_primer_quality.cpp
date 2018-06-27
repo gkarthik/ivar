@@ -316,6 +316,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << "Bam file in empty." << std::endl;
     return -1;
   }
+  bam_out += ".bam";
   samFile *in = hts_open(bam.c_str(), "r");
   BGZF *out = bgzf_open(bam_out.c_str(), "w");
   if(in == NULL) {
