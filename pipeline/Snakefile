@@ -1,11 +1,12 @@
 from os import listdir
 from os.path import isfile, join
 
-in_dir = "/Users/karthik/hpc_downloads/2018.04.18"
+in_dir = "/Users/karthik/hpc_downloads/2018.06.26"
 out_dir = "/Users/karthik/hpc_downloads/test"
 bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed"
+ref="/Users/karthik/Documents/code/ivar/data/db/ZIKV_PRV.fasta"
 
-# File name format - ZI26_a_R1.fastq.gz
+# File name format - ZI26a_R1.fastq.gz
 lst = listdir(in_dir)
 lst.sort()
 files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
@@ -19,78 +20,83 @@ REPS=["a","b"]
 
 rule all:
     input:
-        expand("{out_dir}/reports/{sample}_report.pdf", out_dir = out_dir, sample = SAMPLES),
-        expand("{out_dir}/reports/{sample}_variants_by_amplicon.png", out_dir = out_dir, sample = SAMPLES),
-        expand("{out_dir}/reports/{sample}_variants_by_amplicon_hist.png", out_dir = out_dir, sample = SAMPLES)
+        expand("{out_dir}/masked_variants/{sample}.masked.filtered.tsv", out_dir = out_dir, sample = SAMPLES)
 
 rule filter_variants:
     input:
-        expand("{out_dir}/variants/{{sample}}{rep}.filtered.tsv {b}".split(), out_dir=out_dir, rep=REPS, b = bed)
+        expand("{out_dir}/masked_variants/{{sample}}_{rep}.masked.tsv", out_dir=out_dir, rep=REPS)
     output:
-        "{out_dir}/reports/{sample}_report.pdf",
-        "{out_dir}/reports/{sample}_variants_by_amplicon.png",
-        "{out_dir}/reports/{sample}_variants_by_amplicon_hist.png"
+        "{out_dir}/masked_variants/{sample}.masked.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "/Users/karthik/Documents/code/ivar/ivar.sh filtervariants -p {wildcards.out_dir}/reports/{wildcards.sample} -f 1 {input}"
+        "ivar filtervariants -p {wildcards.out_dir}/variants/{wildcards.sample}.masked.filtered {input}"
 
 rule call_variants_post_removal:
     input:
-        "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
+        "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
     output:
-        "{out_dir}/variants/{sample}{rep}.filtered.tsv"
+        "{out_dir}/masked_variants/{sample}_{rep}.masked.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "~/Documents/code/ivar/ivar.sh callvariants -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/variants/{wildcards.sample}{wildcards.rep}.filtered -i {input}"
+        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 -i {input[0]} | ivar variants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}.masked -t 0.3"
 
 rule remove_reads:
     input:
-        "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam",
-        "{out_dir}/{sample}{rep}_masked_primer_indices.txt"
+        "{out_dir}/trimmed/{sample}_{rep}.trimmed.sorted.bam",
+        "{out_dir}/{sample}_masked_primer_indices.txt"
     output:
-        "{out_dir}/filtered/{sample}{rep}.filtered.sorted.bam"
+        "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
     shell:
         "mkdir -p $(dirname {output})/ &&"
         "primers=$(cat {input[1]}) &&"
-        "~/Documents/code/ivar/ivar.sh removereads -i {input[0]} -p {wildcards.out_dir}/filtered/{wildcards.sample}{wildcards.rep} $primers"
+        "ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked $primers && "
+        "samtools sort -o {output} {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked.bam && "
+        "samtools index {output}"
 
 rule get_masked:
     input:
-        expand("{{out_dir}}/variants/{{sample}}{rep}.tsv {b}".split(), rep=REPS, b = bed)
+        "{out_dir}/variants/{sample}.filtered.tsv"
     output:
-        expand("{{out_dir}}/{{sample}}{rep}_masked_primer_indices.txt", rep=REPS)
+        "{out_dir}/{sample}_masked_primer_indices.txt"
     shell:
-        "~/Documents/code/ivar/ivar.sh getmasked -f 1 -p {wildcards.out_dir}/ {input}"
+        "ivar getmasked -f 1 -p {wildcards.out_dir}/ {input} > {output}"
+
+rule filter_variants_before_masking:
+    input:
+        expand("{{out_dir}}/variants/{{sample}}_{rep}.tsv", rep=REPS)
+    output:
+        "{out_dir}/variants/{sample}.filtered.tsv"
+    shell:
+        "mkdir -p $(dirname {output})/ &&"
+        "ivar filtervariants -p {wildcards.out_dir}/reports/{wildcards.sample}.filtered {input}"
 
 rule call_variants:
     input:
-        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
+        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam",
+        "{ref}".format(ref = ref)
     output:
         "{out_dir}/variants/{sample}.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "~/Documents/code/ivar/ivar.sh callvariants -r ~/Documents/code/ivar/data/db/ZIKV_PRV.fasta -p {wildcards.out_dir}/variants/{wildcards.sample} -i {input}"
+        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 -i {input[0]} | ivar variants -p {wildcards.out_dir}/variants/{wildcards.sample} -t 0.3"
 
 rule trim_primer_quality:
     input:
-        "{out_dir}/aligned/{sample}.sorted.bam",
+        "{out_dir}/aligned/{sample}{rep}.sorted.bam",
         "{b}".format(b = bed)
     output:
-        "{out_dir}/trimmed/{sample}.trimmed.sorted.bam"
+        "{out_dir}/trimmed/{sample}{rep}.trimmed.sorted.bam"
     shell:
         "mkdir -p {wildcards.out_dir}/trimmed/ && "
-        "~/Documents/code/ivar/ivar.sh trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input[0]}"
+        "ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample} -i {input[0]}"
 
 rule align_reads:
     input:
-        "{in_dir}".format(in_dir = in_dir)+"/{sample}_R1.fastq.gz",
-        "{in_dir}".format(in_dir = in_dir)+"/{sample}_R2.fastq.gz",
+        expand("{in_dir}/{{sample}}_R{num}.fastq.gz", in_dir = in_dir, num=[1,2]),
         "{ref}".format(ref = ref)
     output:
-        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.bam",
-        "{out_dir}".format(out_dir = out_dir)+"/aligned/{sample}.sorted.bam"
+        "{out_dir}/aligned/{sample}.sorted.bam"
     shell:
-        "mkdir -p $(dirname {output})/ &&"
-        "bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb -o {output[0]} && "
-        "samtools sort -o {output[1]} {output[0]} && "
-        "samtools index {output[1]}"
+        "mkdir -p $(dirname {output})/ && "
+        "bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -o {output} && "
+        "samtools index {output}"
