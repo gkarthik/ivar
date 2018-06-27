@@ -29,7 +29,7 @@ rule filter_variants:
         "{out_dir}/masked_variants/{sample}.masked.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar filtervariants -p {wildcards.out_dir}/variants/{wildcards.sample}.masked.filtered {input}"
+        "ivar filtervariants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}.masked.filtered {input}"
 
 rule call_variants_post_removal:
     input:
