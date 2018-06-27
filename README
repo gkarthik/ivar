@@ -1,6 +1,9 @@
 IVAR
 ----
 
+NOTE: Under active development. 
+To install run ./autogen.sh and then follow steps beneath. 
+
 Dependencies
 ------------
 
