@@ -1,27 +1,32 @@
 #include<iostream>
 #include <algorithm>
+#include<vector>
+#include<fstream>
+#include<ctime>
 
 /* Substitution Matrix
 
-   A  T  G  C
-A  1 -1 -1 -1
-T -1  1 -1 -1
-G -1 -1  1 -1
-C -1 -1 -1  1
-
+   A  T  G  C N
+A  1 -1 -1 -1 -1 
+T -1  1 -1 -1 -1
+G -1 -1  1 -1 -1
+C -1 -1 -1  1 -1
+N -1 -1 -1 -1  1
 */
 
-const int substitution[4][4] = {
-  {3,-3,-3,3},
-  {-3,3,-3,-3},
-  {-3,-3,3,-3},
-  {-3,-3,-3,3}
+
+const int substitution[5][5] = {
+  {1,-1,-1,-1, -1},
+  {-1,-1,-1,-1, -1},
+  {-1,-1,1,-1, -1},
+  {-1,-1,-1,1, -1},
+  {-1, -1, -1, -1, 1}
 };
 
 const int gap_open = 2;
 const int gap_extension = -1;
 const int max_read_size = 500;
-const int max_adapter_size = 30;
+const int max_adapter_size = 60;
 
 int get_sub_score(char a, char b){
   int i,j;
@@ -38,6 +43,9 @@ int get_sub_score(char a, char b){
   case 'C':
     i = 3;
     break;
+  case 'N':
+    i = 4;
+    break;
   }
   switch(b){
   case 'A':
@@ -51,6 +59,9 @@ int get_sub_score(char a, char b){
     break;
   case 'C':
     j = 3;
+    break;
+  case 'N':
+    i = 4;
     break;
   }
   return substitution[i][j];
@@ -104,7 +115,12 @@ int*  get_score_cell(int h[][max_adapter_size], int i, int j, std::string read, 
 }
 
 void print_alignment(char a[2][max_read_size], int n){
+  std::cout << "Alignment: " << std::endl << std::endl;
   for(int j =0;j<2;j++){
+    if(j == 0)
+      std::cout << "Read: ";
+    else if(j == 1)
+      std::cout << "Adap: ";
     for(int i = n -1; i >= 0;i--){
       std::cout << a[j][i] << " ";
     }
@@ -138,10 +154,13 @@ int align_seqs(std::string read, std::string adap){
       }
     }
   }
+  if(max_v <= adap.length() - get_gap_penalty(1))
+    return 0;
+  // std::cout << "Score: " << max_v << " ";
   // print_matrix(h, m, n, read, adap);
   // print_matrix(t, m, n, read, adap);
   // Traceback
-  int _t, _l, _d, _align_n = 0, end_i = max_i, end_j = max_j;
+  int _t, _l, _d, _align_n = 0;
   char _align[2][max_read_size];
   // 1 - Diag, 2->Right, 3->Down
   while(max_v != 0){
@@ -167,8 +186,8 @@ int align_seqs(std::string read, std::string adap){
     case 3:
       max_v = _t;
       max_i = max_i - 1;
-      _align[0][_align_n] = adap[max_i];
-      _align[1][_align_n] = '-';
+      _align[0][_align_n] = '-';
+      _align[1][_align_n] = adap[max_j];
       _align_n++;
       break;
     case 0:
@@ -176,7 +195,8 @@ int align_seqs(std::string read, std::string adap){
       break;
     }
   }
-  print_alignment(_align, _align_n);
+  // std::cout << max_i << "," <<max_j << std::endl;
+  // print_alignment(_align, _align_n);
   return 0;
 }
 
@@ -203,13 +223,55 @@ std::string get_reverse_complement(std::string rev_read){
   return rev_read;
 }
 
-int find_adapters_contaminants(std::string f, std::string rev, std::string adp_cntms__file){
-  
+std::vector<std::string> read_adapters_from_fasta(std::string p){
+  std::vector<std::string> adp;
+  std::ifstream fin(p);
+  std::string line;
+  while (std::getline(fin, line)){
+    if(line[0] == '>')
+      continue;
+    adp.push_back(line);
+  }
+  return adp;
 }
 
-int main(){
-  std::string read = "CAATGGTTTTGCTTTGGCCTGGTTGGCAATACGAGCGATGGCTGTTCCACGCACTGACAACATCACCTTGGCAATCCTAGCTGCTCTGACACCACTGGCCCGAGGCACACTGCTTGTAGCGTGGAGAGCAGGCCTTGCTACTTGTGGGGGGTTCATGCTCCTCTCTCTGAAGGGGAAAGGTAGTGTGAAGAAGAACCTACCATTTGTCATGGCCTTGGGACTAACCGCTGTGAGGCTGGTTGACCCCATC";
-  std::string adap = "GCACCTTG";
-  align_seqs(read, adap);
+int find_adapters_contaminants(std::istream &cin, std::string adp_cntms_file){
+  std::vector<std::string> adp = read_adapters_from_fasta(adp_cntms_file);
+  std::string line;
+  std::string bases;
+  std::string qual;
+  int ctr = 0;
+  while (std::getline(cin, line)){
+    if(ctr % 4000 == 0)
+      std::cout << "Processed " << (ctr/4) << " reads ..." << std::endl;
+    if(ctr % 2 == 0){
+      ctr++;
+      continue;
+    }
+    if((ctr+1) % 2 == 0 && (ctr + 1) % 4 == 0 ){
+      qual = line;
+      // std::cout << bases << std::endl;
+      // std::cout << qual << std::endl;
+      for(std::vector<std::string>::iterator it = adp.begin(); it != adp.end(); ++it) {
+	align_seqs(bases.substr(0, (*it).length()), *it);
+      }
+    } else {
+      bases = line;
+    }
+    ctr++;
+  }
+  return 0;
+}
+
+int main(int argc, char* argv[]){
+  std::string adp = "../data/adapters/NexteraPE-PE.fa";
+  clock_t begin = clock();
+  find_adapters_contaminants(std::cin, adp);
+  clock_t end = clock();
+  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  std::cout << "Time Taken: " << elapsed_secs << std::endl;
+  // std::string b = "CGTAAGTGACAACTTGTCCGCTCCCCCTTTGTTCTTGTCTCTAAATAATGTCCCTAACTGTTTTCCCTTTTTCTTCTTGTCTAAGGACCTTTTCCACTTTGTTTTTTTCTGTGTCCTTCATTTTTGCCATTTCCATTTCCCTTTTCCCTTTCTCCCTTTTTTTGTTTATTAGTGCTTCTTTCTCCATTTCAATCCTCCTCATTCTTCTTTCCCAGCCTTCTGTCTCTTCTTCATTCATCCTTCCTCCTTTT";
+  // std::string a = "TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG";
+  // align_seqs(b, a);
   return 0;
 }
