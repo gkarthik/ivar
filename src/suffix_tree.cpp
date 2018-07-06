@@ -123,13 +123,18 @@ suffix_node* build_suffix_tree(std::string s){
       suffix_length = (i + 1 - j) + 1;
       beg = j;
       // Go to suffix link by traversing at most 1 edge
+      std::cout << std::endl;
+      std::cout << "Previous Current Node: " << cur_node->get_path(s) << std::endl;
       if(cur_node->suffix_link == 0){ // Since root has a suffix link to itself
-	cur_node = cur_node->parent->suffix_link;
-      } else{
+	if(cur_node->parent->get_length() == 1)
+	  cur_node = root;	// Single character nodes assumed to have suffix link to root.
+	else
+	  cur_node = cur_node->parent->suffix_link;
+      } else {
 	cur_node = cur_node->suffix_link;
       }
-      std::cout << std::endl;
       std::cout << "To be inserted: " << s.substr(beg, suffix_length) << std::endl;
+      std::cout << "Current Node: " << cur_node->get_path(s) << std::endl;
       cur_node = cur_node->walk_path(beg, str_ind, suffix_length);
       // if(cur_node->begin!=-1)
       // 	end_length = suffix_length + (beg - cur_node->begin);
@@ -143,9 +148,9 @@ suffix_node* build_suffix_tree(std::string s){
 	  std::cout << "suffix_length: " << suffix_length << std::endl;
 	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
 	  cur_node->extend_path(i+1); // Speedup Trick 2
-	  if(new_node != 0)
-	    new_node->suffix_link = cur_node;
-	  new_node = 0;
+	  // if(new_node != 0)
+	  //   new_node->suffix_link = cur_node;
+	  // new_node = 0;
 	} else {		// Extension Rule 2
 	  std::cout << "Extension Rule 2" << std::endl;
 	  std::cout << "Beg: " << beg << std::endl;
@@ -162,9 +167,9 @@ suffix_node* build_suffix_tree(std::string s){
 	  std::cout << "Beg: " << beg << std::endl;
 	  std::cout << "suffix_length: " << suffix_length << std::endl;
 	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
-	  if(new_node != 0)
-	    new_node->suffix_link = cur_node;
-	  new_node = 0;
+	  // if(new_node != 0)
+	  //   new_node->suffix_link = cur_node;
+	  // new_node = 0;
 	} else{			// Rule 2
 	  std::cout << "Rule 2" << std::endl;
 	  std::cout << "Beg: " << beg << std::endl;
@@ -209,7 +214,7 @@ suffix_node* build_suffix_tree(std::string s){
 }
 
 int main(){
-  std::string s = "GATAGA-";
+  std::string s = "GATAGACA-";
   suffix_node* root = build_suffix_tree(s);
   std::cout << "Tree: " << std::endl;
   root->print(s);
