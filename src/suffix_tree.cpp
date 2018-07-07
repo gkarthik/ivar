@@ -25,8 +25,8 @@ public:
     return (nchildren == 0);
   }
 
-  bool contains_indice(int ind){
-    return (ind >= this->begin && ind <= this->end);
+  bool contains_child(int ext){
+    return !(this->children[ext] == 0);
   }
 
   int get_length(){
@@ -55,20 +55,36 @@ public:
     this->end = e;
   }
 
-  suffix_node* add_child(int ext, int b, int e, suffix_node* p, suffix_node* l){
-    suffix_node *n = new suffix_node(b, e, p, l);
+  suffix_node* add_child(int ext, int b, int e, suffix_node* l){
+    suffix_node *n = new suffix_node(b, e, this, l);
     this->children[ext] = n;
     this->nchildren++;
     return n;
   }
 
-  suffix_node* add_leaf(int ext_ind, int* str_ind, int beg){
+  void add_child(suffix_node* c, int ext){
+    this->children[ext] = c;
+    c->parent = this;
+    this->nchildren++;
+  }
+
+  suffix_node* get_child(int ext){
+    return this->children[ext];
+  }
+
+  suffix_node* add_internal_node(int ext_ind, int* str_ind, int beg){
     suffix_node *new_int_node;
     int ext = str_ind[ext_ind];
-    this->add_child(ext, ext_ind, ext_ind, this, 0);
-    this->add_child(str_ind[this->begin+beg], this->begin + beg, this->end, this, 0);
-    this->end = this->begin + beg - 1;
-    return this;
+    // Add new Internal Node
+    new_int_node = this->parent->add_child(str_ind[this->begin], this->begin, this->begin + beg - 1, 0);
+    //Add new node as child
+    new_int_node->add_child(ext, ext_ind, ext_ind, 0);
+    //Add older node as child
+    this->begin = this->begin+beg;
+    new_int_node->add_child(this, str_ind[this->begin]);
+    // this->add_child(str_ind[this->begin+beg], this->begin + beg, this->end, this, 0);
+    // this->end = this->begin + beg - 1;
+    return new_int_node;
   }
 
   void print(std::string s){
@@ -89,9 +105,7 @@ public:
   suffix_node* walk_path(int &beg, int* str_ind, int &s){
     suffix_node *node = this;
     while(s >= 0){
-      std::cout << "Walk Start: " << node->begin << " Length: " << node->get_length() << " Suffix:" << s << std::endl;
       if(node->get_length() < s){
-	std::cout << "Walk (Length < s): " << node->begin << std::endl;
 	if(node->children[str_ind[beg+node->get_length()]] == 0)
 	  break;
 	node = node->children[str_ind[beg+node->get_length()]];
@@ -115,16 +129,16 @@ suffix_node* build_suffix_tree(std::string s){
     str_ind[i] = alphabet.find(s[i]);
     n_str_ind++;
   }
-  root->add_child(str_ind[0], 0, 0, root, root);
+  root->add_child(str_ind[0], 0, 0, root);
   for(int i = 0; i < n_str_ind - 1;i++){
     ext = str_ind[i+1];		// Index in alphabet
     new_node = 0;
     for(int j = 0; j<=i+1;j++){
       suffix_length = (i + 1 - j) + 1;
       beg = j;
-      // Go to suffix link by traversing at most 1 edge
       std::cout << std::endl;
-      std::cout << "Previous Current Node: " << cur_node->get_path(s) << std::endl;
+      std::cout << "To be inserted: " << s.substr(beg, suffix_length) << std::endl;
+      // Go to suffix link by traversing at most 1 edge
       if(cur_node->suffix_link == 0){ // Since root has a suffix link to itself
 	if(cur_node->parent->get_length() == 1)
 	  cur_node = root;	// Single character nodes assumed to have suffix link to root.
@@ -133,13 +147,7 @@ suffix_node* build_suffix_tree(std::string s){
       } else {
 	cur_node = cur_node->suffix_link;
       }
-      std::cout << "To be inserted: " << s.substr(beg, suffix_length) << std::endl;
-      std::cout << "Current Node: " << cur_node->get_path(s) << std::endl;
       cur_node = cur_node->walk_path(beg, str_ind, suffix_length);
-      // if(cur_node->begin!=-1)
-      // 	end_length = suffix_length + (beg - cur_node->begin);
-      // else
-      // 	end_length = suffix_length;
       end_length = suffix_length;
       if(cur_node->get_length() < end_length){
 	if(cur_node->is_leaf_node()){	       // If its a leaf node Rule 1
@@ -156,7 +164,7 @@ suffix_node* build_suffix_tree(std::string s){
 	  std::cout << "Beg: " << beg << std::endl;
 	  std::cout << "suffix_length: " << suffix_length << std::endl;
 	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
-	  cur_node->add_child(ext, i+1, i+1, cur_node, 0);
+	  cur_node->add_child(ext, i+1, i+1, 0);
 	  if(new_node != 0)
 	    new_node->suffix_link = cur_node;
 	  new_node = cur_node;
@@ -167,6 +175,7 @@ suffix_node* build_suffix_tree(std::string s){
 	  std::cout << "Beg: " << beg << std::endl;
 	  std::cout << "suffix_length: " << suffix_length << std::endl;
 	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
+	  break;
 	  // if(new_node != 0)
 	  //   new_node->suffix_link = cur_node;
 	  // new_node = 0;
@@ -175,46 +184,24 @@ suffix_node* build_suffix_tree(std::string s){
 	  std::cout << "Beg: " << beg << std::endl;
 	  std::cout << "suffix_length: " << suffix_length << std::endl;
 	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
-	  cur_node->add_leaf(i+1, str_ind, suffix_length - 1);
+	  cur_node = cur_node->add_internal_node(i+1, str_ind, suffix_length - 1);
 	  if(new_node != 0)
 	    new_node->suffix_link = cur_node;
-	  new_node = cur_node;
+	  new_node = cur_node; // New Internal Created
+	  std::cout << "New Created Node: " << std::endl;
+	  cur_node->print(s);
+	  std::cout << std::endl;
 	}
       }
-      std::cout << "Tree: " << std::endl;
+      std::cout << "Tree:" << std::endl;
       root->print(s);
-      // if(cur_node->get_length() == suffix_length){ // Rule 1
-      // 	std::cout << "Rule 1" << std::endl;
-      // 	cur_node->extend_path(i+1);
-      // 	if(new_node != 0)
-      // 	  new_node->suffix_link = cur_node;
-      // 	new_node = new_internal_node = 0;
-      // } else if (cur_node->get_length() > suffix_length){ // Rule 2
-      // 	std::cout << "Rule 2" << std::endl;
-      // 	if(str_ind[cur_node->begin + suffix_length-1] != ext){
-      // 	  new_internal_node = cur_node->add_leaf(i+1, str_ind, suffix_length);
-      // 	  if(new_node != 0)
-      // 	    new_node->suffix_link = new_internal_node;
-      // 	  new_node = new_internal_node;
-      // 	} else {		// Rule 3
-      // 	  std::cout << "Rule 3" << std::endl;
-      // 	}
-      // } else if(cur_node->get_length() < suffix_length - 1){	// Create new Node
-      // 	std::cout << "Extension Rule 2" << std::endl;
-      // 	cur_node->children[ext] = new suffix_node(i+1, i+1, cur_node, 0);
-      // 	if(new_node != 0)
-      // 	  new_node->suffix_link = cur_node;
-      // 	new_node = cur_node;
-      // 	std::cout << "Tree: " << std::endl;
-      // 	root->print(s);
-      // }
     }
   }
   return root;
 }
 
 int main(){
-  std::string s = "GATAGACA-";
+  std::string s = "BANANANANA-";
   suffix_node* root = build_suffix_tree(s);
   std::cout << "Tree: " << std::endl;
   root->print(s);
