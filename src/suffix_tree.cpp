@@ -1,7 +1,7 @@
 #include "iostream"
 #include "algorithm"
 
-const std::string alphabet = "XATGCRYSWKMBDHVN-";
+const std::string alphabet = "ATGCRYSWKMBDHVN-12";
 const int MAX_CHAR = alphabet.length();
 const int MAX_SIZE = 300;
 
@@ -136,8 +136,8 @@ suffix_node* build_suffix_tree(std::string s){
     for(int j = 0; j<=i+1;j++){
       suffix_length = (i + 1 - j) + 1;
       beg = j;
-      std::cout << std::endl;
-      std::cout << "To be inserted: " << s.substr(beg, suffix_length) << std::endl;
+      // std::cout << std::endl;
+      // std::cout << "To be inserted: " << s.substr(beg, suffix_length) << std::endl;
       // Go to suffix link by traversing at most 1 edge
       if(cur_node->suffix_link == 0){ // Since root has a suffix link to itself
 	if(cur_node->parent->get_length() == 1)
@@ -151,19 +151,19 @@ suffix_node* build_suffix_tree(std::string s){
       end_length = suffix_length;
       if(cur_node->get_length() < end_length){
 	if(cur_node->is_leaf_node()){	       // If its a leaf node Rule 1
-	  std::cout << "Rule 1" << std::endl;
-	  std::cout << "Beg: " << beg << std::endl;
-	  std::cout << "suffix_length: " << suffix_length << std::endl;
-	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
+	  // std::cout << "Rule 1" << std::endl;
+	  // std::cout << "Beg: " << beg << std::endl;
+	  // std::cout << "suffix_length: " << suffix_length << std::endl;
+	  // std::cout << "node path: " << cur_node->get_path(s) << std::endl;
 	  cur_node->extend_path(i+1); // Speedup Trick 2
 	  // if(new_node != 0)
 	  //   new_node->suffix_link = cur_node;
 	  // new_node = 0;
 	} else {		// Extension Rule 2
-	  std::cout << "Extension Rule 2" << std::endl;
-	  std::cout << "Beg: " << beg << std::endl;
-	  std::cout << "suffix_length: " << suffix_length << std::endl;
-	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
+	  // std::cout << "Extension Rule 2" << std::endl;
+	  // std::cout << "Beg: " << beg << std::endl;
+	  // std::cout << "suffix_length: " << suffix_length << std::endl;
+	  // std::cout << "node path: " << cur_node->get_path(s) << std::endl;
 	  cur_node->add_child(ext, i+1, i+1, 0);
 	  if(new_node != 0)
 	    new_node->suffix_link = cur_node;
@@ -171,37 +171,37 @@ suffix_node* build_suffix_tree(std::string s){
 	}
       } else if (cur_node->get_length() >= end_length){
 	if(str_ind[cur_node->begin + suffix_length -1] == ext){ // Rule 3
-	  std::cout << "Rule 3" << std::endl;
-	  std::cout << "Beg: " << beg << std::endl;
-	  std::cout << "suffix_length: " << suffix_length << std::endl;
-	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
+	  // std::cout << "Rule 3" << std::endl;
+	  // std::cout << "Beg: " << beg << std::endl;
+	  // std::cout << "suffix_length: " << suffix_length << std::endl;
+	  // std::cout << "node path: " << cur_node->get_path(s) << std::endl;
 	  break;
 	  // if(new_node != 0)
 	  //   new_node->suffix_link = cur_node;
 	  // new_node = 0;
 	} else{			// Rule 2
-	  std::cout << "Rule 2" << std::endl;
-	  std::cout << "Beg: " << beg << std::endl;
-	  std::cout << "suffix_length: " << suffix_length << std::endl;
-	  std::cout << "node path: " << cur_node->get_path(s) << std::endl;
+	  // std::cout << "Rule 2" << std::endl;
+	  // std::cout << "Beg: " << beg << std::endl;
+	  // std::cout << "suffix_length: " << suffix_length << std::endl;
+	  // std::cout << "node path: " << cur_node->get_path(s) << std::endl;
 	  cur_node = cur_node->add_internal_node(i+1, str_ind, suffix_length - 1);
 	  if(new_node != 0)
 	    new_node->suffix_link = cur_node;
 	  new_node = cur_node; // New Internal Created
-	  std::cout << "New Created Node: " << std::endl;
-	  cur_node->print(s);
-	  std::cout << std::endl;
+	  // std::cout << "New Created Node: " << std::endl;
+	  // cur_node->print(s);
+	  // std::cout << std::endl;
 	}
       }
-      std::cout << "Tree:" << std::endl;
-      root->print(s);
+      // std::cout << "Tree:" << std::endl;
+      // root->print(s);
     }
   }
   return root;
 }
 
 int main(){
-  std::string s = "BANANANANA-";
+  std::string s = "CAATGGTTTTG-1CAATGGTTTTG-2";
   suffix_node* root = build_suffix_tree(s);
   std::cout << "Tree: " << std::endl;
   root->print(s);
