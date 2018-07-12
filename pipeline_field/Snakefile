@@ -30,8 +30,7 @@ rule filter_variants:
         "{out_dir}/masked_variants/{sample}.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar filtervariants -p {wildcards.out_dir}/variants/{wildcards.sample}.filtered {input}"
-
+        "ivar filtervariants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}.filtered {input}"
 rule call_variants_post_removal:
     input:
         "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam",
@@ -102,9 +101,10 @@ rule create_bed:
     output:
         "{out_dir}/bed/{sample}_{rep}.bed"
     shell:
-        "cut -f 1,2 -d ',' {input[1]} | sed 's/^/>/g' | tr ',' '\n' > {wildcards.out_dir}/index/{wildcards.sample}{wildcards.rep}.fa && "
-        "~/Documents/bwa/bwa mem -k 5 -T 20 {wildcards.out_dir}/index/{sample}_{rep} {wildcards.out_dir}/index/{wildcards.sample}_{wildcards.rep}.fa | samtools view -bS -F 4 -o {wildcards.out_dir}/index/{wildcards.sample}_{wildcards.rep}.bam && "
-        "bedtools bamtobed -i {wildcards.out_dir}/index/{wildcards.sample}_{wildcards.rep}.bam > {output}"
+        "mkdir -p $(dirname {output}) && "
+        "cut -f 1,2 -d ',' {input[1]} | sed 's/^/>/g' | tr ',' '\n' > {wildcards.out_dir}/bed/{wildcards.sample}_{wildcards.rep}.fa && "
+        "~/Documents/bwa/bwa mem -k 5 -T 20 {wildcards.out_dir}/index/{wildcards.sample}_{wildcards.rep} {wildcards.out_dir}/bed/{wildcards.sample}_{wildcards.rep}.fa | samtools view -bS -F 4 -o {wildcards.out_dir}/bed/{wildcards.sample}_{wildcards.rep}.bam && "
+        "bedtools bamtobed -i {wildcards.out_dir}/bed/{wildcards.sample}_{wildcards.rep}.bam > {output}"
 
 rule align_to_consensus:
     input:
@@ -136,8 +136,8 @@ rule trim_primer_quality:
         "{out_dir}/trimmed/{sample}_{rep}.trimmed.sorted.bam"
     shell:
         "mkdir -p {wildcards.out_dir}/trimmed/ && "
-        "ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample}.trimmed -i {input[0]} &&"
-        "samtools sort -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}.trimmed.bam &&"
+        "ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed -i {input[0]} &&"
+        "samtools sort -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed.bam &&"
         "samtools index {output}"
 
 rule align_reads:

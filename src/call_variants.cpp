@@ -19,15 +19,12 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
     if(it->nuc[0] == ref)
       return it;
   }
-  std::cout << "REF: " << ref << std::endl;
   print_allele_depths(ad);
-  std::cout << "End!" << std::endl;
   return ad.end();
 }
 
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
   std::string line, cell, bases, qualities, region;
-  std::cout << "Min Qual: " << (uint16_t)min_qual << std::endl;
   std::ofstream fout(out_file+".tsv");
   fout << "REGION\tPOS\tREF\tALT\tAD\tRAD\tDP\tFREQ\tQUAL\tPVAL\tPASS"<<std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
@@ -66,10 +63,6 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     ref_it = get_ref_allele(ad, ref);
-    if(pos == 7429){
-      print_allele_depths(ad);
-      std::cout << ref_it -> nuc << " == " << ref << std::endl;
-    }
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((*it == *ref_it) || it->nuc[0]=='*')
 	continue;

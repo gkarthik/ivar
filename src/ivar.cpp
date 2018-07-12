@@ -262,7 +262,7 @@ int main(int argc, char* argv[]){
       rep += argv[i];
       rep += " ";
     }
-    rep += "> "+g_args.prefix+".tsv";
+    rep += " | sort -s -n -k 2 > "+g_args.prefix+".tsv";
     system(rep.c_str());
   } else if(cmd.compare("getmasked") == 0){
     opt = getopt( argc, argv, getmasked_opt_str);
