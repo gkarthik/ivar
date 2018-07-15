@@ -19,7 +19,7 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
     if(it->nuc[0] == ref)
       return it;
   }
-  print_allele_depths(ad);
+  // print_allele_depths(ad);
   return ad.end();
 }
 
@@ -63,6 +63,13 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     ref_it = get_ref_allele(ad, ref);
+    // Get ungapped coverage
+    mdepth = 0;
+    for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
+      if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
+	continue;
+      mdepth += it->depth;
+    }
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((*it == *ref_it) || it->nuc[0]=='*')
 	continue;
