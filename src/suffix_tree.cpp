@@ -2,7 +2,7 @@
 #include "algorithm"
 
 const std::string alphabet = "ATGCRYSWKMBDHVN-X#@";
-const int MAX_CHAR = alphabet.length();
+const unsigned int MAX_CHAR = alphabet.length();
 const int MAX_SIZE = 300;
 
 class suffix_node{
@@ -12,7 +12,7 @@ public:
 
   suffix_node(int b, int *e, suffix_node *p, suffix_node *l){
     this->children = new suffix_node*[MAX_CHAR];
-    for(int i = 0; i < MAX_CHAR;i++)
+    for(unsigned int i = 0; i < MAX_CHAR;i++)
       this->children[i] = 0;
     this->begin = b;
     this->end = e;
@@ -43,6 +43,35 @@ public:
       ctr++;
     }
     return ctr;
+  }
+
+  std::string get_longest_common_substring(std::string s1, std::string s2){
+    std::string str = s1+"#"+s2+"@";
+    std::string p="", tmp, longest_trvsl = "";
+    unsigned int max = 0, i;
+    bool cont_traversal = true;
+    suffix_node* node = this;
+    if(node->begin == -1)
+      p = "";
+    else{
+      tmp = node->get_path(str);
+      std::reverse(tmp.begin(), tmp.end());
+      std::reverse(tmp.begin(), tmp.end());
+      if(s1.find(p+tmp) != std::string::npos && s2.find(p+tmp) != std::string::npos)
+	p += tmp;
+    }
+    tmp = "";
+    for(i = 0; i < MAX_CHAR;i++){
+      if(node->children[i] == 0)
+	continue;
+      longest_trvsl = node->children[i]->get_longest_common_substring(s1, s2);
+      if(longest_trvsl.length() > max){
+	max = longest_trvsl.length();
+	tmp = longest_trvsl;
+      }
+    }
+    p += tmp;
+    return p;
   }
 
   std::string get_path(std::string s){
@@ -87,7 +116,7 @@ public:
     if(this->begin!=-1)
       std::cout << " - " << this->parent->get_path(s);
     std::cout << std::endl;
-    for(int i = 0; i<alphabet.length();i++){
+    for(unsigned int i = 0; i<alphabet.length();i++){
       if(this->children[i]!=0)
 	this->children[i]->print(s);
     }
@@ -109,24 +138,25 @@ suffix_node* build_suffix_tree(std::string s){
   root->suffix_link = root;
   root->parent = root;
   suffix_node *cur_node = root, *new_node = 0, *new_cur_node = 0;
-  int str_ind[MAX_SIZE], n_str_ind = 0, suffix_length = 0, j =0, *leaf_end=  new int, suffix_count = 0, beg = -1, *end;
-  for(int i = 0; i < s.length();i++){
+  int str_ind[MAX_SIZE], suffix_length = 0, *leaf_end=  new int, suffix_count = 0, beg = -1, *end;
+  unsigned int i = 0, n_str_ind = 0, j = 0;
+  for(i = 0; i < s.length();i++){
     str_ind[i] = alphabet.find(s[i]);
     n_str_ind++;
   }
   *leaf_end = 0;
   // root->add_child(str_ind[0], 0, leaf_end, root);
-  for(int i = 0; i < n_str_ind;i++){
+  for(i = 0; i < n_str_ind;i++){
     *leaf_end = i;		// Handle Extension Rule 1
     suffix_count++;
     new_node = 0;
     while(suffix_count > 0){
       if(suffix_length == 0)
 	beg = i;
-      root->print(s);
-      std::cout << "Cur Node: " << cur_node->get_path(s) << std::endl;
+      // root->print(s);
+      // std::cout << "Cur Node: " << cur_node->get_path(s) << std::endl;
       if(cur_node->children[str_ind[beg]] == 0){
-	std::cout << "First Rule 2" << std::endl;
+	// std::cout << "First Rule 2" << std::endl;
 	cur_node->add_child(str_ind[beg], beg, leaf_end, 0); // Trick 3
 	if(new_node != 0){
 	  new_node->suffix_link = cur_node;
@@ -135,12 +165,12 @@ suffix_node* build_suffix_tree(std::string s){
       } else {
 	new_cur_node = cur_node->children[str_ind[beg]];
 	if(new_cur_node->walk_next(beg, suffix_length)){
-	  std::cout << "Continue!" << std::endl;
+	  // std::cout << "Continue!" << std::endl;
 	  cur_node = new_cur_node;
 	  continue;
 	}
 	if(str_ind[new_cur_node->begin + suffix_length] == str_ind[i]){
-	  std::cout << "Rule 3" << std::endl;
+	  // std::cout << "Rule 3" << std::endl;
 	  if(new_node != 0 && cur_node->end != 0){
 	    new_node->suffix_link = cur_node;
 	    new_node = 0;		// No internal node created in Rule 2 here.
@@ -148,7 +178,7 @@ suffix_node* build_suffix_tree(std::string s){
 	  suffix_length++;
 	  break;
 	}
-	std::cout << "Rule 2" << std::endl;
+	// std::cout << "Rule 2" << std::endl;
 	suffix_node *new_int_node;
 	end = new int;
 	*end = new_cur_node->begin + suffix_length - 1;
@@ -174,8 +204,8 @@ suffix_node* build_suffix_tree(std::string s){
       } else if(cur_node->get_length() == 1){
 	cur_node = root;
       }
-      std::cout << "Tree:" << std::endl;
-      std::cout << std::endl;
+      // std::cout << "Tree:" << std::endl;
+      // std::cout << std::endl;
     }
   }
   return root;
@@ -183,9 +213,15 @@ suffix_node* build_suffix_tree(std::string s){
 
 int main(){
   std::cout << alphabet.length() << " " << MAX_CHAR << std::endl;
-  std::string s = "XABXA#BABXBA@";
+  std::string s1 = "ATGCTGATGA";
+  std::string s2 = "TGAT";
+  std::string s = s1 +"#" + s2 + "@";
   suffix_node *root = build_suffix_tree(s);
   std::cout << "Tree: " << std::endl;
   root->print(s);
+  std::string p = root->get_longest_common_substring(s1, s2);
+  std::cout << "Common substring: " << p << std::endl;
+  int ind = s1.find(p);
+  std::cout << "Trimmed: " << s1.substr(0, ind) << std::endl;
   return 0;
 }
