@@ -60,13 +60,13 @@ int main() {
   success += (s.q.compare("?") == 0) ? 1 : 0;
   s = get_consensus_allele(ad,20,.7);
   std::cout << s.nuc << ": " << s.q << std::endl;
-  success += (s.nuc.compare("H") == 0) ? 1: 0;
+  success += (s.nuc.compare("N") == 0) ? 1: 0;
   success += (s.q.compare("?") == 0) ? 1 : 0;
   ad.erase(ad.begin() + 4, ad.begin()+5);
   ad.push_back(a6);
   s = get_consensus_allele(ad,20,.7);
   std::cout << s.nuc << ": " << s.q << std::endl;
-  success += (s.nuc.compare("D") == 0) ? 1: 0;
+  success += (s.nuc.compare("R") == 0) ? 1: 0;
   success += (s.q.compare("?") == 0) ? 1 : 0;
   return (success == num_tests) ? 0 : -1;
 }

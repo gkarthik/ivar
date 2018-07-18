@@ -8,10 +8,12 @@
 void print_allele_depths(std::vector<allele> ad){
   std::cout << "AD Size: " << ad.size() << " " << std::endl;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-    std::cout << it->nuc << " ";
-    std::cout << it->depth << " ";
-    std::cout << it->reverse << " ";
-    std::cout << (uint16_t) it->mean_qual << std::endl;
+    std::cout << "Nuc: " << it->nuc << std::endl;;
+    std::cout << "Depth: " << it->depth << std::endl;
+      std::cout << "Reverse: " << it->reverse <<std::endl;
+    std::cout << "Qual: " << (uint16_t) it->mean_qual << std::endl;
+    std::cout << "Beg: " << it->beg << std::endl;
+    std::cout << "End: " << it->end << std::endl;
   }
 }
 
@@ -39,8 +41,11 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   std::vector<allele> ad;
   std::string indel;
   int i = 0, n =0, j = 0, q_ind = 0;
+  bool beg, end;
   uint8_t q;
   while (i < bases.length()){
+    beg = false;
+    end = false;
     if(bases[i] == '^'){
       i += 2;			// Skip mapping quality as well (i+1) - 33
       continue;
@@ -61,10 +66,14 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     switch(bases[i]){
     case '.':
       b = ref;
+      end = (bases[i+1] == '$');
+      beg = (bases[i+1] == '^');
       break;
     case ',':
       b = ref;
       forward = false;
+      end = (bases[i+1] == '$');
+      beg = (bases[i+1] == '^');
       break;
     case '*':
       b = bases[i];
@@ -92,6 +101,8 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	b = bases[i] - ('a' - 'A');
 	forward = false;
       }
+      end = (bases[i+1] == '$');
+      beg = (bases[i+1] == '^');
     }
     int ind = check_allele_exists(b, ad);
     if(q >= min_qual){
@@ -103,10 +114,22 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	  tmp.reverse = 1;
 	else
 	  tmp.reverse = 0;
+	if(beg)
+	  tmp.beg = 1;
+	else
+	  tmp.beg = 0;
+	if(end)
+	  tmp.end = 1;
+	else
+	  tmp.end = 0;
 	ad.push_back(tmp);
       } else {
 	ad.at(ind).mean_qual = ((ad.at(ind).mean_qual * ad.at(ind).depth) + q)/(ad.at(ind).depth + 1);
 	ad.at(ind).depth += 1;
+	if(beg)
+	  ad.at(ind).beg += 1;
+	if(end)
+	  ad.at(ind).end += 1;
 	if(!forward)
 	  ad.at(ind).reverse += 1;
       }
@@ -190,6 +213,8 @@ B N N B B N N B B B N N N B
 
  */
 char gt2iupac(char a, char b){
+  if(a == '*' || b == '*')
+    return 'N';
   static const char iupac[14][14] = {
     {'Y', 'N', 'H', 'B', 'B', 'H', 'H', 'Y', 'B', 'Y', 'N', 'N', 'H', 'B'},
     {'N', 'R', 'D', 'V', 'D', 'V', 'R', 'D', 'R', 'V', 'D', 'V', 'N', 'N'},
