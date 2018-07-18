@@ -23,6 +23,10 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
   return ad.end();
 }
 
+bool compare_depth(const allele &a, const allele &b){
+  return a.depth < b.depth;
+}
+
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
   std::string line, cell, bases, qualities, region;
   std::ofstream fout(out_file+".tsv");
@@ -32,6 +36,9 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
   std::stringstream lineStream;
   char ref;
   std::vector<allele> ad;
+  print_allele_depths(ad);
+  std::sort(ad.begin(), ad.end(), compare_depth);
+  print_allele_depths(ad);
   std::vector<allele>::iterator ref_it;
   while (std::getline(cin, line)){
     lineStream << line;

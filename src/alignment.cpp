@@ -2,7 +2,8 @@
 #include <algorithm>
 #include<vector>
 #include<fstream>
-#include<ctime>
+
+#include "alignment.h"
 
 /* Substitution Matrix
 
@@ -13,21 +14,6 @@ G -1 -1  1 -1 0
 C -1 -1 -1  1 0
 N  0  0  0  0 0
 */
-
-const int unit_score = 3;
-
-const int substitution[5][5] = {
-  {unit_score,-unit_score,-unit_score,-unit_score, 0},
-  {-unit_score,unit_score,-unit_score,-unit_score, 0},
-  {-unit_score,-unit_score,unit_score,-unit_score, 0},
-  {-unit_score,-unit_score,-unit_score,unit_score, 0},
-  {0, 0, 0, 0, 0}
-};
-
-const int gap_open = unit_score - 1;
-const int gap_extension = -1;
-const int max_read_size = 500;
-const int max_adapter_size = 60;
 
 int get_sub_score(char a, char b){
   int i,j;
@@ -162,7 +148,6 @@ int* align_seqs(std::string read, std::string adap){
     }
   }
   max_score = max_v;
-  rt[1] = max_i;
   // if(max_i != read.length())	// Ensure alignment to end of read.
   //   return rt;
   // std::cout << "Score: " << max_v << " ";
@@ -204,6 +189,7 @@ int* align_seqs(std::string read, std::string adap){
       break;
     }
   }
+  rt[1] = max_i;
   print_alignment(_align, _align_n);
   if(max_score <= ((_align_n - 2) * unit_score) - get_gap_penalty(2, 'A') || max_j != 0) // If alignment does not start at beginning of adapter
     return rt;
@@ -212,82 +198,43 @@ int* align_seqs(std::string read, std::string adap){
   return rt;
 }
 
-std::string get_reverse_complement(std::string rev_read){
-  char t;
-  for(int i = 0;i< rev_read.length();i++){
-    switch(rev_read[i]){
-    case 'A':
-      t = 'T';
-      break;
-    case 'G':
-      t='C';
-      break;
-    case 'C':
-      t='G';
-      break;
-    case 'T':
-      t='A';
-      break;
-    }
-    rev_read[i] = t;
-  }
-  std::reverse(rev_read.begin(), rev_read.end());
-  return rev_read;
-}
+// int find_adapters_contaminants(std::istream &cin, std::string adp_cntms_file){
+//   std::vector<std::string> adp = read_adapters_from_fasta(adp_cntms_file, "Read1");
+//   std::string line, bases, qual, b;
+//   int ctr = 0, score, *t = new int[2];
+//   while (std::getline(cin, line)){
+//     if(ctr % 400000 == 0)
+//       std::cout << "Processed " << (ctr/4) << " reads ..." << std::endl;
+//     if(ctr % 2 == 0){
+//       ctr++;
+//       continue;
+//     }
+//     if((ctr+1) % 2 == 0 && (ctr + 1) % 4 == 0 ){
+//       qual = line;
+//       // std::cout << bases << std::endl;
+//       // std::cout << qual << std::endl;
+//       score = -1;
+//       for(std::vector<std::string>::iterator it = adp.begin(); it != adp.end() && score == -1; ++it) {
+// 	b = ((*it).length() > bases.length()) ? bases : bases.substr(bases.length() - (*it).length(), (*it).length());
+// 	t = align_seqs(b, *it);
+// 	score = *t;
+// 	if(score != -1)
+// 	  std::cout << "Trimmed: " << bases.substr(0, bases.length() - *(t+1)) << std::endl;
+//       }
+//     } else {
+//       bases = line;
+//     }
+//     ctr++;
+//   }
+//   return 0;
+// }
 
-std::vector<std::string> read_adapters_from_fasta(std::string p, std::string n){
-  std::vector<std::string> adp;
-  std::ifstream fin(p);
-  std::string line;
-  bool f = false;
-  while (std::getline(fin, line)){
-    if(f){
-      adp.push_back(line);
-      f = false;
-    }
-    if(line[0] == '>' && line.find(n) != std::string::npos)
-      f = true;
-  }
-  return adp;
-}
-
-int find_adapters_contaminants(std::istream &cin, std::string adp_cntms_file){
-  std::vector<std::string> adp = read_adapters_from_fasta(adp_cntms_file, "Read1");
-  std::string line, bases, qual, b;
-  int ctr = 0, score, *t = new int[2];
-  while (std::getline(cin, line)){
-    if(ctr % 400000 == 0)
-      std::cout << "Processed " << (ctr/4) << " reads ..." << std::endl;
-    if(ctr % 2 == 0){
-      ctr++;
-      continue;
-    }
-    if((ctr+1) % 2 == 0 && (ctr + 1) % 4 == 0 ){
-      qual = line;
-      // std::cout << bases << std::endl;
-      // std::cout << qual << std::endl;
-      score = -1;
-      for(std::vector<std::string>::iterator it = adp.begin(); it != adp.end() && score == -1; ++it) {
-	b = ((*it).length() > bases.length()) ? bases : bases.substr(bases.length() - (*it).length(), (*it).length());
-	t = align_seqs(b, *it);
-	score = *t;
-	if(score != -1)
-	  std::cout << "Trimmed: " << bases.substr(0, bases.length() - *(t+1)) << std::endl;
-      }
-    } else {
-      bases = line;
-    }
-    ctr++;
-  }
-  return 0;
-}
-
-int main(int argc, char* argv[]){
-  std::string adp = "../data/adapters/NexteraPR.fa";
-  clock_t begin = clock();
-  find_adapters_contaminants(std::cin, adp);
-  clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-  std::cout << "Time Taken: " << elapsed_secs << std::endl;
-  return 0;
-}
+// int main(int argc, char* argv[]){
+//   std::string adp = "../data/adapters/NexteraPR.fa";
+//   // clock_t begin = clock();
+//   find_adapters_contaminants(std::cin, adp);
+//   // clock_t end = clock();
+//   // double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+//   // std::cout << "Time Taken: " << elapsed_secs << std::endl;
+//   return 0;
+// }

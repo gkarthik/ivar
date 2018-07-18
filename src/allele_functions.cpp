@@ -211,7 +211,7 @@ char gt2iupac(char a, char b){
   int _a, _b;
   _a = get_index(a);
   _b = get_index(b);
-  if(a == -1 || b == -1)
+  if(_a == -1 || _b == -1)
     return 'N';
   return iupac[_a][_b];
 }
