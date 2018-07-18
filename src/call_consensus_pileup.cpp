@@ -27,7 +27,11 @@ void format_alleles(std::vector<allele> &ad){
   }
 }
 
-ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
+bool compare_allele_depth(const allele &a, const allele &b){
+  return b.depth < a.depth;
+}
+
+ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold){
   ret_t t;
   t.nuc="N";
   t.q = min_qual+33;
@@ -41,10 +45,13 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
     return t;
   }
   std::string cnuc = "";
+  std::vector<allele> nuc_pos;
+  allele tmp_a;
   char n;
   uint32_t max_l = 0, max_depth = 0, tmp_depth = 0, cur_depth = 0, total_max_depth = 0, gap_depth = 0;
-  uint8_t ambg_n = 0, ctr = 0;
+  uint8_t ambg_n = 1, ctr = 0;
   double q = 0, tq = 0;
+  std::vector<allele>::iterator it;
   for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
     if(it->nuc.length() > max_l){
       max_l = it->nuc.length();
@@ -62,10 +69,10 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
     tmp_depth = 0;
     cur_depth = 0;
     // prev_depth = 0;
-    ambg_n = 1;
     ctr = 1;
-    std::vector<allele>::iterator it = ad.begin();
+    it = ad.begin();
     gap_depth = 0;
+    nuc_pos.clear();
     while(it!=ad.end()){
       if(!(i < it->nuc.length())){
 	it++;
@@ -85,29 +92,50 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual){
 	ctr++;
       }
       cur_depth += tmp_depth;
-      if(tmp_depth > max_depth){
-	n = it->nuc[i];
-	max_depth = tmp_depth;
-	q = tq;
-	ambg_n = 1;
-      } else if(tmp_depth == max_depth){
-	n = gt2iupac(n, it->nuc[i]);
-	q = ((q * ambg_n) + tq)/(ambg_n+1);
-	ambg_n += 1;
-      }
+      tmp_a.nuc = it->nuc[i];
+      tmp_a.mean_qual = tq;
+      tmp_a.reverse = 0;	// Reverse reads not important for consensus
+      tmp_a.depth = tmp_depth;
+      nuc_pos.push_back(tmp_a);
+      // if(tmp_depth > max_depth){
+      // 	n = it->nuc[i];
+      // 	max_depth = tmp_depth;
+      // 	q = tq;
+      // 	ambg_n = 1;
+      // } else if(tmp_depth == max_depth){
+      // 	n = gt2iupac(n, it->nuc[i]);
+      // 	q = ((q * ambg_n) + tq)/(ambg_n+1);
+      // 	ambg_n += 1;
+      // }
+      it++;
+    }
+    // Sort nuc_pos by depth of alleles
+    std::sort(nuc_pos.begin(), nuc_pos.end(), compare_allele_depth);
+    it=nuc_pos.begin();
+    n = it->nuc[0];
+    q = it->mean_qual;
+    max_depth = it->depth;
+    it++;
+    ambg_n = 1;
+    std::cout << "Depth Threshold: " << cur_depth * threshold << std::endl;
+    while(it!=nuc_pos.end() && (max_depth < cur_depth * threshold || it->depth == (it -1)->depth)){ // Iterate till end or till cross threshold and no more allele with same depth
+      n = gt2iupac(n, it->nuc[0]);
+      q = ((q * ambg_n) + it->mean_qual)/(ambg_n+1);
+      ambg_n += 1;
+      max_depth += it->depth;
       it++;
     }
     gap_depth = (total_max_depth > cur_depth) ? total_max_depth - cur_depth : 0;
     if(n!='*' && max_depth >= gap_depth){ // TODO: Check what to do when equal.{
       t.nuc += n;
-      q += 0.5;
+      q += 0.5;			// For rounding before converting to int
       t.q += (((uint8_t)q)+33);
     }
   }
   return t;
 }
 
-int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual){
+int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold){
   std::string line, cell;
   std::ofstream fout(out_file+".fa");
   std::ofstream tmp_qout(out_file+".qual.txt");
@@ -146,7 +174,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       ctr++;
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
-    ret_t t = get_consensus_allele(ad, min_qual);
+    ret_t t = get_consensus_allele(ad, min_qual, threshold);
     fout << t.nuc;
     tmp_qout << t.q;
     lineStream.clear();
