@@ -199,7 +199,7 @@ int main(int argc, char* argv[]){
     while( opt != -1 ) {
       switch( opt ) {
       case 't':
-	g_args.min_threshold = atoi(optarg);
+	g_args.min_threshold = atof(optarg);
 	break;
       case 'p':
 	g_args.prefix = optarg;
