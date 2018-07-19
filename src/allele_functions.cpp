@@ -55,11 +55,6 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       continue;
     }
     q = qualities[q_ind] - 33;
-    if(q < min_qual){
-      i++;
-      q_ind++;
-      continue;
-    }
     std::string b;
     allele tmp;
     bool forward= true;

@@ -219,8 +219,9 @@ int main(int argc, char* argv[]){
       print_consensus_usage();
       return -1;
     }
-    std::cout <<"Min Quality" << g_args.min_qual << std::endl;
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
+    std::cout <<"Min Quality" << g_args.min_qual << std::endl;
+    std::cout << "Threshold: " << g_args.min_threshold << std::endl;
     res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
   } else if (cmd.compare("removereads") == 0){
     opt = getopt( argc, argv, removereads_opt_str);

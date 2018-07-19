@@ -120,9 +120,9 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
     it++;
     ambg_n = 1;
     if(i > 0){
-      cur_threshold = threshold * total_indel_depth;
+      cur_threshold = threshold * (double) total_indel_depth;
     } else {
-      cur_threshold = total_max_depth * threshold;
+      cur_threshold =  threshold * (double)total_max_depth;
     }
     while(it!=nuc_pos.end() && (max_depth < cur_threshold || it->depth == (it -1)->depth)){ // Iterate till end or till cross threshold and no more allele with same depth
       n = gt2iupac(n, it->nuc[0]);
@@ -131,6 +131,8 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
       max_depth += it->depth;
       it++;
     }
+    if(max_depth < cur_threshold) // If depth still less than threshold
+      n = 'N';
     if(i > 0)
       gap_depth = (total_indel_depth > cur_depth) ? total_indel_depth - cur_depth : 0;
     else
