@@ -373,17 +373,19 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   int ctr = 0;
   cigar_ t;
   int16_t *p = (int16_t*)malloc(sizeof(int16_t));
+  uint32_t primer_trim_count = 0;
   while(sam_itr_next(in, iter, aln) >= 0) {
     *p = get_overlapping_primer_indice(aln, primers);
-    if(*p == -1)
-      continue;
-    if(bam_is_rev(aln)){
-      t = primer_trim(aln, primers[*p].get_start() - 1);
-    } else {
-      t = primer_trim(aln, primers[*p].get_end() + 1);
-      aln->core.pos = primers[*p].get_end() + 1;
+    if(*p != -1){
+      primer_trim_count++;
+      if(bam_is_rev(aln)){
+	t = primer_trim(aln, primers[*p].get_start() - 1);
+      } else {
+	t = primer_trim(aln, primers[*p].get_end() + 1);
+	aln->core.pos = primers[*p].get_end() + 1;
+      }
+      replace_cigar(aln, t.nlength, t.cigar);
     }
-    replace_cigar(aln, t.nlength, t.cigar);
     t = quality_trim(aln);	// Quality Trimming
     if(bam_is_rev(aln))
       aln->core.pos = t.start_pos;
@@ -392,7 +394,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     replace_cigar(aln, t.nlength, t.cigar);
     int min_length = 30;
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-      bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
+      if(*p != -1)
+	bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
       if(bam_write1(out, aln) < 0){
 	std::cout << "Not able to write to BAM" << std::endl;
 	hts_itr_destroy(iter);
@@ -405,10 +408,12 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       };
     }
     ctr++;
-    if(ctr % 100000 == 0){
+    if(ctr % 1000000 == 0){
       std::cout << "Processed " << ctr << "reads ... " << std::endl;
     }
   }
+  std::cout << "Results: " << std::endl;
+  std::cout << "Trimmed primers from " << primer_trim_count << " reads." << std::endl;
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
   bam_destroy1(aln);
