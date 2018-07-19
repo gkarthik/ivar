@@ -164,7 +164,9 @@ int main(int argc, char* argv[]){
       print_trim_usage();
       return -1;
     }
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region);
+    g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
+    g_args.sliding_window = (g_args.sliding_window == 255) ? 4 : g_args.sliding_window;
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window);
   } else if (cmd.compare("variants") == 0){
     opt = getopt( argc, argv, variants_opt_str);
     while( opt != -1 ) {

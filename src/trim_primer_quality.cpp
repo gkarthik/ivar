@@ -310,7 +310,7 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
       };
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_){
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window){
   std::vector<primer> primers = populate_from_file(bed);
   if(bam.empty()){
     std::cout << "Bam file in empty." << std::endl;
@@ -386,7 +386,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       }
       replace_cigar(aln, t.nlength, t.cigar);
     }
-    t = quality_trim(aln);	// Quality Trimming
+    t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
     if(bam_is_rev(aln))
       aln->core.pos = t.start_pos;
     t = condense_cigar(t.cigar, t.nlength);
