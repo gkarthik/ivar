@@ -62,8 +62,10 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       ctr++;
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
-    if(ad.size() == 0)
+    if(ad.size() == 0){
+      lineStream.clear();
       continue;
+    }
     ref_it = get_ref_allele(ad, ref);
     // Get ungapped coverage
     mdepth = 0;
