@@ -43,6 +43,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   int i = 0, n =0, j = 0, q_ind = 0;
   bool beg, end;
   uint8_t q;
+  float num = 0, den = 0;
   while (i < bases.length()){
     beg = false;
     end = false;
@@ -104,7 +105,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       if (ind==-1){
 	tmp.nuc = b;
 	tmp.depth = 1;
-	tmp.mean_qual = q;
+	tmp.tmp_mean_qual = q;
 	if(!forward)
 	  tmp.reverse = 1;
 	else
@@ -119,7 +120,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	  tmp.end = 0;
 	ad.push_back(tmp);
       } else {
-	ad.at(ind).mean_qual = ((ad.at(ind).mean_qual * ad.at(ind).depth) + q)/(ad.at(ind).depth + 1);
+	ad.at(ind).tmp_mean_qual = (ad.at(ind).tmp_mean_qual * ad.at(ind).depth + q)/(ad.at(ind).depth + 1);
 	ad.at(ind).depth += 1;
 	if(beg)
 	  ad.at(ind).beg += 1;
@@ -133,7 +134,11 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     if(b[0] !='+' && b[0]!='-')
       q_ind++;
   }
-  std::sort(ad.begin(), ad.end());
+  for(std::vector<allele>::iterator it = ad.begin(); it!=ad.end(); ++it){
+    it->mean_qual = (uint8_t) it->tmp_mean_qual;
+  }
+  if(ad.size() > 0)
+    std::sort(ad.begin(), ad.end());
   return ad;
 }
 

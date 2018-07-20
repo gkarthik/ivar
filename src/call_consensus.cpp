@@ -23,7 +23,7 @@ struct maj {
     }							\
   }
 
-#define INDEL_SIZE 10
+#define INDEL_SIZE 30
 
 #define GAP 'N'
 
