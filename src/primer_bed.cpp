@@ -75,7 +75,7 @@ std::vector<primer> populate_from_file(std::string path){
 	p.set_start(std::stoul(cell));
 	break;
       case 2:
-	p.set_end(std::stoul(cell));
+	p.set_end(std::stoul(cell)-1); // Bed format - End is not 0 based
 	break;
       case 3:
 	p.set_name(cell);

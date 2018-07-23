@@ -159,7 +159,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   uint32_t i = 0, j = 0;
   int del_len, cig, temp;
   if (bam_is_rev(r)){
-    del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
+    del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
     // print_cigar(cigar, r->core.n_cigar);
     reverse_cigar(cigar, r->core.n_cigar);
     // print_cigar(cigar, r->core.n_cigar);
@@ -222,8 +222,8 @@ void replace_cigar(bam1_t *b, int n, uint32_t *cigar){
 int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
   uint32_t query_pos, start_pos, *cigar = bam_get_cigar(r);
   if(bam_is_rev(r)){
-    start_pos = bam_endpos(r);
-    query_pos = start_pos + (bam_cigar2qlen(r->core.n_cigar, cigar) - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos));
+    start_pos = bam_endpos(r)-1;
+    query_pos = start_pos + (bam_cigar2qlen(r->core.n_cigar, cigar) - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos)) - 1;
   } else {
     start_pos = r->core.pos;
     query_pos = start_pos - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos);
@@ -310,7 +310,7 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
       };
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window){
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, int min_length = 30){
   std::vector<primer> primers = populate_from_file(bed);
   if(bam.empty()){
     std::cout << "Bam file in empty." << std::endl;
@@ -392,7 +392,6 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     t = condense_cigar(t.cigar, t.nlength);
     aln->core.pos += t.start_pos;
     replace_cigar(aln, t.nlength, t.cigar);
-    int min_length = 30;
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
       if(*p != -1)
 	bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);

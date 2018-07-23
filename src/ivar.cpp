@@ -17,6 +17,7 @@ struct args_t {
   uint8_t min_qual;		// -q
   uint8_t sliding_window;	// -s
   double min_threshold;	// -t
+  int min_length;		// -m
   std::string f1;		// -1
   std::string f2;		// -2
   std::string adp_path;	// -a
@@ -44,7 +45,7 @@ void print_trim_usage(){
     "Input Options    Description\n"
     "           -i    (Required) Input, aligned bam file to trim primers and quality\n"
     "           -b    (Required) Bed File, Bed file with primer sequences and positions.\n"
-    "           -R    Region in BAM\n"
+    "           -m    Minimum length of read\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n\n"
     "Output Options   Description\n"
@@ -108,7 +109,7 @@ void print_trimadapter_usage(){
     "           -p    (Required) Prefix of output fastq files\n";
 }
 
-static const char *trim_opt_str = "i:b:p:R::q::s::h?";
+static const char *trim_opt_str = "i:b:p:m::q::s::h?";
 static const char *variants_opt_str = "p:t::q::h?";
 static const char *consensus_opt_str = "p:q::t::h?";
 static const char *removereads_opt_str = "i:p:h?";
@@ -130,6 +131,7 @@ int main(int argc, char* argv[]){
   g_args.min_qual = 255;
   g_args.sliding_window = 255;
   g_args.min_threshold = -1;
+  g_args.min_length = -1;
   if (cmd.compare("trim") == 0){
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
@@ -143,8 +145,8 @@ int main(int argc, char* argv[]){
       case 'p':
 	g_args.prefix = optarg;
 	break;
-      case 'R':
-	g_args.region = optarg;
+      case 'm':
+	g_args.min_length = atoi(optarg);
 	break;
       case 'q':
 	g_args.min_qual = atoi(optarg);
@@ -166,7 +168,8 @@ int main(int argc, char* argv[]){
     }
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
     g_args.sliding_window = (g_args.sliding_window == 255) ? 4 : g_args.sliding_window;
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window);
+    g_args.min_length = (g_args.min_length == -1) ? 30 : g_args.min_length;
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, g_args.min_length);
   } else if (cmd.compare("variants") == 0){
     opt = getopt( argc, argv, variants_opt_str);
     while( opt != -1 ) {
