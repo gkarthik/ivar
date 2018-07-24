@@ -73,13 +73,13 @@ void reverse_cigar(uint32_t *cigar, int l){
 double mean_quality(uint8_t *a, int s, int e){
   double m = 0;
   for (int i = s; i < e; ++i){
-    m += (int)a[i];
+    m += (double)a[i];
   }
   m = m/(e-s);
   return m;
 }
 
-cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
+cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
   uint8_t *qual = bam_get_qual(r);
@@ -90,9 +90,11 @@ cigar_ quality_trim(bam1_t* r, int qual_threshold = 20, int sliding_window = 4){
   double m = 60;
   int del_len, cig, temp;
   uint32_t i = 0, j = 0;
-  while(m >= qual_threshold && (i < r->core.l_qseq - sliding_window)){
+  while(m >= qual_threshold && (i < r->core.l_qseq)){
     m = mean_quality(qual, i, i+sliding_window);
     i++;
+    if(i > r->core.l_qseq - sliding_window)
+      sliding_window--;
   }
   del_len = r->core.l_qseq - i;
   start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos
