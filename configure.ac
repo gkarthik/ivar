@@ -3,7 +3,7 @@
 
 AC_PREREQ([2.63])
 AC_INIT([ivar], [0.1.0], [gkarthik@scripps.edu])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_SRCDIR([src/alignment.cpp])
 AC_CONFIG_HEADERS([config.h])
 
