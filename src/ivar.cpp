@@ -8,6 +8,8 @@
 #include "get_masked_amplicons.h"
 #include "suffix_tree.h"
 
+const std::string VERSION = "1.0";
+
 struct args_t {
   std::string bam;		// -i
   std::string bed;		// -b
@@ -117,12 +119,32 @@ static const char *filtervariants_opt_str = "p:h?";
 static const char *getmasked_opt_str = "i:b:h?";
 static const char *trimadapter_opt_str = "1:2::p:a:h?";
 
+/*!
+ * Main Function
+ * Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]
+ *
+ * Command       Description
+ * trim       Trim reads in aligned bams
+ * variants       Call Variants from aligned bam
+ * filtervariants       Filter variants across replicates
+ * consensus       Call consensus from vcf file
+ * removereads       Remove reads from aligned bam
+ * getmasked       Get amplicons with primer mismatches
+ * trimadapter     Trim adapter sequences from reads
+ *
+ * To view detailed usage for each command type `ivar <command>`
+ */
+
 int main(int argc, char* argv[]){
   if(argc == 1){
     print_usage();
     return -1;
   }
   std::string cmd(argv[1]);
+  if(cmd.compare("-v") == 0){
+    std::cout << "iVar version " << VERSION << std::endl;
+    return 0;
+  }
   int opt = 0, res = 0;
   // Sift arg by 1 for getopt
   argv[1] = argv[0];
@@ -313,7 +335,7 @@ int main(int argc, char* argv[]){
       return -1;
     }
     res = get_primers_with_mismatches(g_args.bed, g_args.bam);
-  } else if(cmd.compare("trimadapter") == 0){
+  } else if (cmd.compare("trimadapter") == 0){
     opt = getopt( argc, argv, trimadapter_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
