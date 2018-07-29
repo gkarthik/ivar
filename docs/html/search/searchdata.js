@@ -1,27 +1,18 @@
 var indexSectionsWithContent =
 {
-  0: "acdimprs",
-  1: "acmprs",
-  2: "i",
-  3: "m",
-  4: "dim"
+  0: "cdim",
+  1: "cdim"
 };
 
 var indexSectionNames =
 {
   0: "all",
-  1: "classes",
-  2: "files",
-  3: "functions",
-  4: "pages"
+  1: "pages"
 };
 
 var indexSectionLabels =
 {
   0: "All",
-  1: "Classes",
-  2: "Files",
-  3: "Functions",
-  4: "Pages"
+  1: "Pages"
 };
 
