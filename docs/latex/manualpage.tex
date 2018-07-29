@@ -1,0 +1,156 @@
+\subsection*{Available Commands}
+
+\tabulinesep=1mm
+\begin{longtabu} spread 0pt [c]{*{2}{|X[-1]}|}
+\hline
+\rowcolor{\tableheadbgcolor}\textbf{ Command  }&\textbf{ Description   }\\\cline{1-2}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\rowcolor{\tableheadbgcolor}\textbf{ Command  }&\textbf{ Description   }\\\cline{1-2}
+\endhead
+trim  &Trim reads in aligned B\+A\+Ms   \\\cline{1-2}
+variants  &Call variants from aligned B\+AM file   \\\cline{1-2}
+filtervariants  &Filter variants across replicates   \\\cline{1-2}
+consensus  &Call consensus from aligned B\+AM file   \\\cline{1-2}
+getmasked  &Get amplicons with primer mismatches   \\\cline{1-2}
+removereads  &Remove reads from trimmed B\+AM file   \\\cline{1-2}
+version  &Show version information   \\\cline{1-2}
+trimadapter  &(E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+AL) Trim adapter sequences from reads   \\\cline{1-2}
+\end{longtabu}
+
+
+To view detailed usage for each command type {\ttfamily ivar $<$command$>$} Note \+: Commands maked (E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+AL) are still under active development.
+
+\subsection*{Description of commands}
+
+\paragraph*{Trim primer sequences with i\+Var}
+
+Command\+: 
+\begin{DoxyCode}
+ivar trim
+
+Usage: ivar trim -i <input.bam> -b <primers.bed> -p prefix [-m <min-length>] [-q <min-quality>] [-s
+       <sliding-window-width>]
+
+Input Options    Description
+           -i    (Required) <input.bam> Indexed aligned bam file to trim primers and quality
+           -b    (Required) <primers.bed> BED file with primer sequences and positions
+           -m    Minimum length of read to retain after trimming (Default: 30)
+           -q    Minimum quality threshold for sliding window to pass (Default: 20)
+           -s    Width of sliding window (Default: 4)
+
+Output Options   Description
+           -p    (Required) Prefix for the output BAM file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+\end{DoxyCode}
+
+
+\paragraph*{Call variants with i\+Var}
+
+Command\+: 
+\begin{DoxyCode}
+ivar variants
+
+Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -Q 0 -F 0 <input-bam> | ivar variants -p
+       prefix [-q <min-quality>] [-t <min-frequency-threshold>]
+
+Note : samtools mpileup output must be piped into ivar variants
+
+Input Options    Description
+           -q    <min-quality> Minimum quality threshold to count base (Default: 20)
+           -t    <min-frequency-threshold> Minimum frequency threshold(0 - 1) to call variants (Default:
+       0.03)
+
+Output Options   Description
+           -p    (Required) Prefix, prefix for the output tsv variant file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+\end{DoxyCode}
+
+
+\paragraph*{Filter variants across replicates with i\+Var}
+
+Command\+: 
+\begin{DoxyCode}
+ivar filtervariants
+Usage: ivar filtervariants [-p prefix] replicate-one.tsv replicate-two.csv ...
+
+Output Options   Description
+           -p    (Required) Prefix, prefix for the filtered tsv file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+\end{DoxyCode}
+
+
+\paragraph*{Call a consensus sequences from an aligned B\+AM file.}
+
+Command\+: 
+\begin{DoxyCode}
+ivar consensus
+Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 [<input-bam>] | ivar consensus [-p prefix]
+
+Note : samtools mpileup output must be piped into "ivar consensus"
+
+Input Options    Description
+           -q    Minimum quality threshold to count base (Default: 20)
+           -t    Threshold(0 - 100) to call consensus (Default: 0)
+Output Options   Description
+           -p    (Required) Prefix, prefix for the output tsv file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+\end{DoxyCode}
+
+
+\paragraph*{Get primers with mismatches to the reference sequence.}
+
+Command\+: 
+\begin{DoxyCode}
+ivar getmasked
+Usage: ivar getmasked [-i <input-filtered-tsv>] [-b <bed-file>]
+
+Input Options    Description
+           -i    (Required) Input filtered variants tsv generated from "ivar filtervariants"
+           -b    (Required) Bed file with primer indices
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+\end{DoxyCode}
+
+
+\paragraph*{Remove reads associated with mismatched primer indices}
+
+Command\+: 
+\begin{DoxyCode}
+ivar removereads
+Usage: ivar removereads [-i <input-bam>] [-p prefix] primer-index-1 primer-index-2 primer-index-3
+       primer-index-4 ...
+
+Input Options    Description
+           -i    (Required) Input BAM file run through `ivar trim` command whcih adds the primer number to
+       BAM auxillary data
+Output Options   Description
+           -p    (Required) Prefix, prefix for the filtered BAM file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+\end{DoxyCode}
+ 

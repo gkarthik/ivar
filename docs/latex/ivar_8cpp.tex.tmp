@@ -1,0 +1,67 @@
+\hypertarget{ivar_8cpp}{}\section{src/ivar.cpp File Reference}
+\label{ivar_8cpp}\index{src/ivar.\+cpp@{src/ivar.\+cpp}}
+{\ttfamily \#include $<$iostream$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}remove\+\_\+reads\+\_\+from\+\_\+amplicon.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}call\+\_\+consensus\+\_\+pileup.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}call\+\_\+variants.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}trim\+\_\+primer\+\_\+quality.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}get\+\_\+masked\+\_\+amplicons.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}suffix\+\_\+tree.\+h\char`\"{}}\newline
+Include dependency graph for ivar.\+cpp\+:
+% FIG 0
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{structargs__t}{args\+\_\+t}}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{ivar_8cpp_ae5ad5cbeccaedc03a48d3c7eaa803e79}\label{ivar_8cpp_ae5ad5cbeccaedc03a48d3c7eaa803e79}} 
+void {\bfseries print\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_a7d3d88c60168244994ebfb9d01d71aad}\label{ivar_8cpp_a7d3d88c60168244994ebfb9d01d71aad}} 
+void {\bfseries print\+\_\+trim\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_a26b660ffee9302a25fc4b85b6fa7f9d9}\label{ivar_8cpp_a26b660ffee9302a25fc4b85b6fa7f9d9}} 
+void {\bfseries print\+\_\+variants\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_a494f2b3c1101c4424b73e80d33e4be09}\label{ivar_8cpp_a494f2b3c1101c4424b73e80d33e4be09}} 
+void {\bfseries print\+\_\+filtervariants\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_a8499b57df7ba0c00092dd1fd724cd445}\label{ivar_8cpp_a8499b57df7ba0c00092dd1fd724cd445}} 
+void {\bfseries print\+\_\+consensus\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_afab6040035caaef89097988ea732ed2c}\label{ivar_8cpp_afab6040035caaef89097988ea732ed2c}} 
+void {\bfseries print\+\_\+removereads\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_a27fcc15b0b3c8b4386694af97f09fb91}\label{ivar_8cpp_a27fcc15b0b3c8b4386694af97f09fb91}} 
+void {\bfseries print\+\_\+getmasked\+\_\+usage} ()
+\item 
+\mbox{\Hypertarget{ivar_8cpp_ac27b7b01a0eb74231c25b3afe477dcae}\label{ivar_8cpp_ac27b7b01a0eb74231c25b3afe477dcae}} 
+void {\bfseries print\+\_\+trimadapter\+\_\+usage} ()
+\item 
+int \mbox{\hyperlink{ivar_8cpp_a0ddf1224851353fc92bfbff6f499fa97}{main}} (int argc, char $\ast$argv\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+\subsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{ivar_8cpp_a1e20c163c03189acfe600030f8ef8b95}\label{ivar_8cpp_a1e20c163c03189acfe600030f8ef8b95}} 
+const std\+::string {\bfseries V\+E\+R\+S\+I\+ON} = \char`\"{}1.\+0\char`\"{}
+\item 
+\mbox{\Hypertarget{ivar_8cpp_aefc57f4c7b665d04123350d1d1b9fbff}\label{ivar_8cpp_aefc57f4c7b665d04123350d1d1b9fbff}} 
+struct \mbox{\hyperlink{structargs__t}{args\+\_\+t}} {\bfseries g\+\_\+args}
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{ivar_8cpp_a0ddf1224851353fc92bfbff6f499fa97}\label{ivar_8cpp_a0ddf1224851353fc92bfbff6f499fa97}} 
+\index{ivar.\+cpp@{ivar.\+cpp}!main@{main}}
+\index{main@{main}!ivar.\+cpp@{ivar.\+cpp}}
+\subsubsection{\texorpdfstring{main()}{main()}}
+{\footnotesize\ttfamily int main (\begin{DoxyParamCaption}\item[{int}]{argc,  }\item[{char $\ast$}]{argv\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+Main Function
+
+This is where the command line arguments into i\+Var are parsed. i\+Var first parses the first argument and depending on the command it either returns the version or uses G\+NU getopt to parse the remaining arguments. 

@@ -1,0 +1,87 @@
+.TH "src/ivar.cpp" 3 "Sun Jul 29 2018" "iVar" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+src/ivar.cpp
+.SH SYNOPSIS
+.br
+.PP
+\fC#include <iostream>\fP
+.br
+\fC#include <unistd\&.h>\fP
+.br
+\fC#include 'remove_reads_from_amplicon\&.h'\fP
+.br
+\fC#include 'call_consensus_pileup\&.h'\fP
+.br
+\fC#include 'call_variants\&.h'\fP
+.br
+\fC#include 'trim_primer_quality\&.h'\fP
+.br
+\fC#include 'get_masked_amplicons\&.h'\fP
+.br
+\fC#include 'suffix_tree\&.h'\fP
+.br
+
+.SS "Classes"
+
+.in +1c
+.ti -1c
+.RI "struct \fBargs_t\fP"
+.br
+.in -1c
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBprint_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_trim_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_variants_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_filtervariants_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_consensus_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_removereads_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_getmasked_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_trimadapter_usage\fP ()"
+.br
+.ti -1c
+.RI "void \fBprint_version_info\fP ()"
+.br
+.ti -1c
+.RI "int \fBmain\fP (int argc, char *argv[])"
+.br
+.in -1c
+.SS "Variables"
+
+.in +1c
+.ti -1c
+.RI "const std::string \fBVERSION\fP = '1\&.0'"
+.br
+.ti -1c
+.RI "struct \fBargs_t\fP \fBg_args\fP"
+.br
+.in -1c
+.SH "Function Documentation"
+.PP 
+.SS "int main (int argc, char * argv[])"
+Main Function
+.PP
+This is where the command line arguments into iVar are parsed\&. iVar first parses the first argument and depending on the command it either returns the version or uses GNU getopt to parse the remaining arguments\&. 
+.PP
+Definition at line 144 of file ivar\&.cpp\&.
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for iVar from the source code\&.

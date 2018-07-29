@@ -1,0 +1,83 @@
+.TH "suffix_node" 3 "Sun Jul 29 2018" "iVar" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+suffix_node
+.SH SYNOPSIS
+.br
+.PP
+.SS "Public Member Functions"
+
+.in +1c
+.ti -1c
+.RI "\fBsuffix_node\fP (int b, int *e, \fBsuffix_node\fP *p, \fBsuffix_node\fP *l)"
+.br
+.ti -1c
+.RI "bool \fBis_leaf_node\fP ()"
+.br
+.ti -1c
+.RI "bool \fBcontains_child\fP (int ext)"
+.br
+.ti -1c
+.RI "int \fBget_length\fP ()"
+.br
+.ti -1c
+.RI "int \fBget_depth\fP ()"
+.br
+.ti -1c
+.RI "std::string \fBget_longest_common_substring\fP (std::string s1, std::string s2)"
+.br
+.ti -1c
+.RI "std::string \fBget_path\fP (std::string s)"
+.br
+.ti -1c
+.RI "void \fBextend_path\fP (int *e)"
+.br
+.ti -1c
+.RI "\fBsuffix_node\fP * \fBadd_child\fP (int ext, int b, int *e, \fBsuffix_node\fP *l)"
+.br
+.ti -1c
+.RI "void \fBadd_child\fP (\fBsuffix_node\fP *c, int ext)"
+.br
+.ti -1c
+.RI "\fBsuffix_node\fP * \fBget_child\fP (int ext)"
+.br
+.ti -1c
+.RI "bool \fBcontains_depth\fP (int depth)"
+.br
+.ti -1c
+.RI "void \fBprint\fP (std::string s)"
+.br
+.ti -1c
+.RI "bool \fBwalk_next\fP (int &beg, int &suffix_length)"
+.br
+.in -1c
+.SS "Public Attributes"
+
+.in +1c
+.ti -1c
+.RI "int \fBbegin\fP"
+.br
+.ti -1c
+.RI "int \fBnchildren\fP"
+.br
+.ti -1c
+.RI "int * \fBend\fP"
+.br
+.ti -1c
+.RI "\fBsuffix_node\fP ** \fBchildren\fP"
+.br
+.ti -1c
+.RI "\fBsuffix_node\fP * \fBparent\fP"
+.br
+.ti -1c
+.RI "\fBsuffix_node\fP * \fBsuffix_link\fP"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+Definition at line 14 of file suffix_tree\&.h\&.
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for iVar from the source code\&.

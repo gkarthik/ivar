@@ -1,0 +1,78 @@
+\hypertarget{classsuffix__node}{}\section{suffix\+\_\+node Class Reference}
+\label{classsuffix__node}\index{suffix\+\_\+node@{suffix\+\_\+node}}
+
+
+Collaboration diagram for suffix\+\_\+node\+:
+% FIG 0
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsuffix__node_a8622127d06af65bd3d16ce5958995b1b}\label{classsuffix__node_a8622127d06af65bd3d16ce5958995b1b}} 
+{\bfseries suffix\+\_\+node} (int b, int $\ast$e, \mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$p, \mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$l)
+\item 
+\mbox{\Hypertarget{classsuffix__node_ab465cab427de4e42b7b917e738b43425}\label{classsuffix__node_ab465cab427de4e42b7b917e738b43425}} 
+bool {\bfseries is\+\_\+leaf\+\_\+node} ()
+\item 
+\mbox{\Hypertarget{classsuffix__node_af00dced817833c98c331293ebe819de5}\label{classsuffix__node_af00dced817833c98c331293ebe819de5}} 
+bool {\bfseries contains\+\_\+child} (int ext)
+\item 
+\mbox{\Hypertarget{classsuffix__node_a7b47f09cf1d6a59849dba9fbcb1f3f61}\label{classsuffix__node_a7b47f09cf1d6a59849dba9fbcb1f3f61}} 
+int {\bfseries get\+\_\+length} ()
+\item 
+\mbox{\Hypertarget{classsuffix__node_a7fb5c818a596880ac914780e1b8c198f}\label{classsuffix__node_a7fb5c818a596880ac914780e1b8c198f}} 
+int {\bfseries get\+\_\+depth} ()
+\item 
+\mbox{\Hypertarget{classsuffix__node_a5469454f507f118785f65f206b141c3d}\label{classsuffix__node_a5469454f507f118785f65f206b141c3d}} 
+std\+::string {\bfseries get\+\_\+longest\+\_\+common\+\_\+substring} (std\+::string s1, std\+::string s2)
+\item 
+\mbox{\Hypertarget{classsuffix__node_aec052c5cffdd951390cdfb40c360908e}\label{classsuffix__node_aec052c5cffdd951390cdfb40c360908e}} 
+std\+::string {\bfseries get\+\_\+path} (std\+::string s)
+\item 
+\mbox{\Hypertarget{classsuffix__node_a48933a8d9a3958c56dbbe98ae43deb84}\label{classsuffix__node_a48933a8d9a3958c56dbbe98ae43deb84}} 
+void {\bfseries extend\+\_\+path} (int $\ast$e)
+\item 
+\mbox{\Hypertarget{classsuffix__node_af1c5aa14ccae896455815cd4c5a4d1a8}\label{classsuffix__node_af1c5aa14ccae896455815cd4c5a4d1a8}} 
+\mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$ {\bfseries add\+\_\+child} (int ext, int b, int $\ast$e, \mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$l)
+\item 
+\mbox{\Hypertarget{classsuffix__node_ac25245d1931525b91678167fe07c4eb7}\label{classsuffix__node_ac25245d1931525b91678167fe07c4eb7}} 
+void {\bfseries add\+\_\+child} (\mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$c, int ext)
+\item 
+\mbox{\Hypertarget{classsuffix__node_a1ce4cfd4bf2136222a1162dd2555e2d3}\label{classsuffix__node_a1ce4cfd4bf2136222a1162dd2555e2d3}} 
+\mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$ {\bfseries get\+\_\+child} (int ext)
+\item 
+\mbox{\Hypertarget{classsuffix__node_a50ab619252f0ad2091337bbf9688f9bf}\label{classsuffix__node_a50ab619252f0ad2091337bbf9688f9bf}} 
+bool {\bfseries contains\+\_\+depth} (int depth)
+\item 
+\mbox{\Hypertarget{classsuffix__node_a050ba7b3d5859d1dafb053e34a16663b}\label{classsuffix__node_a050ba7b3d5859d1dafb053e34a16663b}} 
+void {\bfseries print} (std\+::string s)
+\item 
+\mbox{\Hypertarget{classsuffix__node_a931f49a361496b16bfa52609ae82630d}\label{classsuffix__node_a931f49a361496b16bfa52609ae82630d}} 
+bool {\bfseries walk\+\_\+next} (int \&beg, int \&suffix\+\_\+length)
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classsuffix__node_a9de4356329d9fd07511bcc4ee080df50}\label{classsuffix__node_a9de4356329d9fd07511bcc4ee080df50}} 
+int {\bfseries begin}
+\item 
+\mbox{\Hypertarget{classsuffix__node_a52e5a4ab12e08966e38db512ed6316dc}\label{classsuffix__node_a52e5a4ab12e08966e38db512ed6316dc}} 
+int {\bfseries nchildren}
+\item 
+\mbox{\Hypertarget{classsuffix__node_af3d0857764f653e1a0f622af5215a4a0}\label{classsuffix__node_af3d0857764f653e1a0f622af5215a4a0}} 
+int $\ast$ {\bfseries end}
+\item 
+\mbox{\Hypertarget{classsuffix__node_ac60ca6423a4769832874c1a6efe3d1c1}\label{classsuffix__node_ac60ca6423a4769832874c1a6efe3d1c1}} 
+\mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$$\ast$ {\bfseries children}
+\item 
+\mbox{\Hypertarget{classsuffix__node_a3034292aaf83597ce658f45438c89133}\label{classsuffix__node_a3034292aaf83597ce658f45438c89133}} 
+\mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$ {\bfseries parent}
+\item 
+\mbox{\Hypertarget{classsuffix__node_a7d19dcd69e8b91ecbde055f7c4d86048}\label{classsuffix__node_a7d19dcd69e8b91ecbde055f7c4d86048}} 
+\mbox{\hyperlink{classsuffix__node}{suffix\+\_\+node}} $\ast$ {\bfseries suffix\+\_\+link}
+\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+src/suffix\+\_\+tree.\+h\item 
+src/suffix\+\_\+tree.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,75 @@
+.TH "installpage" 3 "Sun Jul 29 2018" "iVar" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+installpage \- Installation 
+
+.SS "Dependencies "
+.PP
+.IP "\(bu" 2
+\fChtslib\fP
+.PP
+.PP
+Note:
+.PP
+It is highly recommended that \fCsamtools\fP also be installed alongside iVar\&. iVar uses the output of samtools mpileup to call variants and generate consensus sequences\&. In addition, samtools \fCsort\fP and \fCindex\fP commands are very useful to setup a pipeline using iVar\&.
+.PP
+.SS "Installation "
+.PP
+To install ivar, run the following commands\&.
+.PP
+.PP
+.nf
+\&./autogen\&.sh
+\&./configure
+make
+make install
+.fi
+.PP
+.PP
+If htslib has been installed in a non standard location, please run,
+.PP
+.PP
+.nf
+\&./autogen\&.sh
+\&./configure --with-hts=/prefix/to/bin/folder/with/htslib
+make
+make install
+.fi
+.PP
+.PP
+Also, please add the following to your \&.bashrc so that iVar can find htslib dynamic libraries during runtime\&.
+.PP
+.PP
+.nf
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
+.fi
+.PP
+.PP
+Installing \fCGNU Autotools\fP,
+.PP
+.IP "\(bu" 2
+OSX
+.PP
+.PP
+Using \fChomebrew\fP,
+.PP
+.PP
+.nf
+brew install autoconf automake libtool
+.fi
+.PP
+.PP
+.IP "\(bu" 2
+Ubuntu
+.PP
+.PP
+Using \fCAPT\fP on Ubuntu,
+.PP
+.PP
+.nf
+apt-get install autotools-dev
+.fi
+.PP
+.PP
+For bug reports please email gkarthik[at]scripps\&.edu or raise an issue on Github\&. 
