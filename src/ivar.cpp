@@ -1,3 +1,5 @@
+/*! \file */
+
 #include <iostream>
 #include <unistd.h>
 
@@ -27,78 +29,86 @@ struct args_t {
 
 void print_usage(){
   std::cout <<
-    "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]\n"
+    "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|getmasked|removereads|version|help>]\n"
     "\n"
     "        Command       Description\n"
-    "           trim       Trim reads in aligned bams\n"
-    "       variants       Call Variants from aligned bam\n"
+    "           trim       Trim reads in aligned BAMs\n"
+    "       variants       Call variants from aligned BAM file\n"
     " filtervariants       Filter variants across replicates\n"
-    "      consensus       Call consensus from vcf file\n"
-    "    removereads       Remove reads from aligned bam\n"
+    "      consensus       Call consensus from aligned BAM file\n"
     "      getmasked       Get amplicons with primer mismatches\n"
-    "      trimadapter     Trim adapter sequences from reads\n"
+    "    removereads       Remove reads from trimmed BAM file\n"
+    "        version       Show version information\n"
+    "    trimadapter       (EXPERIMENTAL) Trim adapter sequences from reads\n"
     "\n"
     "To view detailed usage for each command type `ivar <command>` \n";
 }
 
 void print_trim_usage(){
   std::cout <<
-    "Usage: ivar trim [-i input] [-b <bedfile>] [-p prefix]\n\n"
+    "Usage: ivar trim -i <input.bam> -b <primers.bed> -p <prefix> [-m <min-length>] [-q <min-quality>] [-s <sliding-window-width>]\n\n"
     "Input Options    Description\n"
-    "           -i    (Required) Input, aligned bam file to trim primers and quality\n"
-    "           -b    (Required) Bed File, Bed file with primer sequences and positions.\n"
-    "           -m    Minimum length of read\n"
+    "           -i    (Required) Indexed aligned bam file to trim primers and quality\n"
+    "           -b    (Required) BED file with primer sequences and positions\n"
+    "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n\n"
     "Output Options   Description\n"
-    "           -p    (Required) Prefix, prefix for the output file\n";
+    "           -p    (Required) Prefix for the output BAM file\n";
 }
 
 void print_variants_usage(){
   std::cout <<
-    "Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -Q 0 -F 0 -i <input-bam> | ivar variants [-p prefix]\n\n"
+      "Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -Q 0 -F 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
-    "           -r    (Required) Reference fasta file\n"
-    "           -q    Minimum quality threshold to count base (Default: 20)\n"
-    "           -t    Minimum Frequency Threshold(0 - 1) to call variants (Default: 0.03)."
+    "           -q    Minimum quality score threshold to count base (Default: 20)\n"
+    "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n\n"
     "Output Options   Description\n"
-    "           -p    (Required) Prefix, prefix for the output tsv file\n";
+    "           -p    (Required) Prefix for the output tsv variant file\n\n";
 }
 
 void print_filtervariants_usage(){
   std::cout <<
-    "Usage: ivar filtervariants [-p prefix] replicate-one.tsv replicate-two.csv ... \n\n"
+    "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... \n\n"
+    "Input: Variant tsv files for each replicate\n\n"
     "Output Options   Description\n"
-    "           -p    (Required) Prefix, prefix for the filtered tsv file\n";
+    "           -p    (Required) Prefix for the output filtered tsv file\n";
 }
 
 void print_consensus_usage(){
   std::cout <<
-    "Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 [<input-bam>] | ivar consensus [-p prefix] \n\n"
+    "Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix> \n\n"
     "Note : samtools mpileup output must be piped into `ivar consensus`\n\n"
     "Input Options    Description\n"
-    "           -q    Minimum quality threshold to count base (Default: 20)\n"
-    "           -t    Threshold(0 - 100) to call consensus (Default: 0)\n"
+    "           -q    Minimum quality score threshold to count base (Default: 20)\n"
+    "           -t    Minimum frequency threshold(0 - 1) to call consensus. (Default: 0)\n"
+    "                 Frequently used thresholds | Description\n"
+    "                 ---------------------------|------------\n"
+    "                                          0 | Majority or most common base\n"
+    "                                        0.2 | Bases that make up atleast 20% of the depth at a position\n"
+    "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
+    "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
+    "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
     "Output Options   Description\n"
-    "           -p    (Required) Prefix, prefix for the output tsv file\n";
+    "           -p    (Required) Prefix for the output fasta file and quality file\n";
 }
 
 void print_removereads_usage(){
   std::cout <<
-    "Usage: ivar removereads [-i <input-bam>] [-p prefix] primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...  \n\n"
+    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...  \n\n"
     "Input Options    Description\n"
-    "           -i    (Required) Input BAM file run through `ivar trim` command whcih adds the primer number to BAM auxillary data\n"
+    "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using sort_index_bam.sh\n"
     "Output Options   Description\n"
-    "           -p    (Required) Prefix, prefix for the filtered BAM file\n";
+    "           -p    (Required) Prefix for the output filtered BAM file\n";
 }
 
 void print_getmasked_usage(){
   std::cout <<
-    "Usage: ivar getmasked [-i <input-filtered-tsv>] [-b <bed-file>]\n\n"
+    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed>\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input filtered variants tsv generated from `ivar filtervariants`\n"
-    "           -b    (Required) Bed file with primer indices\n";
+    "           -b    (Required) BED file with primer sequences and positions\n";
 }
 
 void print_trimadapter_usage(){
@@ -111,6 +121,11 @@ void print_trimadapter_usage(){
     "           -p    (Required) Prefix of output fastq files\n";
 }
 
+void print_version_info(){
+  std::cout << "iVar version " << VERSION << std::endl <<
+    "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n";
+}
+
 static const char *trim_opt_str = "i:b:p:m::q::s::h?";
 static const char *variants_opt_str = "p:t::q::h?";
 static const char *consensus_opt_str = "p:q::t::h?";
@@ -120,19 +135,10 @@ static const char *getmasked_opt_str = "i:b:h?";
 static const char *trimadapter_opt_str = "1:2::p:a:h?";
 
 /*!
- * Main Function
- * Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|removereads|getmasked>]
- *
- * Command       Description
- * trim       Trim reads in aligned bams
- * variants       Call Variants from aligned bam
- * filtervariants       Filter variants across replicates
- * consensus       Call consensus from vcf file
- * removereads       Remove reads from aligned bam
- * getmasked       Get amplicons with primer mismatches
- * trimadapter     Trim adapter sequences from reads
- *
- * To view detailed usage for each command type `ivar <command>`
+ Main Function
+
+ This is where the command line arguments into iVar are parsed.
+ iVar first parses the first argument and depending on the command it either returns the version or uses GNU getopt to parse the remaining arguments.
  */
 
 int main(int argc, char* argv[]){
@@ -142,7 +148,7 @@ int main(int argc, char* argv[]){
   }
   std::string cmd(argv[1]);
   if(cmd.compare("-v") == 0){
-    std::cout << "iVar version " << VERSION << std::endl;
+
     return 0;
   }
   int opt = 0, res = 0;
