@@ -4,17 +4,15 @@
 .SH NAME
 installpage \- Installation 
 
-.SS "Dependencies "
-.PP
 .IP "\(bu" 2
 \fChtslib\fP
+.IP "\(bu" 2
+\fCAwk\fP - Available on most UNIX systems\&.
 .PP
 .PP
 Note:
 .PP
 It is highly recommended that \fCsamtools\fP also be installed alongside iVar\&. iVar uses the output of samtools mpileup to call variants and generate consensus sequences\&. In addition, samtools \fCsort\fP and \fCindex\fP commands are very useful to setup a pipeline using iVar\&.
-.PP
-.SS "Installation "
 .PP
 To install ivar, run the following commands\&.
 .PP
@@ -48,9 +46,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 .PP
 Installing \fCGNU Autotools\fP,
 .PP
-.IP "\(bu" 2
-OSX
-.PP
+.SS "OSX"
 .PP
 Using \fChomebrew\fP,
 .PP
@@ -60,9 +56,7 @@ brew install autoconf automake libtool
 .fi
 .PP
 .PP
-.IP "\(bu" 2
-Ubuntu
-.PP
+.SS "Ubuntu"
 .PP
 Using \fCAPT\fP on Ubuntu,
 .PP

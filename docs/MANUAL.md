@@ -1,8 +1,10 @@
 Manual {#manualpage}
 ============
 
-## Available Commands
+[TOC]
 
+Available Commands
+====
 | Command | Description |
 |:--------|:------------|
 | trim | Trim reads in aligned BAMs |
@@ -17,124 +19,241 @@ Manual {#manualpage}
 To view detailed usage for each command type `ivar <command>`
 Note : Commands maked (EXPERIMENTAL) are still under active development.
 
-## Description of commands
+Description of commands
+====
 
-#### Trim primer sequences with iVar
+Trim primer sequences with iVar
+----
+
+iVar uses primer positions supplied in a BED file to soft clip primer sequences from an aligned, sorted and indexed BAM file. Following this, the reads are trimmed based on a quality threshold(Default: 20). To do the quality trimming, iVar uses a sliding window approach(Default: 4). The windows slides from the 5' end to the 3' end and if at any point the average base quality in the window falls below the threshold, the remaining read is soft clipped. If after trimming, the length of the read is greater than the minimum length specified(Default: 30), the read is written to the new trimmed BAM file.
+
+To sort and index an aligned BAM file, the following command can be used,
+
+```
+# Input file - test.bam
+samtools sort -o test.sorted.bam test.bam && samtools index test.sorted.bam.
+```
+
+**Note**: All the trimming in iVar is done by soft-clipping reads in an aligned BAM file. This information is lost if reads are extracted in fastq or fasta format from the trimmed BAM file.
 
 Command:
 ```
 ivar trim
 
-Usage: ivar trim -i <input.bam> -b <primers.bed> -p prefix [-m <min-length>] [-q <min-quality>] [-s <sliding-window-width>]
+Usage: ivar trim -i <input.bam> -b <primers.bed> -p <prefix> [-m <min-length>] [-q <min-quality>] [-s <sliding-window-width>]
 
 Input Options    Description
-           -i    (Required) <input.bam> Indexed aligned bam file to trim primers and quality
-           -b    (Required) <primers.bed> BED file with primer sequences and positions
+           -i    (Required) Indexed aligned bam file to trim primers and quality
+           -b    (Required) BED file with primer sequences and positions
            -m    Minimum length of read to retain after trimming (Default: 30)
            -q    Minimum quality threshold for sliding window to pass (Default: 20)
            -s    Width of sliding window (Default: 4)
 
 Output Options   Description
            -p    (Required) Prefix for the output BAM file
+
 ```
 
 Example Usage:
 ```
-
+ivar trim -b test_primers.bed -p test.trimmed -i test.bam -q 15 -m 50 -s 4
 ```
 
-#### Call variants with iVar
+The command above will produce a trimmed BAM file test.trimmed.bam after trimming the aligned reads in test.bam using the primer positions specified in test_primers.bed and a minimum quality threshold of **15**, minimum read length of **50** and a sliding window of **4**.
+
+Example BED file
+
+```
+Puerto	28	52	400_1_out_L	60	+
+Puerto	482	504	400_1_out_R	60	-
+Puerto	359	381	400_2_out_L	60	+
+Puerto	796	818	400_2_out_R	60	-
+Puerto	658	680	400_3_out_L*	60	+
+Puerto	1054	1076	400_3_out_R*	60	-
+.
+.
+.
+.
+```
+
+Call variants with iVar
+----
+
+iVar uses the output of the `samtools mpileup` command to call variants - single nucleotide variants(SNVs) and indels. In order to call variants correctly, the `samtools mpileup` command must be run with the reference fasta supplied using the options(--reference or -f). The output of `samtools pileup` is then piped into `ivar variants` to generate a .tsv file with the following fields,
+
+*TODO: Enter fields and Description*
+
+There are two parameters that can be set for variant calling using iVar - minimum quality(Default: 20) and minimum frequency(Default: 0.03). Minimum quality is the minimum quality for a base to be used in frequency calculations at a given position. Minimum frequency is the minimum frequency required for a SNV or indel to be reported.
 
 Command:
 ```
 ivar variants
 
-Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -Q 0 -F 0 <input-bam> | ivar variants -p prefix [-q <min-quality>] [-t <min-frequency-threshold>]
+Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -B -Q 0 -F 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>]
 
 Note : samtools mpileup output must be piped into ivar variants
 
 Input Options    Description
-           -q    <min-quality> Minimum quality threshold to count base (Default: 20)
-           -t    <min-frequency-threshold> Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)
+           -q    Minimum quality score threshold to count base (Default: 20)
+           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)
 
 Output Options   Description
-           -p    (Required) Prefix, prefix for the output tsv variant file
+           -p    (Required) Prefix for the output tsv variant file
 ```
 
 Example Usage:
 ```
-
+samtools mpileup --reference test_reference.fa -A -d 600000 -F 0 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03
 ```
 
-#### Filter variants across replicates with iVar
+The command above will generate a test.tsv file.
+
+**Note**: Please use the -B options with `samtools mpileup` to call variants and generate consensus. When a reference sequence is supplied, the quality of the reference base is reduced to 0 (ASCII: !) in the mpileup output. Disabling BAQ with -B seems to fix this. This was tested in samtools 1.7 and 1.8.
+
+Filter variants across replicates with iVar
+----
+
+Under the hood, iVar calls an Awk script to get an intersection of variants(in .tsv files) called from any number of replicates. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates.
+
+*TODO: Explain fields.*
 
 Command:
 ```
 ivar filtervariants
-Usage: ivar filtervariants [-p prefix] replicate-one.tsv replicate-two.csv ...
+
+Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ...
+
+Input: Variant tsv files for each replicate
 
 Output Options   Description
-           -p    (Required) Prefix, prefix for the filtered tsv file
+           -p    (Required) Prefix for the output filtered tsv file
 
 ```
 
 Example Usage:
 ```
-
+ivar filtervariants -p test.filtered test_rep1.tsv test_rep2.tsv test_rep3.tsv
 ```
 
-#### Call a consensus sequences from an aligned BAM file.
+The command above will prodoce an output .tsv file test.filtered.tsv.
+
+Generate a consensus sequences from an aligned BAM file
+----
+
+To generate a consensus sequence iVar uses the output of `samtools mpileup` command. The mpileup output must be piped into `ivar consensus`. There are two parameters that can be set - minimum quality(Default: 20) and minimum frequency threshold(0.03). Minimum quality is the minimum quality of a base to be considered in calculations of variant frequencies at a given position. Minimum frequency threshold is the minimum frequency that a base must match to be called as the consensus base at a position. If one base is not enough to match a given frequency, then an ambigious nucleotide is called at that position.
+
+As an example, consider a position with 6As, 3Ts and 1C. The table below shows the consensus nucleotide called at different frequencies.
+
+| Minimum frequency threshold | Consensus |
+|:----------------------------|-----------|
+| 0 | A |
+| 0.5 | A |
+| 0.6 | A |
+| 0.7 | W(A or T) |
+| 0.9 | W (A or T) |
+| 1 | H (A or T or C) |
+
+If there are two nucleotides at the same frequency, both nucleotides are used to call an ambigious base as the consensus. As an example, consider a position wiht 6 Ts, 2As and 2 Gs. The table below shows the consensus nucleotide called at different frequencies.
+
+| Minimum frequency threshold | Consensus |
+|:----------------------------|-----------|
+| 0 | T |
+| 0.5 | T |
+| 0.6 | T |
+| 0.7 | D(A or T or G) |
+| 0.9 | D(A or T or G) |
+| 1 | D(A or T or G) |
+
+The output of the command is a fasta file with the consensus sequence and a .txt file with the average quality of every base used to generate the consensus at each position. *For insertions, the quality is set to be the minimum quality threshold since mpileup doesn't give the quality of bases in insertions.*
 
 Command:
 ```
 ivar consensus
-Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 [<input-bam>] | ivar consensus [-p prefix]
 
-Note : samtools mpileup output must be piped into "ivar consensus"
+Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix>
+
+Note : samtools mpileup output must be piped into ivar consensus
 
 Input Options    Description
-           -q    Minimum quality threshold to count base (Default: 20)
-           -t    Threshold(0 - 100) to call consensus (Default: 0)
+           -q    Minimum quality score threshold to count base (Default: 20)
+           -t    Minimum frequency threshold(0 - 1) to call consensus. (Default: 0)
+                 Frequently used thresholds | Description
+                 ---------------------------|------------
+                                          0 | Majority or most common base
+                                        0.2 | Bases that make up atleast 20% of the depth at a position
+                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position
+                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position
+                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities
 Output Options   Description
-           -p    (Required) Prefix, prefix for the output tsv file
+           -p    (Required) Prefix for the output fasta file and quality file
+
 ```
 
 Example Usage:
 ```
-
+samtools mpileup -d 1000 -A -Q 0 -F 0 test.bam | ivar consensus -p test -q 20 -t 0
 ```
 
-#### Get primers with mismatches to the reference sequence.
+The command above will produce a test.fa fasta file with the consensus sequence and a test.qual.txt with the average quality of each base in the consensus sequence.
+
+Get primers with mismatches to the reference sequence
+----
+
+iVar uses a .tsv file with variants to get the zero based indices(based on the BED file) of mismatched primers. The output is the primer indices delimited by a space. The output is written to stdout and can be written to a file by redirecting output into a file using `>`.
 
 Command:
 ```
 ivar getmasked
-Usage: ivar getmasked [-i <input-filtered-tsv>] [-b <bed-file>]
+
+Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed>
 
 Input Options    Description
-           -i    (Required) Input filtered variants tsv generated from "ivar filtervariants"
-           -b    (Required) Bed file with primer indices
+           -i    (Required) Input filtered variants tsv generated from ivar filtervariants
+           -b    (Required) BED file with primer sequences and positions
+
 ```
 
 Example Usage:
 ```
-
+ivar getmasked -i test.filtered.tsv -b primers.bed > test.masked.txt
 ```
 
-#### Remove reads associated with mismatched primer indices
+The command above produces an output file - test.masked.txt.
+
+Example Output:
+```
+1 2 7 8
+```
+
+Remove reads associated with mismatched primer indices
+----
+
+This command accepts an aligned, sorrted and indexed BAM file trimmed using `ivar trim` and removes the reads corresponding to the supplied primer indices, usually the output of `ivar getmasked`. Under the hood, `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read. Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`.
 
 Command:
 ```
 ivar removereads
-Usage: ivar removereads [-i <input-bam>] [-p prefix] primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...
+
+Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...
 
 Input Options    Description
-           -i    (Required) Input BAM file run through `ivar trim` command whcih adds the primer number to BAM auxillary data
+           -i    (Required) Input BAM file  trimmed with ivar trim. Must be sorted and indexed, which can be done using sort_index_bam.sh
 Output Options   Description
-           -p    (Required) Prefix, prefix for the filtered BAM file
+           -p    (Required) Prefix for the output filtered BAM file
+
 ```
 
 Example Usage:
 ```
-
+ivar trim -i test.bam -p test.trimmed
+ivar removereads -i test.trimmed.bam -p test.trimmed.masked.bam 1 2 7 8
 ```
+
+The `ivar trim` command above trims test.bam and produced test.trimmed.bam with the primer indice data added. The `ivar removereads` command produces an output file - test.trimmed.masked.bam after removing all the reads corresponding to primer indices - 1,2,7 and 8.
+
+(Experimental) trimadapter
+----
+
+**Note: This feature is under active development and not completely validated yet.**
+
+trimadapter in iVar can be used to trim adapter sequences from fastq files using a supplied fasta file.
