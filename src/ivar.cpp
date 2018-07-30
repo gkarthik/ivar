@@ -32,7 +32,7 @@ void print_usage(){
     "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|getmasked|removereads|version|help>]\n"
     "\n"
     "        Command       Description\n"
-    "           trim       Trim reads in aligned BAMs\n"
+    "           trim       Trim reads in aligned BAM\n"
     "       variants       Call variants from aligned BAM file\n"
     " filtervariants       Filter variants across replicates\n"
     "      consensus       Call consensus from aligned BAM file\n"
