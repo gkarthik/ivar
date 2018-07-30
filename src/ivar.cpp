@@ -123,7 +123,7 @@ void print_trimadapter_usage(){
 
 void print_version_info(){
   std::cout << "iVar version " << VERSION << std::endl <<
-    "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n";
+    "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
 static const char *trim_opt_str = "i:b:p:m::q::s::h?";
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]){
   }
   std::string cmd(argv[1]);
   if(cmd.compare("-v") == 0){
-
+    print_version_info();
     return 0;
   }
   int opt = 0, res = 0;
@@ -370,6 +370,8 @@ int main(int argc, char* argv[]){
       return -1;
     }
     res = trim_adapter(g_args.f1, g_args.f2, g_args.adp_path, g_args.prefix);
+  } else if(cmd.compare("version") == 0){
+    print_version_info();
   } else {
     print_usage();
   }
