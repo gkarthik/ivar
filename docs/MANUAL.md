@@ -7,7 +7,7 @@ Available Commands
 ====
 | Command | Description |
 |:--------|:------------|
-| trim | Trim reads in aligned BAMs |
+| trim | Trim reads in aligned BAM |
 | variants | Call variants from aligned BAM file |
 | filtervariants | Filter variants across replicates
 | consensus | Call consensus from aligned BAM file |
