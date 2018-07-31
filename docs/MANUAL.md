@@ -133,7 +133,7 @@ Description
 | ALT\_FREQ | Frequency of alternate base               |
 | TOTAL\_DP | Total depth at position                   |
 | PVAL      | p-value of fisher's exact test            |
-| PASS      | Result of p-value <= 005                  |
+| PASS      | Result of p-value <= 0.05                 |
 
 
 
@@ -191,7 +191,7 @@ Description of fields
 | 11 | ALT_FREQ_<rep1-tsv-file-name>                     | Frequency of alternate base in replicate 1               |
 | 12 | TOTAL_DP_<rep1-tsv-file-name>                     | Total depth at position in replicate 1                   |
 | 13 | PVAL_<rep1-tsv-file-name>                         | p-value of fisher's exact test in replicate 1            |
-| 14 | PASS_<rep1-tsv-file-name>                         | Result of p-value <= 005 in replicate 1                  |
+| 14 | PASS_<rep1-tsv-file-name>                         | Result of p-value <= 0.05 in replicate 1                  |
 | 15 | Continue rows 5 - 14 for every replicate provided |                                                          |
 
 Generate a consensus sequences from an aligned BAM file
