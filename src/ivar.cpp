@@ -105,10 +105,12 @@ void print_removereads_usage(){
 
 void print_getmasked_usage(){
   std::cout <<
-    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed>\n\n"
+    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input filtered variants tsv generated from `ivar filtervariants`\n"
-    "           -b    (Required) BED file with primer sequences and positions\n";
+    "           -b    (Required) BED file with primer sequences and positions\n"
+    "Output Options   Description\n"
+    "           -p    (Required) Prefix for the output text file\n";
 }
 
 void print_trimadapter_usage(){
@@ -131,7 +133,7 @@ static const char *variants_opt_str = "p:t::q::h?";
 static const char *consensus_opt_str = "p:q::t::h?";
 static const char *removereads_opt_str = "i:p:h?";
 static const char *filtervariants_opt_str = "p:h?";
-static const char *getmasked_opt_str = "i:b:h?";
+static const char *getmasked_opt_str = "i:b:p:h?";
 static const char *trimadapter_opt_str = "1:2::p:a:h?";
 
 std::string get_filename_without_extension(std::string f, std::string ext){
@@ -341,6 +343,9 @@ int main(int argc, char* argv[]){
       case 'b':
 	g_args.bed = optarg;
 	break;
+      case 'p':
+	g_args.prefix = optarg;
+	break;
       case 'h':
       case '?':
 	print_getmasked_usage();
@@ -349,11 +354,12 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, getmasked_opt_str);
     }
-    if(g_args.bed.empty() || g_args.bam.empty()){
+    if(g_args.bed.empty() || g_args.bam.empty() || g_args.prefix.empty()){
       print_getmasked_usage();
       return -1;
     }
-    res = get_primers_with_mismatches(g_args.bed, g_args.bam);
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".txt");
+    res = get_primers_with_mismatches(g_args.bed, g_args.bam, g_args.prefix);
   } else if (cmd.compare("trimadapter") == 0){
     opt = getopt( argc, argv, trimadapter_opt_str);
     while( opt != -1 ) {
