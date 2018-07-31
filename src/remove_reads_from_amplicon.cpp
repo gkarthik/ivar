@@ -5,8 +5,9 @@
 #include<iostream>
 
 int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, uint16_t* amplicon, int amp_n){
+  std::cout << "Primer indices ";
   for (int i = 0; i < amp_n; ++i){
-    std::cout << "Amplicon: " << amplicon[i] << " ";
+    std::cout << amplicon[i] << " ";
   }
   bam_out += ".bam";
   std::cout << std::endl;

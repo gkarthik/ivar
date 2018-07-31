@@ -1,6 +1,7 @@
 /*! \file */
 
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 
 #include "remove_reads_from_amplicon.h"
@@ -99,6 +100,7 @@ void print_removereads_usage(){
     "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...  \n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using sort_index_bam.sh\n"
+    "           -t    (Required) Text file with primer indices separated by spaces\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered BAM file\n";
 }
@@ -131,7 +133,7 @@ void print_version_info(){
 static const char *trim_opt_str = "i:b:p:m::q::s::h?";
 static const char *variants_opt_str = "p:t::q::h?";
 static const char *consensus_opt_str = "p:q::t::h?";
-static const char *removereads_opt_str = "i:p:h?";
+static const char *removereads_opt_str = "i:p:t:h?";
 static const char *filtervariants_opt_str = "p:h?";
 static const char *getmasked_opt_str = "i:b:p:h?";
 static const char *trimadapter_opt_str = "1:2::p:a:h?";
@@ -276,6 +278,9 @@ int main(int argc, char* argv[]){
       case 'i':
 	g_args.bam = optarg;
 	break;
+      case 't':
+	g_args.bed = optarg;
+	break;
       case 'p':
 	g_args.prefix = optarg;
 	break;
@@ -287,21 +292,19 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, removereads_opt_str);
     }
-    if(optind >= argc){
+    if(g_args.bam.empty() || g_args.prefix.empty() || g_args.bed.empty()){
       print_removereads_usage();
       return -1;
     }
-    uint16_t amp[100];
-    for(int i = optind; i<argc;i++){
-      amp[i] = atoi(argv[i]);
-      std::cout << amp[i];
-    }
-    if(g_args.bam.empty() || g_args.prefix.empty()){
-      print_removereads_usage();
-      return -1;
+    uint16_t amp[150], i = 0;	// Max primer indices set to 150.
+    std::string s;
+    std::ifstream fin(g_args.bed);
+    while(getline(fin, s, ' ' ) ){
+      amp[i] = stoi(s);
+      i++;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, argc - optind);
+    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, i);
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
     while( opt != -1 ) {
