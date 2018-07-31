@@ -26,7 +26,21 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
   std::string line, cell, bases, qualities, region;
   std::ofstream fout(out_file+".tsv");
-  fout << "REGION\tPOS\tREF\tALT\tAD\tRAD\tDP\tFREQ\tQUAL\tPVAL\tPASS"<<std::endl;
+  fout << "REGION"
+    "\tPOS"
+    "\tREF"
+    "\tALT"
+    "\tREF_DP"
+    "\tREF_RV"
+    "\tREF_QUAL"
+    "\tALT_DP"
+    "\tALT_RV"
+    "\tALT_QUAL"
+    "\tALT_FREQ"
+    "\tTOTAL_DP"
+    "\tPVAL"
+    "\tPASS"
+       << std::endl;
   int ctr = 0, pos = 0, mdepth = 0;
   double pval_left, pval_right, pval_twotailed, freq, err;
   std::stringstream lineStream;
@@ -84,11 +98,14 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       fout << pos << "\t";
       fout << ref << "\t";
       fout << it->nuc << "\t";
+      fout << ref_it->depth << "\t";
+      fout << ref_it->reverse << "\t";
+      fout << (uint16_t)ref_it->mean_qual << "\t";
       fout << it->depth << "\t";
       fout << it->reverse << "\t";
-      fout << mdepth << "\t";
+      fout << (uint16_t) it->mean_qual << "\t";
       fout << freq << "\t";
-      fout << (uint16_t)it->mean_qual << "\t";
+      fout << mdepth << "\t";
       /*
 	    | Var   | Ref      |
 	Exp | Error | Err free |
