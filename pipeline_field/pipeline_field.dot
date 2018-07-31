@@ -1,0 +1,166 @@
+digraph fc{
+	label="Calling iSNVs for samples with unknown reference sequence";
+	fontname="arial";
+	nodesep=0.8;
+	fontsize=18;
+	node [shape=Mrecord,
+	      color="#2b2b2b",
+	      fillcolor="#ececec",
+	      style="filled,solid",
+	      fontsize=18,
+	      fontname = "arial",
+	      fontcolor="#2b2b2b"]
+	edge[color="#5c5c5c"];
+
+        subgraph cluster_rep1{
+		label="Replicate 1";
+		group=outermain;
+		graph[style=dotted];
+		align1 [label="{Align reads\nto reference | bwa mem}",
+			fillcolor="/ylgnbu3/1",
+			color="#2b2b2b",
+			fontcolor="#2b2b2b",
+			group=rep1];
+		trim1 [label="{Primmer Trimming\nQuality Trimming | ivar trim}",
+		       fillcolor="/ylgnbu3/3",
+		       color="#ececec",
+		       fontcolor="#ececec",
+		       group=rep1];
+		realign1 [label="{Realign reads to\nconsensus sequence | bwa mem}",
+			fillcolor="/ylgnbu3/1",
+			color="#2b2b2b",
+			fontcolor="#2b2b2b",
+			group=rep1];
+		retrim1 [label="{Primmer Trimming\nQuality Trimming | ivar trim}",
+		       fillcolor="/ylgnbu3/3",
+		       color="#ececec",
+		       fontcolor="#ececec",
+		       group=rep1];
+		o1[style=invis group=rep1];
+		vc1 [label="{Variant Calling\n3% minimum frequency | samtools mpileup\nivar variants}",
+		     fillcolor="/ylgnbu3/2",
+		     color="#2b2b2b",
+		     fontcolor="#2b2b2b",
+		     group=rep1];
+		rr1 [label="{Remove reads from amplicons\nwith mismatched primers | ivar removereads}",
+		     fillcolor="/ylgnbu3/3",
+		     color="#ececec",
+		     fontcolor="#ececec",
+		     group=rep1];
+		vc2_1 [label="{Redo variant Calling\n3% minimum frequency | samtools mpileup\nivar variants}",
+		       fillcolor="/ylgnbu3/2",
+		       color="#2b2b2b",
+		       fontcolor="#2b2b2b",
+		       group=rep1];
+	}
+
+        subgraph cluster_rep2{
+		label="Replicate 2";
+		graph[style=dotted];
+		group=outermain;
+		align2 [label="{Align reads\nto reference | bwa mem}",
+			fillcolor="/ylgnbu3/1",
+			color="#2b2b2b",
+			fontcolor="#2b2b2b",
+			group=rep2];
+		trim2 [label="{Primmer Trimming\nQuality Trimming | ivar trim}",
+		       fillcolor="/ylgnbu3/3",
+		       color="#ececec",
+		       fontcolor="#ececec",
+		       group=rep2];
+		realign2 [label="{Realign reads to\nconsensus sequence | bwa mem}",
+			fillcolor="/ylgnbu3/1",
+			color="#2b2b2b",
+			fontcolor="#2b2b2b",
+			group=rep2];
+		retrim2 [label="{Primmer Trimming\nQuality Trimming | ivar trim}",
+		       fillcolor="/ylgnbu3/3",
+		       color="#ececec",
+		       fontcolor="#ececec",
+		       group=rep2];
+		o2[style=invis group=rep2];
+		vc2 [label="{Variant Calling\n3% minimum frequency | samtools mpileup\nivar variants}",
+		     fillcolor="/ylgnbu3/2",
+		     color="#2b2b2b",
+		     fontcolor="#2b2b2b",
+		     group=rep2];
+		rr2 [label="{Remove reads from amplicons\nwith mismatched primers | ivar removereads}",
+		     fillcolor="/ylgnbu3/3",
+		     color="#ececec",
+		     fontcolor="#ececec",
+		     group=rep2];
+		vc2_2 [label="{Redo variant Calling\n3% minimum frequency | samtools mpileup\nivar variants}",
+		       fillcolor="/ylgnbu3/2",
+		       color="#2b2b2b",
+		       fontcolor="#2b2b2b",
+		       group=rep2];
+        }
+
+	subgraph cluster_common{
+		label="";
+		graph[style=invis];
+		newrank=true;
+		mrg[label="{Merge alignments | samtools merge}",
+			fillcolor="/ylgnbu3/1",
+			color="#2b2b2b",
+			fontcolor="#2b2b2b",
+		    ];
+		cns[label="{Call consensus | samtools mpileup\nivar consensus}",
+		       fillcolor="/ylgnbu3/2",
+		       color="#2b2b2b",
+		       fontcolor="#2b2b2b"];
+		bed [label="{Generate new bed file\nbased on consensus sequence | bwa\nbedtools}",
+			fillcolor="/ylgnbu3/1",
+			color="#2b2b2b",
+			fontcolor="#2b2b2b",
+		     ];
+	}
+
+	subgraph combine{
+		group=outermain;
+		c [label="{Get intersection of iSNVs called across replicates | ivar filtervariants}",
+		       fillcolor="/ylgnbu3/3",
+		       color="#ececec",
+		       fontcolor="#ececec"];
+	}
+
+	// subgraph cluster_commands{
+	// 	label="Commands";
+	// 	graph[penwidth=0];
+	// 	node [shape=record,
+	// 	      color="#2b2b2b",
+	// 	      fillcolor="#ececec",
+	// 	      style="filled,solid",
+	// 	      fontsize=18,
+	// 	      fontname = "arial bold italic",
+	// 	      fontcolor="#2b2b2b"];
+	// 	aligncmd [label="bwa mem ... \l"];
+	// 	trimcmd [label="ivar trim ... \lsamtools sort ...\lsamtools index ..."];
+	// 	oc[style=invis];
+	// 	align1cmd [label="bwa mem ... \l"];
+	// 	trim1cmd [label="ivar trim ... \lsamtools sort ...\lsamtools index ..."];
+	// 	mrgcmd [label="samtools merge ...\l"];
+	// 	cnscmd [label="samtools mpileup ... \| ivar consensus ... \l"];
+	// 	bedcmd [label="bwa mem ...\lbedtools bamtobed ... \l"];
+	// 	vc1cmd [label="samtools mpileup ... \| ivar variants ... \l"];
+	// 	rrcmd [label="ivar getmasked ... \livar removereads ... \l"];
+	// 	vc2cmd [label="samtools mpileup ... \| ivar variants ... \l"];
+	// 	combinecmd [label="ivar filtervariants ... \l"];
+	// }
+
+	trim1 -> mrg;
+	trim2 -> mrg;
+	mrg -> cns;
+	bed -> realign1;
+	bed -> realign2;
+	cns -> bed;
+	align1 -> trim1;
+	align2 -> trim2;
+	trim1 -> o1[style=invis];
+	o1-> realign1[style=invis];
+	trim2 -> o2[style=invis];
+	o2 -> realign2[style=invis];
+	realign1 -> retrim1 -> vc1 -> rr1 -> vc2_1 -> c;
+	realign2 -> retrim2 -> vc2 -> rr2 -> vc2_2 -> c;
+	// aligncmd->trimcmd->mrgcmd->cnscmd->bedcmd->align1cmd->trim1cmd->vc1cmd->rrcmd->vc2cmd->combinecmd[style=invis];
+}
