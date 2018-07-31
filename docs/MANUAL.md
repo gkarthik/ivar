@@ -81,8 +81,6 @@ Call variants with iVar
 
 iVar uses the output of the `samtools mpileup` command to call variants - single nucleotide variants(SNVs) and indels. In order to call variants correctly, the `samtools mpileup` command must be run with the reference fasta supplied using the options(--reference or -f). The output of `samtools pileup` is then piped into `ivar variants` to generate a .tsv file with the following fields,
 
-*TODO: Enter fields and Description*
-
 There are two parameters that can be set for variant calling using iVar - minimum quality(Default: 20) and minimum frequency(Default: 0.03). Minimum quality is the minimum quality for a base to be used in frequency calculations at a given position. Minimum frequency is the minimum frequency required for a SNV or indel to be reported.
 
 Command:
@@ -108,14 +106,43 @@ samtools mpileup --reference test_reference.fa -A -d 600000 -F 0 -B -Q 0 test.tr
 
 The command above will generate a test.tsv file.
 
+Example of output .tsv file.
+
+```
+REGION	POS	REF	ALT	REF_DP	REF_RV	REF_QUAL	ALT_DP	ALT_RV	ALT_QUAL	ALT_FREQ	TOTAL_DP	PVAL	PASS
+Puerto	77	A	G	9204	0	37	2843	0	37	0.235973	12048	0	TRUE
+Puerto	110	G	A	11289	0	37	443	0	37	0.0377568	11733	1.44315e-117	TRUE
+Puerto	118	C	+AA	11613	0	37	365	0	20	0.0314087	11621	2.94565e-30	TRUE
+Puerto	118	C	+A	11613	0	37	635	0	20	0.0546425	11621	2.95259e-84	TRUE
+```
+
+Description
+
+| Field     | Description                               |
+|:----------|:------------------------------------------|
+| REGION    | Region from BAM file                      |
+| POS       | Position on reference sequence            |
+| REF       | Reference base                            |
+| ALT       | Alternate Base                            |
+| REF\_DP   | Depth of reference base                   |
+| REF\_RV   | Depth of reference base on reverse reads  |
+| REF\_QUAL | Mean quality of reference base            |
+| ALT\_DP   | Depth of alternate base                   |
+| ALT\_RV   | Deapth of alternate base on reverse reads |
+| ALT\_QUAL | Mean quality of alternate base            |
+| ALT\_FREQ | Frequency of alternate base               |
+| TOTAL\_DP | Total depth at position                   |
+| PVAL      | p-value of fisher's exact test            |
+| PASS      | Result of p-value <= 005                  |
+
+
+
 **Note**: Please use the -B options with `samtools mpileup` to call variants and generate consensus. When a reference sequence is supplied, the quality of the reference base is reduced to 0 (ASCII: !) in the mpileup output. Disabling BAQ with -B seems to fix this. This was tested in samtools 1.7 and 1.8.
 
 Filter variants across replicates with iVar
 ----
 
-Under the hood, iVar calls an Awk script to get an intersection of variants(in .tsv files) called from any number of replicates. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates.
-
-*TODO: Explain fields.*
+Under the hood, iVar calls an Awk script to get an intersection of variants(in .tsv files) called from any number of replicates. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates. Fields that are different across replicates(fields apart from REGION, POS, REF, ALT) will have the filename added as a suffix.
 
 Command:
 ```
@@ -136,6 +163,36 @@ ivar filtervariants -p test.filtered test_rep1.tsv test_rep2.tsv test_rep3.tsv
 ```
 
 The command above will prodoce an output .tsv file test.filtered.tsv.
+
+Example output of filtered .tsv file from two files test_rep1.tsv and test_rep2.tsv
+
+```
+REGION	POS	REF	ALT	REF_DP_test_rep2.tsv	REF_RV_test_rep2.tsv	REF_QUAL_test_rep2.tsv	ALT_DP_test_rep2.tsv	ALT_RV_test_rep2.tsv	ALT_QUAL_test_rep2.tsv	ALT_FREQ_test_rep2.tsv	TOTAL_DP_test_rep2.tsv	PVAL_test_rep2.tsv	PASS_test_rep2.tsv	REF_DP_test_rep1.tsv	REF_RV_test_rep1.tsv	REF_QUAL_test_rep1.tsv	ALT_DP_test_rep1.tsv	ALT_RV_test_rep1.tsv	ALT_QUAL_test_rep1.tsv	ALT_FREQ_test_rep1.tsv	TOTAL_DP_test_rep1.tsv	PVAL_test_rep1.tsv	PASS_test_rep1.tsv	
+Puerto	77	A	G	9204	0	37	2843	0	37	0.235973	12048	0	TRUE	9204	0	37	2843	0	37	0.235973	12048	0	TRUE	
+Puerto	110	G	A	11289	0	37	443	0	37	0.0377568	11733	1.44315e-117	TRUE	11289	0	37	443	0	37	0.0377568	11733	1.44315e-117	TRUE	
+Puerto	118	C	+AA	11613	0	37	365	0	20	0.0314087	11621	2.94565e-30	TRUE	11613	0	37	365	0	20	0.0314087	11621	2.94565e-30	TRUE	
+Puerto	118	C	+A	11613	0	37	635	0	20	0.0546425	11621	2.95259e-84	TRUE	11613	0	37	635	0	20	0.0546425	11621	
+```
+
+Description of fields
+
+| No | Field                                             | Description                                              |
+|:---|:--------------------------------------------------|----------------------------------------------------------|
+|  1 | REGION                                            | Common region across all replicate variant tsv files     |
+|  2 | POS                                               | Common position across all variant tsv files             |
+|  3 | REF                                               | Common reference base across all variant tsv files       |
+|  4 | ALT                                               | Common alternate base across all variant tsv files       |
+|  5 | REF_DP_<rep1-tsv-file-name>                       | Depth of reference base in replicate 1                   |
+|  6 | REF_RV_<rep1-tsv-file-name>                       | Depth of reference base on reverse reads in replicate 1  |
+|  7 | REF_QUAL_<rep1-tsv-file-name>                     | Mean quality of reference base in replicate 1            |
+|  8 | ALT_DP_<rep1-tsv-file-name>                       | Depth of alternate base in replicate 1                   |
+|  9 | ALT_RV_<rep1-tsv-file-name>                       | Deapth of alternate base on reverse reads in replicate 1 |
+| 10 | ALT_QUAL_<rep1-tsv-file-name>                     | Mean quality of alternate base in replicate 1            |
+| 11 | ALT_FREQ_<rep1-tsv-file-name>                     | Frequency of alternate base in replicate 1               |
+| 12 | TOTAL_DP_<rep1-tsv-file-name>                     | Total depth at position in replicate 1                   |
+| 13 | PVAL_<rep1-tsv-file-name>                         | p-value of fisher's exact test in replicate 1            |
+| 14 | PASS_<rep1-tsv-file-name>                         | Result of p-value <= 005 in replicate 1                  |
+| 15 | Continue rows 5 - 14 for every replicate provided |                                                          |
 
 Generate a consensus sequences from an aligned BAM file
 ----

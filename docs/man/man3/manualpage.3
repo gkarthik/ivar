@@ -1,4 +1,4 @@
-.TH "manualpage" 3 "Sun Jul 29 2018" "iVar" \" -*- nroff -*-
+.TH "manualpage" 3 "Mon Jul 30 2018" "iVar" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -74,8 +74,6 @@ Puerto  1054    1076    400_3_out_R*    60  -
 .SS "Call variants with iVar"
 iVar uses the output of the \fCsamtools mpileup\fP command to call variants - single nucleotide variants(SNVs) and indels\&. In order to call variants correctly, the \fCsamtools mpileup\fP command must be run with the reference fasta supplied using the options(--reference or -f)\&. The output of \fCsamtools pileup\fP is then piped into \fCivar variants\fP to generate a \&.tsv file with the following fields,
 .PP
-\fITODO: Enter fields and Description\fP
-.PP
 There are two parameters that can be set for variant calling using iVar - minimum quality(Default: 20) and minimum frequency(Default: 0\&.03)\&. Minimum quality is the minimum quality for a base to be used in frequency calculations at a given position\&. Minimum frequency is the minimum frequency required for a SNV or indel to be reported\&.
 .PP
 Command: 
@@ -107,11 +105,25 @@ samtools mpileup --reference test_reference\&.fa -A -d 600000 -F 0 -B -Q 0 test\
 .PP
 The command above will generate a test\&.tsv file\&.
 .PP
+Example of output \&.tsv file\&.
+.PP
+.PP
+.nf
+REGION  POS REF ALT REF_DP  REF_RV  REF_QUAL    ALT_DP  ALT_RV  ALT_QUAL    ALT_FREQ    TOTAL_DP    PVAL    PASS
+Puerto  77  A   G   9204    0   37  2843    0   37  0\&.235973    12048   0   TRUE
+Puerto  110 G   A   11289   0   37  443 0   37  0\&.0377568   11733   1\&.44315e-117    TRUE
+Puerto  118 C   +AA 11613   0   37  365 0   20  0\&.0314087   11621   2\&.94565e-30 TRUE
+Puerto  118 C   +A  11613   0   37  635 0   20  0\&.0546425   11621   2\&.95259e-84 TRUE
+.fi
+.PP
+.PP
+Description
+.PP
+Field  Description   REGION  Region from BAM file   POS  Position on reference sequence   REF  Reference base   ALT  Alternate Base   REF_DP  Depth of reference base   REF_RV  Depth of reference base on reverse reads   REF_QUAL  Mean quality of reference base   ALT_DP  Depth of alternate base   ALT_RV  Deapth of alternate base on reverse reads   ALT_QUAL  Mean quality of alternate base   ALT_FREQ  Frequency of alternate base   TOTAL_DP  Total depth at position   PVAL  p-value of fisher's exact test   PASS  Result of p-value <= 005   
+.PP
 \fBNote\fP: Please use the -B options with \fCsamtools mpileup\fP to call variants and generate consensus\&. When a reference sequence is supplied, the quality of the reference base is reduced to 0 (ASCII: !) in the mpileup output\&. Disabling BAQ with -B seems to fix this\&. This was tested in samtools 1\&.7 and 1\&.8\&.
 .SS "Filter variants across replicates with iVar"
-Under the hood, iVar calls an Awk script to get an intersection of variants(in \&.tsv files) called from any number of replicates\&. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates\&.
-.PP
-\fITODO: Explain fields\&.\fP
+Under the hood, iVar calls an Awk script to get an intersection of variants(in \&.tsv files) called from any number of replicates\&. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates\&. Fields that are different across replicates(fields apart from REGION, POS, REF, ALT) will have the filename added as a suffix\&.
 .PP
 Command: 
 .PP
@@ -137,6 +149,22 @@ ivar filtervariants -p test\&.filtered test_rep1\&.tsv test_rep2\&.tsv test_rep3
 .PP
 .PP
 The command above will prodoce an output \&.tsv file test\&.filtered\&.tsv\&.
+.PP
+Example output of filtered \&.tsv file from two files test_rep1\&.tsv and test_rep2\&.tsv
+.PP
+.PP
+.nf
+REGION  POS REF ALT REF_DP_test_rep2\&.tsv    REF_RV_test_rep2\&.tsv    REF_QUAL_test_rep2\&.tsv  ALT_DP_test_rep2\&.tsv    ALT_RV_test_rep2\&.tsv    ALT_QUAL_test_rep2\&.tsv  ALT_FREQ_test_rep2\&.tsv  TOTAL_DP_test_rep2\&.tsv  PVAL_test_rep2\&.tsv  PASS_test_rep2\&.tsv  REF_DP_test_rep1\&.tsv    REF_RV_test_rep1\&.tsv    REF_QUAL_test_rep1\&.tsv  ALT_DP_test_rep1\&.tsv    ALT_RV_test_rep1\&.tsv    ALT_QUAL_test_rep1\&.tsv  ALT_FREQ_test_rep1\&.tsv  TOTAL_DP_test_rep1\&.tsv  PVAL_test_rep1\&.tsv  PASS_test_rep1\&.tsv  
+Puerto  77  A   G   9204    0   37  2843    0   37  0\&.235973    12048   0   TRUE    9204    0   37  2843    0   37  0\&.235973    12048   0   TRUE    
+Puerto  110 G   A   11289   0   37  443 0   37  0\&.0377568   11733   1\&.44315e-117    TRUE    11289   0   37  443 0   37  0\&.0377568   11733   1\&.44315e-117    TRUE    
+Puerto  118 C   +AA 11613   0   37  365 0   20  0\&.0314087   11621   2\&.94565e-30 TRUE    11613   0   37  365 0   20  0\&.0314087   11621   2\&.94565e-30 TRUE    
+Puerto  118 C   +A  11613   0   37  635 0   20  0\&.0546425   11621   2\&.95259e-84 TRUE    11613   0   37  635 0   20  0\&.0546425   11621   
+.fi
+.PP
+.PP
+Description of fields
+.PP
+No  Field  Description   1  REGION  Common region across all replicate variant tsv files   2  POS  Common position across all variant tsv files   3  REF  Common reference base across all variant tsv files   4  ALT  Common alternate base across all variant tsv files   5  REF_DP_<rep1-tsv-file-name>  Depth of reference base in replicate 1   6  REF_RV_<rep1-tsv-file-name>  Depth of reference base on reverse reads in replicate 1   7  REF_QUAL_<rep1-tsv-file-name>  Mean quality of reference base in replicate 1   8  ALT_DP_<rep1-tsv-file-name>  Depth of alternate base in replicate 1   9  ALT_RV_<rep1-tsv-file-name>  Deapth of alternate base on reverse reads in replicate 1   10  ALT_QUAL_<rep1-tsv-file-name>  Mean quality of alternate base in replicate 1   11  ALT_FREQ_<rep1-tsv-file-name>  Frequency of alternate base in replicate 1   12  TOTAL_DP_<rep1-tsv-file-name>  Total depth at position in replicate 1   13  PVAL_<rep1-tsv-file-name>  p-value of fisher's exact test in replicate 1   14  PASS_<rep1-tsv-file-name>  Result of p-value <= 005 in replicate 1   15  Continue rows 5 - 14 for every replicate provided  
 .SS "Generate a consensus sequences from an aligned BAM file"
 To generate a consensus sequence iVar uses the output of \fCsamtools mpileup\fP command\&. The mpileup output must be piped into \fCivar consensus\fP\&. There are two parameters that can be set - minimum quality(Default: 20) and minimum frequency threshold(0\&.03)\&. Minimum quality is the minimum quality of a base to be considered in calculations of variant frequencies at a given position\&. Minimum frequency threshold is the minimum frequency that a base must match to be called as the consensus base at a position\&. If one base is not enough to match a given frequency, then an ambigious nucleotide is called at that position\&.
 .PP

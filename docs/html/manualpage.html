@@ -113,15 +113,83 @@ Trim primer sequences with iVar</h2>
 <div class="fragment"><div class="line">Puerto  28  52  400_1_out_L 60  +</div><div class="line">Puerto  482 504 400_1_out_R 60  -</div><div class="line">Puerto  359 381 400_2_out_L 60  +</div><div class="line">Puerto  796 818 400_2_out_R 60  -</div><div class="line">Puerto  658 680 400_3_out_L*    60  +</div><div class="line">Puerto  1054    1076    400_3_out_R*    60  -</div><div class="line">.</div><div class="line">.</div><div class="line">.</div><div class="line">.</div></div><!-- fragment --><h2><a class="anchor" id="autotoc_md5"></a>
 Call variants with iVar</h2>
 <p>iVar uses the output of the <code>samtools mpileup</code> command to call variants - single nucleotide variants(SNVs) and indels. In order to call variants correctly, the <code>samtools mpileup</code> command must be run with the reference fasta supplied using the options(&ndash;reference or -f). The output of <code>samtools pileup</code> is then piped into <code>ivar variants</code> to generate a .tsv file with the following fields,</p>
-<p><em>TODO: Enter fields and Description</em></p>
 <p>There are two parameters that can be set for variant calling using iVar - minimum quality(Default: 20) and minimum frequency(Default: 0.03). Minimum quality is the minimum quality for a base to be used in frequency calculations at a given position. Minimum frequency is the minimum frequency required for a SNV or indel to be reported.</p>
 <p>Command: </p><div class="fragment"><div class="line">ivar variants</div><div class="line"></div><div class="line">Usage: samtools mpileup -A -d 300000 --reference &lt;reference-fasta&gt; -B -Q 0 -F 0 &lt;input.bam&gt; | ivar variants -p &lt;prefix&gt; [-q &lt;min-quality&gt;] [-t &lt;min-frequency-threshold&gt;]</div><div class="line"></div><div class="line">Note : samtools mpileup output must be piped into ivar variants</div><div class="line"></div><div class="line">Input Options    Description</div><div class="line">           -q    Minimum quality score threshold to count base (Default: 20)</div><div class="line">           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)</div><div class="line"></div><div class="line">Output Options   Description</div><div class="line">           -p    (Required) Prefix for the output tsv variant file</div></div><!-- fragment --><p>Example Usage: </p><div class="fragment"><div class="line">samtools mpileup --reference test_reference.fa -A -d 600000 -F 0 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03</div></div><!-- fragment --><p>The command above will generate a test.tsv file.</p>
+<p>Example of output .tsv file.</p>
+<div class="fragment"><div class="line">REGION  POS REF ALT REF_DP  REF_RV  REF_QUAL    ALT_DP  ALT_RV  ALT_QUAL    ALT_FREQ    TOTAL_DP    PVAL    PASS</div><div class="line">Puerto  77  A   G   9204    0   37  2843    0   37  0.235973    12048   0   TRUE</div><div class="line">Puerto  110 G   A   11289   0   37  443 0   37  0.0377568   11733   1.44315e-117    TRUE</div><div class="line">Puerto  118 C   +AA 11613   0   37  365 0   20  0.0314087   11621   2.94565e-30 TRUE</div><div class="line">Puerto  118 C   +A  11613   0   37  635 0   20  0.0546425   11621   2.95259e-84 TRUE</div></div><!-- fragment --><p>Description</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">Field  </th><th class="markdownTableHeadLeft">Description   </th></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">REGION  </td><td class="markdownTableBodyLeft">Region from BAM file   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">POS  </td><td class="markdownTableBodyLeft">Position on reference sequence   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">REF  </td><td class="markdownTableBodyLeft">Reference base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">ALT  </td><td class="markdownTableBodyLeft">Alternate Base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">REF_DP  </td><td class="markdownTableBodyLeft">Depth of reference base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">REF_RV  </td><td class="markdownTableBodyLeft">Depth of reference base on reverse reads   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">REF_QUAL  </td><td class="markdownTableBodyLeft">Mean quality of reference base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">ALT_DP  </td><td class="markdownTableBodyLeft">Depth of alternate base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">ALT_RV  </td><td class="markdownTableBodyLeft">Deapth of alternate base on reverse reads   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">ALT_QUAL  </td><td class="markdownTableBodyLeft">Mean quality of alternate base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">ALT_FREQ  </td><td class="markdownTableBodyLeft">Frequency of alternate base   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">TOTAL_DP  </td><td class="markdownTableBodyLeft">Total depth at position   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">PVAL  </td><td class="markdownTableBodyLeft">p-value of fisher's exact test   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">PASS  </td><td class="markdownTableBodyLeft">Result of p-value &lt;= 005   </td></tr>
+</table>
 <p><b>Note</b>: Please use the -B options with <code>samtools mpileup</code> to call variants and generate consensus. When a reference sequence is supplied, the quality of the reference base is reduced to 0 (ASCII: !) in the mpileup output. Disabling BAQ with -B seems to fix this. This was tested in samtools 1.7 and 1.8.</p>
 <h2><a class="anchor" id="autotoc_md6"></a>
 Filter variants across replicates with iVar</h2>
-<p>Under the hood, iVar calls an Awk script to get an intersection of variants(in .tsv files) called from any number of replicates. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates.</p>
-<p><em>TODO: Explain fields.</em></p>
+<p>Under the hood, iVar calls an Awk script to get an intersection of variants(in .tsv files) called from any number of replicates. This intersection will filter out any SNVs that do not pass the filters(in the variant calling step) in all the replicates. Fields that are different across replicates(fields apart from REGION, POS, REF, ALT) will have the filename added as a suffix.</p>
 <p>Command: </p><div class="fragment"><div class="line">ivar filtervariants</div><div class="line"></div><div class="line">Usage: ivar filtervariants -p &lt;prefix&gt; replicate-one.tsv replicate-two.tsv ...</div><div class="line"></div><div class="line">Input: Variant tsv files for each replicate</div><div class="line"></div><div class="line">Output Options   Description</div><div class="line">           -p    (Required) Prefix for the output filtered tsv file</div></div><!-- fragment --><p>Example Usage: </p><div class="fragment"><div class="line">ivar filtervariants -p test.filtered test_rep1.tsv test_rep2.tsv test_rep3.tsv</div></div><!-- fragment --><p>The command above will prodoce an output .tsv file test.filtered.tsv.</p>
+<p>Example output of filtered .tsv file from two files test_rep1.tsv and test_rep2.tsv</p>
+<div class="fragment"><div class="line">REGION  POS REF ALT REF_DP_test_rep2.tsv    REF_RV_test_rep2.tsv    REF_QUAL_test_rep2.tsv  ALT_DP_test_rep2.tsv    ALT_RV_test_rep2.tsv    ALT_QUAL_test_rep2.tsv  ALT_FREQ_test_rep2.tsv  TOTAL_DP_test_rep2.tsv  PVAL_test_rep2.tsv  PASS_test_rep2.tsv  REF_DP_test_rep1.tsv    REF_RV_test_rep1.tsv    REF_QUAL_test_rep1.tsv  ALT_DP_test_rep1.tsv    ALT_RV_test_rep1.tsv    ALT_QUAL_test_rep1.tsv  ALT_FREQ_test_rep1.tsv  TOTAL_DP_test_rep1.tsv  PVAL_test_rep1.tsv  PASS_test_rep1.tsv  </div><div class="line">Puerto  77  A   G   9204    0   37  2843    0   37  0.235973    12048   0   TRUE    9204    0   37  2843    0   37  0.235973    12048   0   TRUE    </div><div class="line">Puerto  110 G   A   11289   0   37  443 0   37  0.0377568   11733   1.44315e-117    TRUE    11289   0   37  443 0   37  0.0377568   11733   1.44315e-117    TRUE    </div><div class="line">Puerto  118 C   +AA 11613   0   37  365 0   20  0.0314087   11621   2.94565e-30 TRUE    11613   0   37  365 0   20  0.0314087   11621   2.94565e-30 TRUE    </div><div class="line">Puerto  118 C   +A  11613   0   37  635 0   20  0.0546425   11621   2.95259e-84 TRUE    11613   0   37  635 0   20  0.0546425   11621   </div></div><!-- fragment --><p>Description of fields</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">No  </th><th class="markdownTableHeadLeft">Field  </th><th class="markdownTableHeadNone">Description   </th></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">1  </td><td class="markdownTableBodyLeft">REGION  </td><td class="markdownTableBodyNone">Common region across all replicate variant tsv files   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">2  </td><td class="markdownTableBodyLeft">POS  </td><td class="markdownTableBodyNone">Common position across all variant tsv files   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">3  </td><td class="markdownTableBodyLeft">REF  </td><td class="markdownTableBodyNone">Common reference base across all variant tsv files   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">4  </td><td class="markdownTableBodyLeft">ALT  </td><td class="markdownTableBodyNone">Common alternate base across all variant tsv files   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">5  </td><td class="markdownTableBodyLeft">REF_DP_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Depth of reference base in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">6  </td><td class="markdownTableBodyLeft">REF_RV_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Depth of reference base on reverse reads in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">7  </td><td class="markdownTableBodyLeft">REF_QUAL_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Mean quality of reference base in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">8  </td><td class="markdownTableBodyLeft">ALT_DP_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Depth of alternate base in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">9  </td><td class="markdownTableBodyLeft">ALT_RV_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Deapth of alternate base on reverse reads in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">10  </td><td class="markdownTableBodyLeft">ALT_QUAL_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Mean quality of alternate base in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">11  </td><td class="markdownTableBodyLeft">ALT_FREQ_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Frequency of alternate base in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">12  </td><td class="markdownTableBodyLeft">TOTAL_DP_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Total depth at position in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">13  </td><td class="markdownTableBodyLeft">PVAL_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">p-value of fisher's exact test in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">14  </td><td class="markdownTableBodyLeft">PASS_&lt;rep1-tsv-file-name&gt;  </td><td class="markdownTableBodyNone">Result of p-value &lt;= 005 in replicate 1   </td></tr>
+<tr class="markdownTableBody" class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">15  </td><td class="markdownTableBodyLeft">Continue rows 5 - 14 for every replicate provided  </td><td class="markdownTableBodyNone"></td></tr>
+</table>
 <h2><a class="anchor" id="autotoc_md7"></a>
 Generate a consensus sequences from an aligned BAM file</h2>
 <p>To generate a consensus sequence iVar uses the output of <code>samtools mpileup</code> command. The mpileup output must be piped into <code>ivar consensus</code>. There are two parameters that can be set - minimum quality(Default: 20) and minimum frequency threshold(0.03). Minimum quality is the minimum quality of a base to be considered in calculations of variant frequencies at a given position. Minimum frequency threshold is the minimum frequency that a base must match to be called as the consensus base at a position. If one base is not enough to match a given frequency, then an ambigious nucleotide is called at that position.</p>
