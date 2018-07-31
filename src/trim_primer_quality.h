@@ -19,7 +19,7 @@ int32_t get_pos_on_reference(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uin
 void reverse_qual(uint8_t *q, int l);
 void reverse_cigar(uint32_t *cigar, int l);
 double mean_quality(uint8_t *a, int s, int e);
-cigar_ quality_trim(bam1_t* r, int qual_threshold, int sliding_window);
+cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window);
 void print_cigar(uint32_t *cigar, int nlength);
 cigar_ primer_trim(bam1_t *r, int32_t new_pos);
 void replace_cigar(bam1_t *b, int n, uint32_t *cigar);

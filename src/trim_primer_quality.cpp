@@ -96,6 +96,10 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
     if(i > r->core.l_qseq - sliding_window)
       sliding_window--;
   }
+  // Reverse qual back.
+  if(bam_is_rev(r)){
+    reverse_qual(qual, r->core.l_qseq);
+  }
   del_len = r->core.l_qseq - i;
   start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos
   if(bam_is_rev(r) && start_pos <= r->core.pos) {
