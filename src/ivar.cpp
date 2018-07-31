@@ -134,6 +134,13 @@ static const char *filtervariants_opt_str = "p:h?";
 static const char *getmasked_opt_str = "i:b:h?";
 static const char *trimadapter_opt_str = "1:2::p:a:h?";
 
+std::string get_filename_without_extension(std::string f, std::string ext){
+  if(f.substr(f.length()-ext.length(), ext.length()).compare(ext) == 0){
+    return f.substr(0,f.length()-ext.length());
+  }
+  return f;
+}
+
 /*!
  Main Function
 
@@ -194,6 +201,7 @@ int main(int argc, char* argv[]){
       print_trim_usage();
       return -1;
     }
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
     g_args.sliding_window = (g_args.sliding_window == 255) ? 4 : g_args.sliding_window;
     g_args.min_length = (g_args.min_length == -1) ? 30 : g_args.min_length;
@@ -223,6 +231,7 @@ int main(int argc, char* argv[]){
       print_variants_usage();
       return -1;
     }
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     g_args.min_threshold = (g_args.min_threshold == -1 || g_args.min_threshold < 0 || g_args.min_threshold >= 1) ? 0.03: g_args.min_threshold;
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
@@ -252,6 +261,8 @@ int main(int argc, char* argv[]){
       print_consensus_usage();
       return -1;
     }
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".fa");
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".fasta");
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
     std::cout <<"Min Quality" << g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
@@ -287,6 +298,7 @@ int main(int argc, char* argv[]){
       print_removereads_usage();
       return -1;
     }
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
     res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, argc - optind);
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
@@ -311,6 +323,7 @@ int main(int argc, char* argv[]){
       print_filtervariants_usage();
       return -1;
     }
+    g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     std::string rep = "get_common_variants.sh ";
     for(int i = optind; i<argc;i++){
       rep += argv[i];
