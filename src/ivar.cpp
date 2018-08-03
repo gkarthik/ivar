@@ -11,6 +11,8 @@
 #include "get_masked_amplicons.h"
 #include "suffix_tree.h"
 
+#include "../samtools-1.9/bam_sort.h"
+
 const std::string VERSION = "1.0";
 
 struct args_t {
@@ -33,7 +35,7 @@ void print_usage(){
     "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|getmasked|removereads|version|help>]\n"
     "\n"
     "        Command       Description\n"
-    "           trim       Trim reads in aligned BAM\n"
+    "           trim       Trim reads in aligned BAM file\n"
     "       variants       Call variants from aligned BAM file\n"
     " filtervariants       Filter variants across replicates\n"
     "      consensus       Call consensus from aligned BAM file\n"

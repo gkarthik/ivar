@@ -2,12 +2,12 @@ digraph fc{
 	label="Calling iSNVs for samples with unknown reference sequence";
 	fontname="arial";
 	nodesep=0.8;
-	fontsize=18;
+	fontsize=36;
 	node [shape=Mrecord,
 	      color="#2b2b2b",
 	      fillcolor="#ececec",
 	      style="filled,solid",
-	      fontsize=18,
+	      fontsize=36,
 	      fontname = "arial",
 	      fontcolor="#2b2b2b"]
 	edge[color="#5c5c5c"];

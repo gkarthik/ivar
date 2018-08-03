@@ -1,7 +1,6 @@
 *~
 .DS_Store
 trim_primer_quality
-data/*
 **/.snakemake/*
 GPATH
 GRTAGS

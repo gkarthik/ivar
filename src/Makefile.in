@@ -100,9 +100,11 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_ivar_OBJECTS = ivar.$(OBJEXT) call_consensus_pileup.$(OBJEXT) \
+	alignment.$(OBJEXT) suffix_tree.$(OBJEXT) \
 	trim_primer_quality.$(OBJEXT) \
 	remove_reads_from_amplicon.$(OBJEXT) call_variants.$(OBJEXT) \
-	primer_bed.$(OBJEXT) allele_functions.$(OBJEXT)
+	primer_bed.$(OBJEXT) allele_functions.$(OBJEXT) \
+	get_masked_amplicons.$(OBJEXT)
 ivar_OBJECTS = $(am_ivar_OBJECTS)
 am__DEPENDENCIES_1 =
 ivar_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -121,12 +123,14 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/allele_functions.Po \
+am__depfiles_remade = ./$(DEPDIR)/alignment.Po \
+	./$(DEPDIR)/allele_functions.Po \
 	./$(DEPDIR)/call_consensus_pileup.Po \
-	./$(DEPDIR)/call_variants.Po ./$(DEPDIR)/ivar.Po \
+	./$(DEPDIR)/call_variants.Po \
+	./$(DEPDIR)/get_masked_amplicons.Po ./$(DEPDIR)/ivar.Po \
 	./$(DEPDIR)/primer_bed.Po \
 	./$(DEPDIR)/remove_reads_from_amplicon.Po \
-	./$(DEPDIR)/trim_primer_quality.Po
+	./$(DEPDIR)/suffix_tree.Po ./$(DEPDIR)/trim_primer_quality.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -171,7 +175,9 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(top_srcdir)/depcomp
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AM_CXXFLAGS = @AM_CXXFLAGS@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+AM_LDFLAGS = @AM_LDFLAGS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -198,7 +204,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
-LDFLAGS = 
+LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = -lhts -lz -lpthread
 LTLIBOBJS = @LTLIBOBJS@
@@ -260,7 +266,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ivar_SOURCES = ivar.cpp call_consensus_pileup.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp
+ivar_SOURCES = ivar.cpp call_consensus_pileup.cpp alignment.cpp suffix_tree.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp get_masked_amplicons.cpp
 ivar_LDADD = $(LIBS)
 all: all-am
 
@@ -348,12 +354,15 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/alignment.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allele_functions.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/call_consensus_pileup.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/call_variants.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_masked_amplicons.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ivar.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/primer_bed.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/remove_reads_from_amplicon.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/suffix_tree.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trim_primer_quality.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
@@ -363,15 +372,17 @@ $(am__depfiles_remade):
 am--depfiles: $(am__depfiles_remade)
 
 .cpp.o:
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ $<
 
 .cpp.obj:
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
+@am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
+@am__fastdepCXX_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
@@ -503,12 +514,15 @@ clean: clean-am
 clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
-		-rm -f ./$(DEPDIR)/allele_functions.Po
+		-rm -f ./$(DEPDIR)/alignment.Po
+	-rm -f ./$(DEPDIR)/allele_functions.Po
 	-rm -f ./$(DEPDIR)/call_consensus_pileup.Po
 	-rm -f ./$(DEPDIR)/call_variants.Po
+	-rm -f ./$(DEPDIR)/get_masked_amplicons.Po
 	-rm -f ./$(DEPDIR)/ivar.Po
 	-rm -f ./$(DEPDIR)/primer_bed.Po
 	-rm -f ./$(DEPDIR)/remove_reads_from_amplicon.Po
+	-rm -f ./$(DEPDIR)/suffix_tree.Po
 	-rm -f ./$(DEPDIR)/trim_primer_quality.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -555,12 +569,15 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-		-rm -f ./$(DEPDIR)/allele_functions.Po
+		-rm -f ./$(DEPDIR)/alignment.Po
+	-rm -f ./$(DEPDIR)/allele_functions.Po
 	-rm -f ./$(DEPDIR)/call_consensus_pileup.Po
 	-rm -f ./$(DEPDIR)/call_variants.Po
+	-rm -f ./$(DEPDIR)/get_masked_amplicons.Po
 	-rm -f ./$(DEPDIR)/ivar.Po
 	-rm -f ./$(DEPDIR)/primer_bed.Po
 	-rm -f ./$(DEPDIR)/remove_reads_from_amplicon.Po
+	-rm -f ./$(DEPDIR)/suffix_tree.Po
 	-rm -f ./$(DEPDIR)/trim_primer_quality.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

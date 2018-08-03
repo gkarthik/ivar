@@ -13,7 +13,6 @@ const std::string gap="N";
 
 void format_alleles(std::vector<allele> &ad){
   std::vector<allele>::iterator it = ad.begin();
-  int prev_ind = 0;
   while(it < ad.end()){
     if(it->nuc[0] == '-'){	// Remove deletions
       it = ad.erase(it);
