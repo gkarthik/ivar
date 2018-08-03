@@ -1,5 +1,9 @@
-Installation {#installpage}
-============
+iVar
+===========
+
+## [Manual](https://andersen-lab.github.io/ivar/html/)
+
+## Installation
 
 ### Dependencies
 

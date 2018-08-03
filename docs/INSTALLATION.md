@@ -3,7 +3,7 @@ Installation {#installpage}
 
 ### Dependencies
 
-* [htslib](https://github.com/samtools/htslib)
+* [htslib](http://www.htslib.org/download/)
 * [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Available on most UNIX systems.
 
 Note:
