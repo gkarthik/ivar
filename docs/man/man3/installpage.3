@@ -19,7 +19,17 @@ It is highly recommended that \fCsamtools\fP also be installed alongside iVar\&.
 .PP
 .SS "Installing on Mac"
 .PP
-To install ivar, run the following commands\&.
+\fCGNU Autotools\fP is required to compile iVar from source\&.
+.PP
+To install Autotools using \fChomebrew\fP please use the command below,
+.PP
+.PP
+.nf
+brew install autoconf automake libtool
+.fi
+.PP
+.PP
+To install iVar, run the following commands\&.
 .PP
 .PP
 .nf
@@ -49,19 +59,19 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 .fi
 .PP
 .PP
-Installing \fCGNU Autotools\fP,
+.SS "Installing on Linux"
 .PP
-Using \fChomebrew\fP,
+\fCGNU Autotools\fP is required to compile iVar from source\&.
+.PP
+To install Autotools using \fCAPT\fP please use the command below,
 .PP
 .PP
 .nf
-brew install autoconf automake libtool
+apt-get install autotools-dev
 .fi
 .PP
 .PP
-.SS "Installing on Linux"
-.PP
-To install ivar, run the following commands\&.
+To install iVar, run the following commands\&.
 .PP
 .PP
 .nf
@@ -90,15 +100,4 @@ Also, please add the following to your \&.bash_rc so that iVar can find htslib d
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 .fi
 .PP
-.PP
-Installing \fCGNU Autotools\fP,
-.PP
-Using \fCAPT\fP on Ubuntu,
-.PP
-.PP
-.nf
-apt-get install autotools-dev
-.fi
-.PP
-.PP
-For bug reports please email gkarthik[at]scripps\&.edu or raise an issue on Github\&. 
+ 

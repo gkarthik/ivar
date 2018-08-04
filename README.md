@@ -16,7 +16,15 @@ Note:
 
 ### Installing on Mac
 
-To install ivar, run the following commands.
+[GNU Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction) is required to compile iVar from source.
+
+To install Autotools using [homebrew](https://brew.sh/) please use the command below,
+
+```
+brew install autoconf automake libtool
+```
+
+To install iVar, run the following commands.
 
 ```
 ./autogen.sh
@@ -40,18 +48,17 @@ Also, please add the following to your .bash_profile so that iVar can find htsli
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 ```
 
-Installing [GNU Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction),
-
-
-Using [homebrew](https://brew.sh/),
-
-```
-brew install autoconf automake libtool
-```
-
 ### Installing on Linux
 
-To install ivar, run the following commands.
+[GNU Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction) is required to compile iVar from source.
+
+To install Autotools using [APT](https://help.ubuntu.com/lts/serverguide/apt.html) please use the command below,
+
+```
+apt-get install autotools-dev
+```
+
+To install iVar, run the following commands.
 
 ```
 ./autogen.sh
@@ -74,13 +81,3 @@ Also, please add the following to your .bash_rc so that iVar can find htslib dyn
 ```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 ```
-
-Installing [GNU Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction),
-
-Using [APT](https://help.ubuntu.com/lts/serverguide/apt.html) on Ubuntu,
-
-```
-apt-get install autotools-dev
-```
-
-For bug reports please email gkarthik[at]scripps.edu or raise an issue on Github.
