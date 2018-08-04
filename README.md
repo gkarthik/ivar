@@ -7,7 +7,7 @@ iVar
 
 ### Dependencies
 
-* [htslib](http://www.htslib.org/download/)
+* [htslib](https://github.com/samtools/htslib)
 * [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
 
 Note:
