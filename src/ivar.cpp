@@ -11,8 +11,6 @@
 #include "get_masked_amplicons.h"
 #include "suffix_tree.h"
 
-#include "../samtools-1.9/bam_sort.h"
-
 const std::string VERSION = "1.0";
 
 struct args_t {
