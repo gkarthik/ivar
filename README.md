@@ -17,6 +17,7 @@ Note:
 ### Installing on Mac
 
 [Xcode](https://developer.apple.com/xcode/) from Apple is required to compile iVar (and other tools) from source.
+
 [GNU Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction) is required to compile iVar from source.
 
 To install Autotools using [homebrew](https://brew.sh/) please use the command below,
