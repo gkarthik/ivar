@@ -4,7 +4,7 @@ Installation {#installpage}
 ### Dependencies
 
 * [htslib](http://www.htslib.org/download/)
-* [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Available on most UNIX systems.
+* [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
 
 Note:
 * It is highly recommended that [samtools](https://github.com/samtools/samtools) also be installed alongside iVar. iVar uses the output of samtools mpileup to call variants and generate consensus sequences. In addition, samtools `sort` and `index` commands are very useful to setup a pipeline using iVar.
@@ -29,7 +29,7 @@ make
 make install
 ```
 
-If htslib has been installed in a non standard location, please run,
+If htslib has been installed in a non standard location, please run the following commands,
 
 ```
 ./autogen.sh
@@ -38,10 +38,18 @@ make
 make install
 ```
 
-Also, please add the following to your .bash_profile so that iVar can find htslib dynamic libraries during runtime.
+If htslib is installed in a non standard location, please add the following to your .bash_profile so that iVar can find htslib dynamic libraries during runtime.
 
 ```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
+```
+
+To test installation just run, `ivar version` and you should get the following output,
+
+```
+iVar version 1.0
+
+Please raise issues and bug reports at https://github.com/andersen-lab/ivar/
 ```
 
 ### Installing on Linux
@@ -72,8 +80,20 @@ make
 make install
 ```
 
-Also, please add the following to your .bash_rc so that iVar can find htslib dynamic libraries during runtime.
+If htslib is installed in a non standard location, please add the following to your .bashrc so that iVar can find htslib dynamic libraries during runtime.
 
 ```
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 ```
+
+To test installation just run, `ivar version` and you should get the following output,
+
+```
+iVar version 1.0
+
+Please raise issues and bug reports at https://github.com/andersen-lab/ivar/
+```
+
+### Contact
+
+For bug reports please email gkarthik[at]scripps.edu or raise an issue on Github.
