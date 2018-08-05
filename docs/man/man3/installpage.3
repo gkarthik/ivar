@@ -9,7 +9,7 @@ installpage \- Installation
 .IP "\(bu" 2
 \fChtslib\fP
 .IP "\(bu" 2
-\fCAwk\fP - Available on most UNIX systems\&.
+\fCAwk\fP - Pre-installed on most UNIX systems\&.
 .PP
 .PP
 Note:
@@ -40,7 +40,7 @@ make install
 .fi
 .PP
 .PP
-If htslib has been installed in a non standard location, please run,
+If htslib has been installed in a non standard location, please run the following commands,
 .PP
 .PP
 .nf
@@ -51,11 +51,21 @@ make install
 .fi
 .PP
 .PP
-Also, please add the following to your \&.bash_profile so that iVar can find htslib dynamic libraries during runtime\&.
+If htslib is installed in a non standard location, please add the following to your \&.bash_profile so that iVar can find htslib dynamic libraries during runtime\&.
 .PP
 .PP
 .nf
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
+.fi
+.PP
+.PP
+To test installation just run, \fCivar version\fP and you should get the following output,
+.PP
+.PP
+.nf
+iVar version 1\&.0
+
+Please raise issues and bug reports at https://github\&.com/andersen-lab/ivar/
 .fi
 .PP
 .PP
@@ -93,11 +103,24 @@ make install
 .fi
 .PP
 .PP
-Also, please add the following to your \&.bash_rc so that iVar can find htslib dynamic libraries during runtime\&.
+If htslib is installed in a non standard location, please add the following to your \&.bashrc so that iVar can find htslib dynamic libraries during runtime\&.
 .PP
 .PP
 .nf
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/hts/lib/folder
 .fi
 .PP
- 
+.PP
+To test installation just run, \fCivar version\fP and you should get the following output,
+.PP
+.PP
+.nf
+iVar version 1\&.0
+
+Please raise issues and bug reports at https://github\&.com/andersen-lab/ivar/
+.fi
+.PP
+.PP
+.SS "Contact"
+.PP
+For bug reports please email gkarthik[at]scripps\&.edu or raise an issue on Github\&. 

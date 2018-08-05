@@ -3,7 +3,7 @@
 
 \begin{DoxyItemize}
 \item \href{http://www.htslib.org/download/}{\tt htslib}
-\item \href{https://www.cs.princeton.edu/~bwk/btl.mirror/}{\tt Awk} -\/ Available on most U\+N\+IX systems.
+\item \href{https://www.cs.princeton.edu/~bwk/btl.mirror/}{\tt Awk} -\/ Pre-\/installed on most U\+N\+IX systems.
 \end{DoxyItemize}
 
 Note\+:
@@ -34,7 +34,7 @@ make install
 \end{DoxyCode}
 
 
-If htslib has been installed in a non standard location, please run,
+If htslib has been installed in a non standard location, please run the following commands,
 
 
 \begin{DoxyCode}
@@ -45,11 +45,21 @@ make install
 \end{DoxyCode}
 
 
-Also, please add the following to your .bash\+\_\+profile so that i\+Var can find htslib dynamic libraries during runtime.
+If htslib is installed in a non standard location, please add the following to your .bash\+\_\+profile so that i\+Var can find htslib dynamic libraries during runtime.
 
 
 \begin{DoxyCode}
 export LD\_LIBRARY\_PATH=$LD\_LIBRARY\_PATH:/path/to/hts/lib/folder
+\end{DoxyCode}
+
+
+To test installation just run, {\ttfamily ivar version} and you should get the following output,
+
+
+\begin{DoxyCode}
+iVar version 1.0
+
+Please raise issues and bug reports at https://github.com/andersen-lab/ivar/
 \end{DoxyCode}
 
 
@@ -87,10 +97,24 @@ make install
 \end{DoxyCode}
 
 
-Also, please add the following to your .bash\+\_\+rc so that i\+Var can find htslib dynamic libraries during runtime.
+If htslib is installed in a non standard location, please add the following to your .bashrc so that i\+Var can find htslib dynamic libraries during runtime.
 
 
 \begin{DoxyCode}
 export LD\_LIBRARY\_PATH=$LD\_LIBRARY\_PATH:/path/to/hts/lib/folder
 \end{DoxyCode}
- 
+
+
+To test installation just run, {\ttfamily ivar version} and you should get the following output,
+
+
+\begin{DoxyCode}
+iVar version 1.0
+
+Please raise issues and bug reports at https://github.com/andersen-lab/ivar/
+\end{DoxyCode}
+
+
+\subsubsection*{Contact}
+
+For bug reports please email gkarthik\mbox{[}at\mbox{]}scripps.\+edu or raise an issue on Github. 
