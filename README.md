@@ -9,7 +9,7 @@ iVar is a computational package that contains functions broadly useful for viral
 
 ### Dependencies
 
-* [htslib](http://www.htslib.org/download/)
+* [htslib](https://github.com/samtools/htslib)
 * [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
 
 Note:
@@ -17,6 +17,12 @@ Note:
 
 
 ### Installing on Mac
+
+[Xcode](https://developer.apple.com/xcode/) from Apple is required to compile iVar (and other tools) from source. If you don't want to install the full Xcode package from the AppStore, you can install the Xcode command line tools,
+
+```
+xcode-select --install
+```
 
 [GNU Autotools](https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html#Autotools-Introduction) is required to compile iVar from source.
 
