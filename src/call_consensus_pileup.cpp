@@ -5,6 +5,7 @@
 #include<algorithm>
 #include<string>
 #include<regex>
+#include<libgen.h>
 
 #include "allele_functions.h"
 #include "call_consensus_pileup.h"
@@ -147,7 +148,10 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
   std::string line, cell;
   std::ofstream fout(out_file+".fa");
   std::ofstream tmp_qout(out_file+".qual.txt");
-  fout << ">Consensus" << "_" << threshold <<std::endl;
+  char *o = new char[out_file.length() + 1];
+  strcpy(o, out_file.c_str());
+  fout << ">Consensus_" << basename(o) << "_threshold_" << threshold << "_quality_" << (uint16_t) min_qual  <<std::endl;
+  delete [] o;
   int ctr = 0, mdepth = 0;
   uint32_t prev_pos = 0, pos = 0;
   std::stringstream lineStream;
