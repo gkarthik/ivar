@@ -5,27 +5,30 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `hts' library (-lhts). */
-#define HAVE_LIBHTS 1
+/* #undef HAVE_LIBHTS */
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
-#define HAVE_LIBPTHREAD 1
+/* #undef HAVE_LIBPTHREAD */
 
 /* Define to 1 if you have the `z' library (-lz). */
-#define HAVE_LIBZ 1
+/* #undef HAVE_LIBZ */
 
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
-#define HAVE_MALLOC 1
+#define HAVE_MALLOC 0
 
 /* Define to 1 if you have the `memmove' function. */
-#define HAVE_MEMMOVE 1
+/* #undef HAVE_MEMMOVE */
 
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
 /* Define to 1 if your system has a GNU libc compatible `realloc' function,
    and to 0 otherwise. */
-#define HAVE_REALLOC 1
+#define HAVE_REALLOC 0
+
+/* Define to 1 if stdbool.h conforms to C99. */
+#define HAVE_STDBOOL_H 1
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -61,7 +64,7 @@
 #define PACKAGE_NAME "ivar"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "ivar 0.1.0"
+#define PACKAGE_STRING "ivar 1.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "ivar"
@@ -70,13 +73,13 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.1.0"
+#define PACKAGE_VERSION "1.0"
 
 /* Define to 1 if you have the ANSI C header files. */
-#define STDC_HEADERS 1
+/* #undef STDC_HEADERS */
 
 /* Version number of package */
-#define VERSION "0.1.0"
+#define VERSION "1.0"
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef were allowed, the
@@ -107,10 +110,10 @@
 /* #undef int8_t */
 
 /* Define to rpl_malloc if the replacement function should be used. */
-/* #undef malloc */
+#define malloc rpl_malloc
 
 /* Define to rpl_realloc if the replacement function should be used. */
-/* #undef realloc */
+#define realloc rpl_realloc
 
 /* Define to the type of an unsigned integer type of width exactly 16 bits if
    such a type exists and the standard includes do not define it. */

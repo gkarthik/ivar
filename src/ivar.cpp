@@ -101,7 +101,8 @@ void print_consensus_usage(){
 
 void print_removereads_usage(){
   std::cout <<
-    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices> \n\n"
+    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices> \n"
+    "Note: This step is used only for amplicon-based sequencing.\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using sort_index_bam.sh\n"
     "           -t    (Required) Text file with primer indices separated by spaces. This is the output of `getmasked` command.\n\n"
@@ -111,7 +112,8 @@ void print_removereads_usage(){
 
 void print_getmasked_usage(){
   std::cout <<
-    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>\n\n"
+    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>\n"
+    "Note: This step is used only for amplicon-based sequencing.\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input filtered variants tsv generated from `ivar filtervariants`\n"
     "           -b    (Required) BED file with primer sequences and positions\n\n"
