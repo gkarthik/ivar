@@ -101,10 +101,10 @@ void print_consensus_usage(){
 
 void print_removereads_usage(){
   std::cout <<
-    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...  \n\n"
+    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices> \n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using sort_index_bam.sh\n"
-    "           -t    (Required) Text file with primer indices separated by spaces\n"
+    "           -t    (Required) Text file with primer indices separated by spaces. This is the output of `getmasked` command.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered BAM file\n";
 }
@@ -114,7 +114,7 @@ void print_getmasked_usage(){
     "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input filtered variants tsv generated from `ivar filtervariants`\n"
-    "           -b    (Required) BED file with primer sequences and positions\n"
+    "           -b    (Required) BED file with primer sequences and positions\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output text file\n";
 }
@@ -125,7 +125,8 @@ void print_trimadapter_usage(){
     "Input Options    Description\n"
     "           -1    (Required) Input fastq file\n"
     "           -2    Input fastq file 2 (for pair ended reads)\n"
-    "           -a    (Required) Adapter Fasta File\n"
+    "           -a    (Required) Adapter Fasta File\n\n"
+    "Output Options   Description\n"
     "           -p    (Required) Prefix of output fastq files\n";
 }
 
