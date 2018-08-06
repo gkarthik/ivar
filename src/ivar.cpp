@@ -268,7 +268,7 @@ int main(int argc, char* argv[]){
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fa");
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fasta");
     g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
-    std::cout <<"Min Quality" << g_args.min_qual << std::endl;
+    std::cout <<"Min Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
     res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
   } else if (cmd.compare("removereads") == 0){

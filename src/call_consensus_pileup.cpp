@@ -9,7 +9,7 @@
 #include "allele_functions.h"
 #include "call_consensus_pileup.h"
 
-const std::string gap="N";
+const char gap = '-';
 
 void format_alleles(std::vector<allele> &ad){
   std::vector<allele>::iterator it = ad.begin();
@@ -150,7 +150,8 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
   std::ofstream fout(out_file+".fa");
   std::ofstream tmp_qout(out_file+".qual.txt");
   fout << ">Consensus" << "_" << threshold <<std::endl;
-  int ctr = 0, pos = 0, mdepth = 0;
+  int ctr = 0, mdepth = 0;
+  uint32_t prev_pos = 0, pos = 0;
   std::stringstream lineStream;
   char ref;
   std::string bases;
@@ -183,12 +184,14 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       }
       ctr++;
     }
+    fout << std::string((pos - prev_pos) - 1, gap);
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     ret_t t = get_consensus_allele(ad, min_qual, threshold);
     fout << t.nuc;
     tmp_qout << t.q;
     lineStream.clear();
     ad.clear();
+    prev_pos = pos;
   }
   tmp_qout.close();
   fout.close();
