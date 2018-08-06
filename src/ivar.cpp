@@ -26,6 +26,8 @@ struct args_t {
   std::string f1;		// -1
   std::string f2;		// -2
   std::string adp_path;	// -a
+  int min_depth;		// -m
+  char gap;			// -n
 } g_args;
 
 void print_usage(){
@@ -91,6 +93,8 @@ void print_consensus_usage(){
     "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
+    "           -m    Minimum depth to call consensus(Default: 0)\n"
+    "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output fasta file and quality file\n";
 }
@@ -132,7 +136,7 @@ void print_version_info(){
 
 static const char *trim_opt_str = "i:b:p:m::q::s::h?";
 static const char *variants_opt_str = "p:t::q::h?";
-static const char *consensus_opt_str = "p:q::t::h?";
+static const char *consensus_opt_str = "p:q::t::m::n::h?";
 static const char *removereads_opt_str = "i:p:t:h?";
 static const char *filtervariants_opt_str = "p:h?";
 static const char *getmasked_opt_str = "i:b:p:h?";
@@ -167,11 +171,10 @@ int main(int argc, char* argv[]){
   argv[1] = argv[0];
   argv++;
   argc--;
-  g_args.min_qual = 255;
-  g_args.sliding_window = 255;
-  g_args.min_threshold = -1;
-  g_args.min_length = -1;
   if (cmd.compare("trim") == 0){
+    g_args.min_qual = 20;
+    g_args.sliding_window = 4;
+    g_args.min_length = 30;
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -206,11 +209,10 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
-    g_args.sliding_window = (g_args.sliding_window == 255) ? 4 : g_args.sliding_window;
-    g_args.min_length = (g_args.min_length == -1) ? 30 : g_args.min_length;
     res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, g_args.min_length);
   } else if (cmd.compare("variants") == 0){
+    g_args.min_qual = 20;
+    g_args.min_threshold = 0.03;
     opt = getopt( argc, argv, variants_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -236,12 +238,14 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
-    g_args.min_threshold = (g_args.min_threshold == -1 || g_args.min_threshold < 0 || g_args.min_threshold >= 1) ? 0.03: g_args.min_threshold;
-    g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
+    g_args.min_threshold = (g_args.min_threshold < 0 || g_args.min_threshold > 1) ? 0.03: g_args.min_threshold;
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.min_threshold = 0;
+    g_args.min_depth = 0;
+    g_args.gap = '-';
+    g_args.min_qual = 20;
     while( opt != -1 ) {
       switch( opt ) {
       case 't':
@@ -249,6 +253,12 @@ int main(int argc, char* argv[]){
 	break;
       case 'p':
 	g_args.prefix = optarg;
+	break;
+      case 'm':
+	g_args.min_depth = atoi(optarg);
+	break;
+      case 'n':
+	g_args.gap = optarg[0];
 	break;
       case 'q':
 	g_args.min_qual = atoi(optarg);
@@ -267,10 +277,12 @@ int main(int argc, char* argv[]){
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fa");
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fasta");
-    g_args.min_qual = (g_args.min_qual == 255) ? 20 : g_args.min_qual;
-    std::cout <<"Min Quality: " << (uint16_t) g_args.min_qual << std::endl;
+    g_args.gap = (g_args.gap != 'N' && g_args.gap != '-') ? '-' : g_args.gap; // Accept only N or -
+    std::cout <<"Minimum Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
-    res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
+    std::cout << "Minimum depth: " << g_args.min_depth << std::endl;
+    std::cout << "Gap character: " << g_args.gap << std::endl;
+    res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap);
   } else if (cmd.compare("removereads") == 0){
     opt = getopt( argc, argv, removereads_opt_str);
     while( opt != -1 ) {

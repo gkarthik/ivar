@@ -9,8 +9,6 @@
 #include "allele_functions.h"
 #include "call_consensus_pileup.h"
 
-const char gap = '-';
-
 void format_alleles(std::vector<allele> &ad){
   std::vector<allele>::iterator it = ad.begin();
   while(it < ad.end()){
@@ -145,7 +143,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
   return t;
 }
 
-int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold){
+int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, int min_depth, char gap){
   std::string line, cell;
   std::ofstream fout(out_file+".fa");
   std::ofstream tmp_qout(out_file+".qual.txt");
@@ -185,10 +183,14 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       ctr++;
     }
     fout << std::string((pos - prev_pos) - 1, gap);
-    ad = update_allele_depth(ref, bases, qualities, min_qual);
-    ret_t t = get_consensus_allele(ad, min_qual, threshold);
-    fout << t.nuc;
-    tmp_qout << t.q;
+    if(mdepth < min_depth){
+      fout << gap;
+    } else {
+      ad = update_allele_depth(ref, bases, qualities, min_qual);
+      ret_t t = get_consensus_allele(ad, min_qual, threshold);
+      fout << t.nuc;
+      tmp_qout << t.q;
+    }
     lineStream.clear();
     ad.clear();
     prev_pos = pos;
