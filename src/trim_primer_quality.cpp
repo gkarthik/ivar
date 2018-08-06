@@ -90,6 +90,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   double m = 60;
   int del_len, cig, temp;
   uint32_t i = 0, j = 0;
+  cigar_ t;
   while(m >= qual_threshold && (i < r->core.l_qseq)){
     m = mean_quality(qual, i, i+sliding_window);
     i++;
@@ -103,11 +104,10 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   del_len = r->core.l_qseq - i;
   start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos
   if(bam_is_rev(r) && start_pos <= r->core.pos) {
-    return {
-      cigar,
-	r->core.n_cigar,
-	r->core.pos
-	};
+    t.cigar = cigar;
+    t.nlength = r->core.n_cigar;
+    t.start_pos = r->core.pos;
+    return t;
   }
   int32_t n;
   i = 0;
@@ -145,11 +145,10 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   if(bam_is_rev(r)){
     reverse_cigar(ncigar, j);
   }
-  return {
-    ncigar,
-      j,
-      start_pos
-  };
+  t.cigar = ncigar;
+  t.nlength = j;
+  t.start_pos = start_pos;
+  return t;
 }
 
 void print_cigar(uint32_t *cigar, int nlength){
@@ -243,6 +242,7 @@ int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
 
 cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
   int i = 0, len = 0, cig, start_pos = 0;
+  cigar_ t;
   while(i < n){
     cig = bam_cigar_op(cigar[i]);
     len = bam_cigar_oplen(cigar[i]);
@@ -282,11 +282,10 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
     i++;
   }
   reverse_cigar(cigar, n);
-  return {
-    cigar,
-      n,
-      start_pos
-  };
+  t.cigar = cigar;
+  t.nlength = n;
+  t.start_pos = start_pos;
+  return t;
 }
 
 cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
@@ -309,11 +308,10 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
       i++;
     }
   }
-  return {
-    cigar,
-      n,
-      start_pos
-      };
+  t.cigar = cigar;
+  t.nlength = n;
+  t.start_pos = start_pos;
+  return t;
 }
 
 int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, int min_length = 30){
