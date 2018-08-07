@@ -146,6 +146,8 @@ static const char *getmasked_opt_str = "i:b:p:h?";
 static const char *trimadapter_opt_str = "1:2::p:a:h?";
 
 std::string get_filename_without_extension(std::string f, std::string ext){
+  if(ext.length() > f.length())	// If extension longer than filename
+    return f;
   if(f.substr(f.length()-ext.length(), ext.length()).compare(ext) == 0){
     return f.substr(0,f.length()-ext.length());
   }
