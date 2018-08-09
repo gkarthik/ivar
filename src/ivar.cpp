@@ -137,13 +137,13 @@ void print_version_info(){
     "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
-static const char *trim_opt_str = "i:b:p:m::q::s::h?";
-static const char *variants_opt_str = "p:t::q::h?";
-static const char *consensus_opt_str = "p:q::t::m::n::h?";
+static const char *trim_opt_str = "i:b:p:m:q:s:h?";
+static const char *variants_opt_str = "p:t:q:h?";
+static const char *consensus_opt_str = "p:q:t:m:n:h?";
 static const char *removereads_opt_str = "i:p:t:h?";
 static const char *filtervariants_opt_str = "p:h?";
 static const char *getmasked_opt_str = "i:b:p:h?";
-static const char *trimadapter_opt_str = "1:2::p:a:h?";
+static const char *trimadapter_opt_str = "1:2:p:a:h?";
 
 std::string get_filename_without_extension(std::string f, std::string ext){
   if(ext.length() > f.length())	// If extension longer than filename
