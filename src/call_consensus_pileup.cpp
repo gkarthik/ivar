@@ -188,8 +188,10 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
     }
     if(prev_pos == 0)		// No -/N before alignment starts
       prev_pos = pos;
-    if(pos > prev_pos)
+    if(pos > prev_pos){
       fout << std::string((pos - prev_pos) - 1, gap);
+      tmp_qout << std::string((pos - prev_pos) - 1, '-');
+    }
     if(mdepth < min_depth){
       fout << gap;
     } else {
