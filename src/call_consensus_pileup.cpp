@@ -202,6 +202,8 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
     ad.clear();
     prev_pos = pos;
   }
+  fout << "\n";			// Add new line character after end of sequence
+  tmp_qout << "\n";
   tmp_qout.close();
   fout.close();
   return 0;
