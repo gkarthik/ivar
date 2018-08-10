@@ -190,7 +190,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       prev_pos = pos;
     if(pos > prev_pos){
       fout << std::string((pos - prev_pos) - 1, gap);
-      tmp_qout << std::string((pos - prev_pos) - 1, '-');
+      tmp_qout << std::string((pos - prev_pos) - 1, '!'); // ! represents 0 quality score.
     }
     if(mdepth < min_depth){
       fout << gap;
