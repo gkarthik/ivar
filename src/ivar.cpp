@@ -94,7 +94,7 @@ void print_consensus_usage(){
     "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
-    "           -m    Minimum depth to call consensus(Default: 0)\n"
+    "           -m    Minimum depth to call consensus(Default: 1)\n"
     "           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n \n"
     "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)\n\n"
     "Output Options   Description\n"
