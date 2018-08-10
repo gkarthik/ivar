@@ -28,6 +28,7 @@ struct args_t {
   std::string adp_path;	// -a
   int min_depth;		// -m
   char gap;			// -n
+  bool keep_min_coverage;	// -k
 } g_args;
 
 void print_usage(){
@@ -94,6 +95,7 @@ void print_consensus_usage(){
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
     "           -m    Minimum depth to call consensus(Default: 0)\n"
+    "           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n \n"
     "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output fasta file and quality file\n";
@@ -139,7 +141,7 @@ void print_version_info(){
 
 static const char *trim_opt_str = "i:b:p:m:q:s:h?";
 static const char *variants_opt_str = "p:t:q:h?";
-static const char *consensus_opt_str = "p:q:t:m:n:h?";
+static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:h?";
 static const char *filtervariants_opt_str = "p:h?";
 static const char *getmasked_opt_str = "i:b:p:h?";
@@ -251,6 +253,7 @@ int main(int argc, char* argv[]){
     g_args.min_depth = 0;
     g_args.gap = '-';
     g_args.min_qual = 20;
+    g_args.keep_min_coverage = true;
     while( opt != -1 ) {
       switch( opt ) {
       case 't':
@@ -267,6 +270,10 @@ int main(int argc, char* argv[]){
 	break;
       case 'q':
 	g_args.min_qual = atoi(optarg);
+	break;
+      case 'k':
+	g_args.keep_min_coverage = false;
+      case 'g':
 	break;
       case 'h':
       case '?':
@@ -286,8 +293,11 @@ int main(int argc, char* argv[]){
     std::cout <<"Minimum Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
     std::cout << "Minimum depth: " << g_args.min_depth << std::endl;
-    std::cout << "Gap character: " << g_args.gap << std::endl;
-    res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap);
+    if(!g_args.keep_min_coverage)
+      std::cout << "Regions with depth less than minimum depth will not added to consensus" << std::endl;
+    else
+      std::cout << "Regions with depth less than minimum depth covered by: " << g_args.gap << std::endl;
+    res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage);
   } else if (cmd.compare("removereads") == 0){
     opt = getopt( argc, argv, removereads_opt_str);
     while( opt != -1 ) {

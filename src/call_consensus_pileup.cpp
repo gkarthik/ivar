@@ -144,7 +144,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
   return t;
 }
 
-int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, int min_depth, char gap){
+int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, int min_depth, char gap, bool min_coverage_flag){
   std::string line, cell;
   std::ofstream fout(out_file+".fa");
   std::ofstream tmp_qout(out_file+".qual.txt");
@@ -188,17 +188,18 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
     }
     if(prev_pos == 0)		// No -/N before alignment starts
       prev_pos = pos;
-    if(pos > prev_pos){
+    if((pos > prev_pos && min_coverage_flag)){
       fout << std::string((pos - prev_pos) - 1, gap);
       tmp_qout << std::string((pos - prev_pos) - 1, '!'); // ! represents 0 quality score.
     }
-    if(mdepth < min_depth){
-      fout << gap;
-    } else {
+    if(mdepth >= min_depth){
       ad = update_allele_depth(ref, bases, qualities, min_qual);
       ret_t t = get_consensus_allele(ad, min_qual, threshold);
       fout << t.nuc;
       tmp_qout << t.q;
+    } else if(min_coverage_flag){
+      fout << gap;
+      tmp_qout << '!';
     }
     lineStream.clear();
     ad.clear();
