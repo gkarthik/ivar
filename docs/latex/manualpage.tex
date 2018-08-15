@@ -270,91 +270,104 @@ If there are two nucleotides at the same frequency, both nucleotides are used to
 
 The output of the command is a fasta file with the consensus sequence and a .txt file with the average quality of every base used to generate the consensus at each position. {\itshape For insertions, the quality is set to be the minimum quality threshold since mpileup doesn\textquotesingle{}t give the quality of bases in insertions.}
 
-Command\+: \`{}\`{}\`{} ivar consensus
+Command\+: 
+\begin{DoxyCode}
+ivar consensus
 
-Usage\+: samtools mpileup -\/A -\/d 300000 -\/Q 0 -\/F 0 $<$input.\+bam$>$ $\vert$ ivar consensus -\/p $<$prefix$>$
+Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix>
 
-Note \+: samtools mpileup output must be piped into {\ttfamily ivar consensus}
+Note : samtools mpileup output must be piped into ivar consensus
 
-Input Options Description -\/q Minimum quality score threshold to count base (Default\+: 20) -\/t Minimum frequency threshold(0 -\/ 1) to call consensus. (Default\+: 0) \tabulinesep=1mm
-\begin{longtabu} spread 0pt [c]{*{2}{|X[-1]}|}
-\hline
-\rowcolor{\tableheadbgcolor}\textbf{ Frequently used thresholds  }&\textbf{ Description   }\\\cline{1-2}
-\endfirsthead
-\hline
-\endfoot
-\hline
-\rowcolor{\tableheadbgcolor}\textbf{ Frequently used thresholds  }&\textbf{ Description   }\\\cline{1-2}
-\endhead
-0  &Majority or most common base   \\\cline{1-2}
-0.\+2  &Bases that make up atleast 20\% of the depth at a position   \\\cline{1-2}
-0.\+5  &Strict or bases that make up atleast 50\% of the depth at a position   \\\cline{1-2}
-0.\+9  &Strict or bases that make up atleast 90\% of the depth at a position   \\\cline{1-2}
-1  &Identical or bases that make up 100\% of the depth at a position. Will have highest ambiguities   \\\cline{1-2}
-\end{longtabu}
--\/m Minimum depth to call consensus(\+Default\+: 1) -\/k If \textquotesingle{}-\/k\textquotesingle{} flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using \textquotesingle{}-\/k\textquotesingle{} will override any option specified using -\/n -\/n (N/-\/) Character to print in regions with less than minimum coverage(Default\+: -\/)
+Input Options    Description
+           -q    Minimum quality score threshold to count base (Default: 20)
+           -t    Minimum frequency threshold(0 - 1) to call consensus. (Default: 0)
+                 Frequently used thresholds | Description
+                 ---------------------------|------------
+                                          0 | Majority or most common base
+                                        0.2 | Bases that make up atleast 20% of the depth at a position
+                                        0.5 | Strict or bases that make up atleast 50% of the depth at a
+       position
+                                        0.9 | Strict or bases that make up atleast 90% of the depth at a
+       position
+                                          1 | Identical or bases that make up 100% of the depth at a
+       position. Will have highest ambiguities
+           -m    Minimum depth to call consensus(Default: 1)
+           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the
+       consensus sequence. Using '-k' will override any option specified using -n
+           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)
 
-Output Options Description -\/p (Required) Prefix for the output fasta file and quality file
+Output Options   Description
+           -p    (Required) Prefix for the output fasta file and quality file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+samtools mpileup -d 1000 -A -Q 0 -F 0 test.bam | ivar consensus -p test -q 20 -t 0
+\end{DoxyCode}
+
+
+The command above will produce a test.\+fa fasta file with the consensus sequence and a test.\+qual.\+txt with the average quality of each base in the consensus sequence.\hypertarget{manualpage_autotoc_md6}{}\subsection{Get primers with mismatches to the reference sequence}\label{manualpage_autotoc_md6}
+i\+Var uses a .tsv file with variants to get the zero based indices(based on the B\+E\+D file) of mismatched primers. The output is the primer indices delimited by a space. The output is written to stdout and can be written to a file by redirecting output into a file using {\ttfamily $>$}.
+
+Command\+: 
+\begin{DoxyCode}
+ivar getmasked
+Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>
+Note: This step is used only for amplicon-based sequencing.
+
+Input Options    Description
+           -i    (Required) Input filtered variants tsv generated from ivar filtervariants
+           -b    (Required) BED file with primer sequences and positions
+
+Output Options   Description
+           -p    (Required) Prefix for the output text file
+\end{DoxyCode}
+
+
+Example Usage\+: 
+\begin{DoxyCode}
+ivar getmasked -i test.filtered.tsv -b primers.bed -p test.masked.txt
+\end{DoxyCode}
+
+
+The command above produces an output file -\/ test.\+masked.\+txt.
+
+Example Output\+:
 
 
 \begin{DoxyCode}
-Example Usage:
+1 2 7 8
 \end{DoxyCode}
- samtools mpileup -\/d 1000 -\/A -\/Q 0 -\/F 0 test.\+bam $\vert$ ivar consensus -\/p test -\/q 20 -\/t 0 
+\hypertarget{manualpage_autotoc_md7}{}\subsection{Remove reads associated with mismatched primer indices}\label{manualpage_autotoc_md7}
+This command accepts an aligned, sorted and indexed B\+AM file trimmed using {\ttfamily ivar trim} and removes the reads corresponding to the supplied primer indices, which is the output of {\ttfamily ivar getmasked} command. Under the hood, {\ttfamily ivar trim} adds the zero based primer index(based on the B\+E\+D file) to the B\+AM auxillary data for every read. Hence, ivar removereads will only work on B\+AM files that have been trimmed using {\ttfamily ivar trim}.
+
+Command\+: 
 \begin{DoxyCode}
-The command above will produce a test.fa fasta file with the consensus sequence and a test.qual.txt with
-       the average quality of each base in the consensus sequence.
+ivar removereads
 
-Get primers with mismatches to the reference sequence
-----
+Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices>
+Note: This step is used only for amplicon-based sequencing.
 
-iVar uses a .tsv file with variants to get the zero based indices(based on the BED file) of mismatched
-       primers. The output is the primer indices delimited by a space. The output is written to stdout and can be
-       written to a file by redirecting output into a file using `>`.
+Input Options    Description
+           -i    (Required) Input BAM file  trimmed with ivar trim. Must be sorted and indexed, which can
+       be done using sort\_index\_bam.sh
+           -t    (Required) Text file with primer indices separated by spaces. This is the output of
+       getmasked command.
 
-Command:
+Output Options   Description
+           -p    (Required) Prefix for the output filtered BAM file
 \end{DoxyCode}
- ivar getmasked
-
-Usage\+: ivar getmasked -\/i $<$input-\/filtered.\+tsv$>$ -\/b $<$primers.\+bed$>$
-
-Input Options Description -\/i (Required) Input filtered variants tsv generated from ivar filtervariants -\/b (Required) B\+ED file with primer sequences and positions
 
 
+Example Usage\+: 
 \begin{DoxyCode}
-Example Usage:
+ivar trim -i test.bam -p test.trimmed
+ivar removereads -i test.trimmed.bam -p test.trimmed.masked.bam -t test.masked.txt
 \end{DoxyCode}
- ivar getmasked -\/i test.\+filtered.\+tsv -\/b primers.\+bed $>$ test.\+masked.\+txt 
-\begin{DoxyCode}
-The command above produces an output file - test.masked.txt.
-
-Example Output:
-\end{DoxyCode}
- 1 2 7 8 
-\begin{DoxyCode}
-Remove reads associated with mismatched primer indices
-----
-
-This command accepts an aligned, sorrted and indexed BAM file trimmed using `ivar trim` and removes the
-       reads corresponding to the supplied primer indices, usually the output of `ivar getmasked`. Under the hood,
-       `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read.
-       Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`.
-
-Command:
-\end{DoxyCode}
- ivar removereads
-
-Usage\+: ivar removereads -\/i $<$input.\+trimmed.\+bam$>$ -\/p $<$prefix$>$ primer-\/index-\/1 primer-\/index-\/2 primer-\/index-\/3 primer-\/index-\/4 ...
-
-Input Options Description -\/i (Required) Input B\+AM file trimmed with ivar trim. Must be sorted and indexed, which can be done using sort\+\_\+index\+\_\+bam.\+sh Output Options Description -\/p (Required) Prefix for the output filtered B\+AM file
 
 
-\begin{DoxyCode}
-Example Usage:
-\end{DoxyCode}
- ivar trim -\/i test.\+bam -\/p test.\+trimmed ivar removereads -\/i test.\+trimmed.\+bam -\/p test.\+trimmed.\+masked.\+bam 1 2 7 8 \`{}\`{}\`{}
-
-The {\ttfamily ivar trim} command above trims test.\+bam and produced test.\+trimmed.\+bam with the primer indice data added. The {\ttfamily ivar removereads} command produces an output file -\/ test.\+trimmed.\+masked.\+bam after removing all the reads corresponding to primer indices -\/ 1,2,7 and 8.\hypertarget{manualpage_autotoc_md6}{}\subsection{(\+Experimental) trimadapter}\label{manualpage_autotoc_md6}
+The {\ttfamily ivar trim} command above trims test.\+bam and produced test.\+trimmed.\+bam with the primer indice data added. The {\ttfamily ivar removereads} command produces an output file -\/ test.\+trimmed.\+masked.\+bam after removing all the reads corresponding to primer indices -\/ 1,2,7 and 8.\hypertarget{manualpage_autotoc_md8}{}\subsection{(\+Experimental) trimadapter}\label{manualpage_autotoc_md8}
 {\bfseries Note\+: This feature is under active development and not completely validated yet.}
 
 trimadapter in i\+Var can be used to trim adapter sequences from fastq files using a supplied fasta file. 

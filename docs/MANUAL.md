@@ -229,7 +229,7 @@ ivar consensus
 
 Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix>
 
-Note : samtools mpileup output must be piped into `ivar consensus`
+Note : samtools mpileup output must be piped into ivar consensus
 
 Input Options    Description
            -q    Minimum quality score threshold to count base (Default: 20)
@@ -265,23 +265,27 @@ iVar uses a .tsv file with variants to get the zero based indices(based on the B
 Command:
 ```
 ivar getmasked
-
-Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed>
+Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>
+Note: This step is used only for amplicon-based sequencing.
 
 Input Options    Description
            -i    (Required) Input filtered variants tsv generated from ivar filtervariants
            -b    (Required) BED file with primer sequences and positions
 
+Output Options   Description
+           -p    (Required) Prefix for the output text file
+
 ```
 
 Example Usage:
 ```
-ivar getmasked -i test.filtered.tsv -b primers.bed > test.masked.txt
+ivar getmasked -i test.filtered.tsv -b primers.bed -p test.masked.txt
 ```
 
 The command above produces an output file - test.masked.txt.
 
 Example Output:
+
 ```
 1 2 7 8
 ```
@@ -289,16 +293,19 @@ Example Output:
 Remove reads associated with mismatched primer indices
 ----
 
-This command accepts an aligned, sorrted and indexed BAM file trimmed using `ivar trim` and removes the reads corresponding to the supplied primer indices, usually the output of `ivar getmasked`. Under the hood, `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read. Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`.
+This command accepts an aligned, sorted and indexed BAM file trimmed using `ivar trim` and removes the reads corresponding to the supplied primer indices, which is the output of `ivar getmasked` command. Under the hood, `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read. Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`.
 
 Command:
 ```
 ivar removereads
 
-Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> primer-index-1 primer-index-2 primer-index-3 primer-index-4 ...
+Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices>
+Note: This step is used only for amplicon-based sequencing.
 
 Input Options    Description
            -i    (Required) Input BAM file  trimmed with ivar trim. Must be sorted and indexed, which can be done using sort_index_bam.sh
+           -t    (Required) Text file with primer indices separated by spaces. This is the output of getmasked command.
+
 Output Options   Description
            -p    (Required) Prefix for the output filtered BAM file
 
@@ -307,7 +314,7 @@ Output Options   Description
 Example Usage:
 ```
 ivar trim -i test.bam -p test.trimmed
-ivar removereads -i test.trimmed.bam -p test.trimmed.masked.bam 1 2 7 8
+ivar removereads -i test.trimmed.bam -p test.trimmed.masked.bam -t test.masked.txt
 ```
 
 The `ivar trim` command above trims test.bam and produced test.trimmed.bam with the primer indice data added. The `ivar removereads` command produces an output file - test.trimmed.masked.bam after removing all the reads corresponding to primer indices - 1,2,7 and 8.
