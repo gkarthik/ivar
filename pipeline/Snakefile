@@ -49,8 +49,7 @@ rule remove_reads:
         "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "primers=$(cat {input[1]}) &&"
-        "ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked $primers && "
+        "ivar removereads -i {input[0]} -p {output} -t {input[1]} && "
         "samtools sort -o {output} {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked.bam && "
         "samtools index {output}"
 
@@ -61,7 +60,7 @@ rule get_masked:
     output:
         "{out_dir}/{sample}_masked_primer_indices.txt"
     shell:
-        "ivar getmasked -i {input[0]} -b {input[1]} > {output}"
+        "ivar getmasked -i {input[0]} -b {input[1]} -p {output}"
 
 rule filter_variants_before_masking:
     input:
