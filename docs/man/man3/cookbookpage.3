@@ -3,6 +3,43 @@
 .nh
 .SH NAME
 cookbookpage \- Cookbook 
-
+Two pipelines to call iSNVs from known and unknown reference sequences have been written in \fCsnakemake\fP\&.
+.PP
+The two pipelines are distributed along with iVar and are present in the\fCpipeline/\fP and \fCpipeline_field/\fP fodlers respectively\&.
+.PP
+For both pipelines, there are four parameters that will have to be set in beginning of the Snakefile\&.
+.PP
+in_dir = '<input fastq files>' out_dir = '<output directory>' bed = '<bed-file-with-primer-positions>' ref='<path to reference fasta>'
+.PP
+.SS "Call iSNVs from samples with known reference sequence"
+.PP
+\fCLink to pipeline\fP
+.PP
+.SS "Dependencies:"
+.PP
+.IP "\(bu" 2
+\fCiVar\fP
+.IP "\(bu" 2
+\fCsamtools\fP
+.IP "\(bu" 2
+\fCbwa\fP
+.PP
+.PP
+.PP
+.SS "Call iSNVs from samples with unknown reference sequence"
+.PP
+\fCLink to pipeline\fP
+.PP
+.SS "Dependencies:"
+.PP
+.IP "\(bu" 2
+\fCiVar\fP
+.IP "\(bu" 2
+\fCsamtools\fP
+.IP "\(bu" 2
+\fCbwa\fP
+.IP "\(bu" 2
+\fCbedtools\fP
+.PP
 .PP
  

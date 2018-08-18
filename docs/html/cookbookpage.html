@@ -65,15 +65,30 @@ $(function() {
 <div class="title">Cookbook </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="toc"><h3>Table of Contents</h3>
-<ul><ul><li class="level2"><a href="#autotoc_md19">Call iSNVs from samples with known reference sequence</a></li>
-<li class="level2"><a href="#autotoc_md20">Call iSNVs from samples with unknown reference sequence</a></li>
+<div class="textblock"><p>Two pipelines to call iSNVs from known and unknown reference sequences have been written in <a href="https://snakemake.readthedocs.io/en/stable/">snakemake</a>.</p>
+<p>The two pipelines are distributed along with iVar and are present in the<a href="https://github.com/andersen-lab/ivar/tree/master/pipeline">pipeline/</a> and <a href="https://github.com/andersen-lab/ivar/tree/master/pipeline_field">pipeline_field/</a> fodlers respectively.</p>
+<p>For both pipelines, there are four parameters that will have to be set in beginning of the Snakefile.</p>
+<p>in_dir = "&lt;input fastq files&gt;" out_dir = "&lt;output directory&gt;" bed = "&lt;bed-file-with-primer-positions&gt;" ref="&lt;path to reference fasta&gt;"</p>
+<h3>Call iSNVs from samples with known reference sequence</h3>
+<p><a href="https://github.com/andersen-lab/ivar/tree/master/pipeline">Link to pipeline</a></p>
+<h4>Dependencies:</h4>
+<ul>
+<li><a href="https://github.com/andersen-lab/ivar">iVar</a></li>
+<li><a href="https://htslib.org/">samtools</a></li>
+<li><a href="https://github.com/lh3/bwa">bwa</a></li>
 </ul>
-</ul>
-</div>
-<div class="textblock"><div class="image">
+<div class="image">
 <img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline/pipeline.png" width="500"/>
 </div>
+<h3>Call iSNVs from samples with unknown reference sequence</h3>
+<p><a href="https://github.com/andersen-lab/ivar/tree/master/pipeline_field/">Link to pipeline</a></p>
+<h4>Dependencies:</h4>
+<ul>
+<li><a href="https://github.com/andersen-lab/ivar">iVar</a></li>
+<li><a href="https://htslib.org/">samtools</a></li>
+<li><a href="https://github.com/lh3/bwa">bwa</a></li>
+<li><a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></li>
+</ul>
 <div class="image">
 <img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline_field/pipeline_field.png" width="500"/>
 </div>

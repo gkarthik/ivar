@@ -78,6 +78,8 @@ $(function() {
 <li class="level2"><a href="#autotoc_md9">Installing iVar</a></li>
 </ul>
 </li>
+<li class="level1"><a href="#autotoc_md10">Running from Docker</a></li>
+<li class="level1"><a href="#autotoc_md11">Contact</a></li>
 </ul>
 </div>
 <div class="textblock"><h3>Dependencies</h3>
@@ -136,7 +138,13 @@ Installing iVar</h2>
 <p>The prefix to the bin folder can be found using the command <code>which conda</code>. The output of the command will be in this format - /opt/conda/bin/conda or /opt/anaconda2/bin/conda or /opt/anaconda3/bin/conda depending on whether you installed miniconda or anaconda. For example, if the output of the command is /opt/conda/bin/conda, the prefix to the htslib bin folder will be /opt/conda. This can be supplied to ./configure &ndash;with-hts=/opt/conda.</p>
 <div class="fragment"><div class="line">./autogen.sh</div><div class="line">./configure --with-hts=/prefix/to/bin/folder/with/HTSlib</div><div class="line">make</div><div class="line">make install</div></div><!-- fragment --><p>If HTSlib was installed in a non standard location, please run the following commands,</p>
 <div class="fragment"><div class="line">./autogen.sh</div><div class="line">./configure --with-hts=/prefix/to/bin/folder/with/HTSlib</div><div class="line">make</div><div class="line">make install</div></div><!-- fragment --><p>To test installation just run, <code>ivar version</code> and you should get the following output,</p>
-<div class="fragment"><div class="line">iVar version 1.0</div><div class="line"></div><div class="line">Please raise issues and bug reports at https://github.com/andersen-lab/ivar/</div></div><!-- fragment --><h3>Contact</h3>
+<div class="fragment"><div class="line">iVar version 1.0</div><div class="line"></div><div class="line">Please raise issues and bug reports at https://github.com/andersen-lab/ivar/</div></div><!-- fragment --><h1><a class="anchor" id="autotoc_md10"></a>
+Running from Docker</h1>
+<p>iVar can also be run via <a href="https://www.docker.com/">Docker</a>. Pull the docker image from <a href="https://hub.docker.com/">Docker Hub</a> using the following command,</p>
+<div class="fragment"><div class="line">docker pull lodbrok/ivar</div></div><!-- fragment --><p>This docker image contains all the required dependencies to run iVar and the <a class="el" href="cookbookpage.html">pipelines</a> developed using iVar. You will have to attach a docker volume to get data into the docker container. Instructions to do so are in the <a href="https://docs.docker.com/storage/volumes/">Docker docs</a>.</p>
+<p><a href="https://hub.docker.com/r/lodbrok/ivar/">iVar on Docker Hub</a></p>
+<h1><a class="anchor" id="autotoc_md11"></a>
+Contact</h1>
 <p>For bug reports please email gkarthik[at]scripps.edu or raise an issue on Github. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->

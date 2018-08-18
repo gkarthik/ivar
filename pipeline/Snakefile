@@ -49,7 +49,7 @@ rule remove_reads:
         "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar removereads -i {input[0]} -p {output} -t {input[1]} && "
+        "ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked -t {input[1]} && "
         "samtools sort -o {output} {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked.bam && "
         "samtools index {output}"
 

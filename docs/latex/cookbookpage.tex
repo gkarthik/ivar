@@ -1,3 +1,38 @@
+Two pipelines to call i\+S\+N\+Vs from known and unknown reference sequences have been written in \href{https://snakemake.readthedocs.io/en/stable/}{\tt snakemake}.
 
+The two pipelines are distributed along with i\+Var and are present in the\href{https://github.com/andersen-lab/ivar/tree/master/pipeline}{\tt pipeline/} and \href{https://github.com/andersen-lab/ivar/tree/master/pipeline_field}{\tt pipeline\+\_\+field/} fodlers respectively.
+
+For both pipelines, there are four parameters that will have to be set in beginning of the Snakefile.
+
+in\+\_\+dir = \char`\"{}$<$input fastq files$>$\char`\"{} out\+\_\+dir = \char`\"{}$<$output directory$>$\char`\"{} bed = \char`\"{}$<$bed-\/file-\/with-\/primer-\/positions$>$\char`\"{} ref=\char`\"{}$<$path to reference fasta$>$\char`\"{}
+
+\subsubsection*{Call i\+S\+N\+Vs from samples with known reference sequence}
+
+\href{https://github.com/andersen-lab/ivar/tree/master/pipeline}{\tt Link to pipeline}
+
+\paragraph*{Dependencies\+:}
+
+
+\begin{DoxyItemize}
+\item \href{https://github.com/andersen-lab/ivar}{\tt i\+Var}
+\item \href{https://htslib.org/}{\tt samtools}
+\item \href{https://github.com/lh3/bwa}{\tt bwa}
+\end{DoxyItemize}
+
+
+
+\subsubsection*{Call i\+S\+N\+Vs from samples with unknown reference sequence}
+
+\href{https://github.com/andersen-lab/ivar/tree/master/pipeline_field/}{\tt Link to pipeline}
+
+\paragraph*{Dependencies\+:}
+
+
+\begin{DoxyItemize}
+\item \href{https://github.com/andersen-lab/ivar}{\tt i\+Var}
+\item \href{https://htslib.org/}{\tt samtools}
+\item \href{https://github.com/lh3/bwa}{\tt bwa}
+\item \href{https://bedtools.readthedocs.io/en/latest/}{\tt bedtools}
+\end{DoxyItemize}
 
  
