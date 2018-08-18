@@ -4,7 +4,14 @@ The two pipelines are distributed along with i\+Var and are present in the\href{
 
 For both pipelines, there are four parameters that will have to be set in beginning of the Snakefile.
 
-in\+\_\+dir = \char`\"{}$<$input fastq files$>$\char`\"{} out\+\_\+dir = \char`\"{}$<$output directory$>$\char`\"{} bed = \char`\"{}$<$bed-\/file-\/with-\/primer-\/positions$>$\char`\"{} ref=\char`\"{}$<$path to reference fasta$>$\char`\"{}
+
+\begin{DoxyCode}
+in\_dir = "<input fastq files>"
+out\_dir = "<output directory>"
+bed = "<bed-file-with-primer-positions>"
+ref="<path to reference fasta>"
+\end{DoxyCode}
+
 
 \subsubsection*{Call i\+S\+N\+Vs from samples with known reference sequence}
 

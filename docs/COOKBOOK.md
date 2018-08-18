@@ -7,10 +7,12 @@ The two pipelines are distributed along with iVar and are present in the[ pipeli
 
 For both pipelines, there are four parameters that will have to be set in beginning of the Snakefile.
 
+```
 in_dir = "<input fastq files>"
 out_dir = "<output directory>"
 bed = "<bed-file-with-primer-positions>"
 ref="<path to reference fasta>"
+```
 
 ### Call iSNVs from samples with known reference sequence
 
