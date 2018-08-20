@@ -2,6 +2,7 @@
 
 #include<iostream>
 #include<fstream>
+#include<stdint.h>
 
 struct maj {
   int *ind;
@@ -88,7 +89,7 @@ int main_old(int argc, char* argv[]) {
   if(!bcf.empty()) {
     //open BCF for reading
     htsFile *in = bcf_open(bcf.c_str(), "r");
-    std::ofstream out(out_path);
+    std::ofstream out(out_path.c_str());
     out << ">" << out_path << "\n";
     if(in == NULL) {
       throw std::runtime_error("Unable to open BCF/VCF file.");

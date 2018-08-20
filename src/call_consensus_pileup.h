@@ -1,4 +1,5 @@
 #include<iostream>
+#include<stdint.h>
 #include "allele_functions.h"
 
 #ifndef call_consensus_from_pileup

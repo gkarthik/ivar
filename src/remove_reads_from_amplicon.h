@@ -1,4 +1,5 @@
 #include<iostream>
+#include<stdint.h>
 
 #ifndef removereads_from_amplicon
 #define removereads_from_amplicon

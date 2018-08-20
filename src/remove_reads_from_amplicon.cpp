@@ -3,6 +3,7 @@
 #include "htslib/bgzf.h"
 
 #include<iostream>
+#include <stdint.h>
 
 int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, uint16_t* amplicon, int amp_n){
   std::cout << "Primer indices ";

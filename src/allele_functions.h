@@ -1,5 +1,6 @@
 #include<string>
 #include<vector>
+#include<stdint.h>
 
 #ifndef allele_functions
 #define allele_functions

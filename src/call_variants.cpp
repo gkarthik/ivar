@@ -1,3 +1,4 @@
+#include<stdint.h>
 #include<iostream>
 #include<fstream>
 #include<sstream>
@@ -25,7 +26,7 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
 
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
   std::string line, cell, bases, qualities, region;
-  std::ofstream fout(out_file+".tsv");
+  std::ofstream fout((out_file+".tsv").c_str());
   fout << "REGION"
     "\tPOS"
     "\tREF"

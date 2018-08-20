@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <stdint.h>
 
 #include "remove_reads_from_amplicon.h"
 #include "call_consensus_pileup.h"
@@ -325,7 +326,7 @@ int main(int argc, char* argv[]){
     }
     uint16_t amp[150], i = 0;	// Max primer indices set to 150.
     std::string s;
-    std::ifstream fin(g_args.bed);
+    std::ifstream fin(g_args.bed.c_str());
     while(getline(fin, s, ' ' ) ){
       amp[i] = stoi(s);
       i++;

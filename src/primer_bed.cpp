@@ -58,7 +58,7 @@ void primer::set_score(int s){
 }
 
 std::vector<primer> populate_from_file(std::string path){
-  std::ifstream  data(path);
+  std::ifstream  data(path.c_str());
   std::string line;
   std::vector<primer> primers;
   while(std::getline(data,line)){ // Remove extra lineStream

@@ -233,7 +233,7 @@ std::string get_reverse_complement(std::string rev_read){
 
 std::vector<std::string> read_adapters_from_fasta(std::string p){
   std::vector<std::string> adp;
-  std::ifstream fin(p);
+  std::ifstream fin(p.c_str());
   std::string line;
   while (std::getline(fin, line)){
     if(line[0] == '>')
@@ -268,14 +268,14 @@ int trim_adapter(std::string f1, std::string f2, std::string adp_path, std::stri
   std::string l1, l2, l1_rc, l2_rc, s, cmn, trmd_read;
   int *t = new int[2], beg;
   unsigned int pos;
-  std::ifstream ff1(f1), ff2, pf(p);
-  std::ofstream out(p+".trimmed.fastq");
+  std::ifstream ff1(f1.c_str()), ff2, pf(p.c_str());
+  std::ofstream out((p+".trimmed.fastq").c_str());
   std::vector<std::string>::iterator it;
   suffix_node *root = (suffix_node*) malloc(sizeof(suffix_node));
   std::vector<std::string> adp = read_adapters_from_fasta(adp_path);
   int i = -1, n = 0, adp_pos;
   if(!f2.empty()){
-    ff2.open(f2);
+    ff2.open(f2.c_str());
     while (std::getline(ff1, l1) && std::getline(ff2, l2)){
       i++;
       if((i - 1)%4 != 0)

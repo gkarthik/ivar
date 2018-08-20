@@ -1,6 +1,7 @@
 #include "htslib/sam.h"
 #include "htslib/bgzf.h"
 
+#include <stdint.h>
 #include <iostream>
 #include <stdexcept>
 #include <string>

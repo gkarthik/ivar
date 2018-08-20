@@ -1,5 +1,6 @@
 #include<iostream>
 #include<vector>
+#include<stdint.h>
 
 #include "primer_bed.h"
 #include "htslib/sam.h"

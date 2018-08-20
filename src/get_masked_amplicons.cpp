@@ -18,9 +18,9 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
   std::vector<primer> primers = populate_from_file(bed);
   std::vector<unsigned int> indices;
   std::string line, cell;
-  std::ifstream fin(vpath);
+  std::ifstream fin(vpath.c_str());
   out += ".txt";
-  std::ofstream fout(out);
+  std::ofstream fout(out.c_str());
   unsigned int ctr, pos;
   int ind;
   std::stringstream  line_stream;
