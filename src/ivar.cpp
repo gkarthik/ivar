@@ -328,7 +328,7 @@ int main(int argc, char* argv[]){
     std::string s;
     std::ifstream fin(g_args.bed.c_str());
     while(getline(fin, s, ' ' ) ){
-      amp[i] = stoi(s);
+      amp[i] = atoi(s.c_str());
       i++;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");

@@ -81,7 +81,7 @@ std::vector<primer> populate_from_file(std::string path){
 	p.set_name(cell);
 	break;
       case 4:
-	p.set_score(std::stoi(cell));
+	p.set_score(atoi(cell.c_str()));
 	break;
       case 5:
 	p.set_strand(cell[0]);

@@ -168,13 +168,13 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       case 0:
 	break;
       case 1:
-	pos = stoi(cell);
+	pos = atoi(cell.c_str());
 	break;
       case 2:
 	ref = cell[0];
 	break;
       case 3:
-	mdepth = stoi(cell);
+	mdepth = atoi(cell.c_str());
 	break;
       case 4:
 	bases = cell;

@@ -57,13 +57,13 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	region = cell;
 	break;
       case 1:
-	pos = stoi(cell);
+	pos = atoi(cell.c_str());
 	break;
       case 2:
 	ref = cell[0];
 	break;
       case 3:
-	mdepth = stoi(cell);
+	mdepth = atoi(cell.c_str());
 	break;
       case 4:
 	bases = cell;

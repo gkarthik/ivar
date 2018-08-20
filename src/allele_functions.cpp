@@ -81,7 +81,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	j++;
       }
       j = j - (i+1);
-      n = stoi(bases.substr(i+1, j));
+      n = atoi(bases.substr(i+1, j).c_str());
       indel = bases.substr(i+1+j, n);
       transform(indel.begin(), indel.end(), indel.begin(),::toupper);
       b = bases[i] + indel;	// + for Insertion and - for Deletion
