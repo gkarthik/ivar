@@ -196,13 +196,13 @@ int main(int argc, char* argv[]){
 	g_args.prefix = optarg;
 	break;
       case 'm':
-	g_args.min_length = atoi(optarg);
+	g_args.min_length = std::stoi(optarg);
 	break;
       case 'q':
-	g_args.min_qual = atoi(optarg);
+	g_args.min_qual = std::stoi(optarg);
 	break;
       case 's':
-	g_args.sliding_window = atoi(optarg);
+	g_args.sliding_window = std::stoi(optarg);
 	break;
       case 'h':
       case '?':
@@ -231,7 +231,7 @@ int main(int argc, char* argv[]){
 	g_args.min_threshold = atof(optarg);
 	break;
       case 'q':
-	g_args.min_qual = atoi(optarg);
+	g_args.min_qual = std::stoi(optarg);
 	break;
       case 'h':
       case '?':
@@ -264,13 +264,13 @@ int main(int argc, char* argv[]){
 	g_args.prefix = optarg;
 	break;
       case 'm':
-	g_args.min_depth = atoi(optarg);
+	g_args.min_depth = std::stoi(optarg);
 	break;
       case 'n':
 	g_args.gap = optarg[0];
 	break;
       case 'q':
-	g_args.min_qual = atoi(optarg);
+	g_args.min_qual = std::stoi(optarg);
 	break;
       case 'k':
 	g_args.keep_min_coverage = false;
@@ -328,7 +328,7 @@ int main(int argc, char* argv[]){
     std::string s;
     std::ifstream fin(g_args.bed.c_str());
     while(getline(fin, s, ' ' ) ){
-      amp[i] = atoi(s.c_str());
+      amp[i] = stoi(s);
       i++;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");

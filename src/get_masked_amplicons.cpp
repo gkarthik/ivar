@@ -32,7 +32,7 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
       switch(ctr){
       case 1:
 	if(cell != "POS")
-	  pos = atoi(cell.c_str());
+	  pos = stoi(cell);
 	break;
       default:
 	break;
