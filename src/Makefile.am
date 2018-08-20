@@ -1,6 +1,6 @@
 LIBS = -lhts -lz -lpthread
 
-CFLAGS = -g -std=c++11
+CXXFLAGS = -g -std=c++11
 
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
