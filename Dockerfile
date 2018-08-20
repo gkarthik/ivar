@@ -13,6 +13,7 @@ RUN cd root/ &&\
     make install &&\
     cd ../ &&\
     rm htslib-1.9.tar.bz2
+ENV LD_LIBRARY_PATH /usr/local/lib:$LD_LIBRARY_PATH
 # SAMtools
 RUN cd root &&\
     wget https://github.com/samtools/samtools/releases/download/1.9/samtools-1.9.tar.bz2 &&\

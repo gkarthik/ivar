@@ -204,13 +204,13 @@ Running from Docker
 iVar can also be run via [Docker](https://www.docker.com/). Pull the docker image from [Docker Hub](https://hub.docker.com/) using the following command,
 
 ```
-docker pull lodbrok/ivar
+docker pull andersenlabapps/ivar
 ```
 
 This docker image contains all the required dependencies to run iVar and the [pipelines](@ref cookbookpage) developed using iVar.
 You will have to attach a docker volume to get data into the docker container. Instructions to do so are in the [Docker docs](https://docs.docker.com/storage/volumes/).
 
-[iVar on Docker Hub](https://hub.docker.com/r/lodbrok/ivar/)
+[iVar on Docker Hub](https://hub.docker.com/r/andersenlabapps/ivar/)
 
 Contact
 =======
