@@ -12,12 +12,13 @@ bioRxiv 383513; doi: [https://doi.org/10.1101/383513](https://doi.org/10.1101/38
 
 ## [Manual](https://andersen-lab.github.io/ivar/html/)
 
-## Installation
+## Insallation
 
 ### Dependencies
 
-* [htslib](https://github.com/samtools/htslib)
+* [HTSlib](http://www.htslib.org/download/)
 * [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
+* [GCC](https://gcc.gnu.org/) any version after v6.0
 
 Note:
 * It is highly recommended that [samtools](https://github.com/samtools/samtools) also be installed alongside iVar. iVar uses the output of samtools mpileup to call variants and generate consensus sequences. In addition, samtools `sort` and `index` commands are very useful to setup a pipeline using iVar.
@@ -207,6 +208,7 @@ iVar version 1.0
 Please raise issues and bug reports at https://github.com/andersen-lab/ivar/
 ```
 
+
 Running from Docker
 ===================
 
@@ -216,7 +218,7 @@ iVar can also be run via [Docker](https://www.docker.com/). Pull the docker imag
 docker pull lodbrok/ivar
 ```
 
-This docker image contains all the required dependencies to run iVar and the [pipelines](https://andersen-lab.github.io/ivar/html/cookbookpage.html) developed using iVar.
+This docker image contains all the required dependencies to run iVar and the [pipelines](@ref cookbookpage) developed using iVar.
 You will have to attach a docker volume to get data into the docker container. Instructions to do so are in the [Docker docs](https://docs.docker.com/storage/volumes/).
 
 [iVar on Docker Hub](https://hub.docker.com/r/lodbrok/ivar/)
