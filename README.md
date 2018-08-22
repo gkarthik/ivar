@@ -18,7 +18,7 @@ bioRxiv 383513; doi: [https://doi.org/10.1101/383513](https://doi.org/10.1101/38
 
 * [HTSlib](http://www.htslib.org/download/)
 * [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
-* [GCC](https://gcc.gnu.org/) any version after v6.0
+* [GCC](https://gcc.gnu.org/) any version after v5.0. Support for C++11 standard required.
 
 Note:
 * It is highly recommended that [samtools](https://github.com/samtools/samtools) also be installed alongside iVar. iVar uses the output of samtools mpileup to call variants and generate consensus sequences. In addition, samtools `sort` and `index` commands are very useful to setup a pipeline using iVar.
