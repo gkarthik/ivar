@@ -54,17 +54,17 @@ int main() {
   for(int i = 0;i<size;i++){
     ad.at(i) = arr[i];
   }
-  s = get_consensus_allele(ad, 0, 0);
+  s = get_consensus_allele(ad, 0, 0, 'N');
   std::cout << s.nuc << ": " << s.q << std::endl;
   success += (s.nuc.compare("DW") == 0) ? 1: 0;
   success += (s.q.compare("8+") == 0) ? 1 : 0;
   ad.push_back(a6);
-  s = get_consensus_allele(ad, 0, 0);
+  s = get_consensus_allele(ad, 0, 0, 'N');
   std::cout << s.nuc << ": " << s.q << std::endl;
   success += (s.nuc.compare("DAS") == 0) ? 1: 0;
   success += (s.q.compare("8++") == 0) ? 1 : 0;
   ad.push_back(a7);
-  s = get_consensus_allele(ad, 0, 0);
+  s = get_consensus_allele(ad, 0, 0, 'N');
   std::cout << s.nuc << ": " << s.q << std::endl;
   success += (s.nuc.compare("DAB") == 0) ? 1: 0;
   success += (s.q.compare("8++") == 0) ? 1 : 0;

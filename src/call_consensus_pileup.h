@@ -12,6 +12,6 @@ struct ret_t {
 
 void format_alleles(std::vector<allele> &ad);
 int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, int min_depth, char gap, bool min_coverage_flag);
-ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold);
+ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold, char gap);
 
 #endif

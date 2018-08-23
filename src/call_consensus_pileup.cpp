@@ -30,18 +30,18 @@ bool compare_allele_depth(const allele &a, const allele &b){
   return b.depth < a.depth;
 }
 
-ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold){
+ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold, char gap){
   ret_t t;
-  t.nuc="";
+  t.nuc=gap;
   t.q = min_qual+33;
   if(ad.size()==0)
     return t;
   format_alleles(ad);
-  if(ad.size() == 1){
-    t.nuc = (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
-    t.q = (ad.at(0).nuc.compare("*") == 0) ? min_qual + 33 : ad.at(0).mean_qual + 33;
-    return t;
-  }
+  // if(ad.size() == 1){
+  //   t.nuc = (ad.at(0).nuc.compare("*") == 0) ? "" : ad.at(0).nuc;
+  //   t.q = (ad.at(0).nuc.compare("*") == 0) ? min_qual + 33 : ad.at(0).mean_qual + 33;
+  //   return t;
+  // }
   std::string cnuc = "";
   std::vector<allele> nuc_pos;
   allele tmp_a;
@@ -193,9 +193,10 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       fout << std::string((pos - prev_pos) - 1, gap);
       tmp_qout << std::string((pos - prev_pos) - 1, '!'); // ! represents 0 quality score.
     }
+    ret_t t;
     if(mdepth >= min_depth){
       ad = update_allele_depth(ref, bases, qualities, min_qual);
-      ret_t t = get_consensus_allele(ad, min_qual, threshold);
+      t = get_consensus_allele(ad, min_qual, threshold, gap);
       fout << t.nuc;
       tmp_qout << t.q;
     } else if(min_coverage_flag){
