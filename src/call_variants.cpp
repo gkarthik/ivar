@@ -82,6 +82,14 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       continue;
     }
     ref_it = get_ref_allele(ad, ref);
+    if (ref_it == ad.end()) {	// If ref not present in reads.
+      allele a;
+      a.nuc = ref;
+      a.depth = 0;
+      a.reverse = 0;
+      a.mean_qual = 0;
+      ad.push_back(a);
+    }
     // Get ungapped coverage
     mdepth = 0;
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
