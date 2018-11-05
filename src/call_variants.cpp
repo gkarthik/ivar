@@ -89,6 +89,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       a.reverse = 0;
       a.mean_qual = 0;
       ad.push_back(a);
+      ref_it = ad.end() - 1;
     }
     // Get ungapped coverage
     mdepth = 0;
