@@ -38,7 +38,8 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
     ind = get_primer_indice(primers, pos);
     if(std::find(indices.begin(), indices.end(), ind) == indices.end() && ind != -1){
       indices.push_back(ind);
-      indices.push_back(primers.at(ind).get_pair_indice());
+      if(primers.at(ind).get_pair_indice() != -1)
+	indices.push_back(primers.at(ind).get_pair_indice());
     }
     line_stream.clear();
   }
