@@ -11,7 +11,7 @@ Available Commands
 | variants | Call variants from aligned BAM file |
 | filtervariants | Filter variants across replicates
 | consensus | Call consensus from aligned BAM file |
-| getmasked | Get amplicons with primer mismatches |
+| getmasked | Detect primer mismatches and get primer indices for the amplicon to be masked |
 | removereads | Remove reads from trimmed BAM file |
 | version | Show version information |
 | trimadapter | (EXPERIMENTAL) Trim adapter sequences from reads |
@@ -260,18 +260,18 @@ The command above will produce a test.fa fasta file with the consensus sequence 
 Get primers with mismatches to the reference sequence
 ----
 
-iVar uses a .tsv file with variants to get the zero based indices(based on the BED file) of mismatched primers. The output is the primer indices delimited by a space. The output is written to stdout and can be written to a file by redirecting output into a file using `>`.
+iVar uses a .tsv file with variants to get the zero based indices(based on the BED file) of mismatched primers. This command requires another .tsv file with each line containing the left and right primer names separated by a tab. This is used to get both the primers for an amplicon with a single mismatched primer. The output is a text file with the zero based primer indices delimited by a space. The output is written to a a text file using the prefix provided.
 
 Command:
 ```
 ivar getmasked
-Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>
+Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -f <primer_pairs.tsv> -p <prefix>
 Note: This step is used only for amplicon-based sequencing.
 
 Input Options    Description
-           -i    (Required) Input filtered variants tsv generated from ivar filtervariants
+           -i    (Required) Input filtered variants tsv generated from 'ivar filtervariants'
            -b    (Required) BED file with primer sequences and positions
-
+           -f    (Required) Primer pair information file containing left and right primer names for the same amplicon separated by a tab
 Output Options   Description
            -p    (Required) Prefix for the output text file
 
@@ -279,7 +279,7 @@ Output Options   Description
 
 Example Usage:
 ```
-ivar getmasked -i test.filtered.tsv -b primers.bed -p test.masked.txt
+ivar getmasked -i test.filtered.tsv -b primers.bed -f pair_information.tsv -p test.masked.txt
 ```
 
 The command above produces an output file - test.masked.txt.

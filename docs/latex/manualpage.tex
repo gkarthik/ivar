@@ -13,7 +13,7 @@ trim  &Trim reads in aligned B\+AM   \\\cline{1-2}
 variants  &Call variants from aligned B\+AM file   \\\cline{1-2}
 filtervariants  &Filter variants across replicates   \\\cline{1-2}
 consensus  &Call consensus from aligned B\+AM file   \\\cline{1-2}
-getmasked  &Get amplicons with primer mismatches   \\\cline{1-2}
+getmasked  &Detect primer mismatches and get primer indices for the amplicon to be masked   \\\cline{1-2}
 removereads  &Remove reads from trimmed B\+AM file   \\\cline{1-2}
 version  &Show version information   \\\cline{1-2}
 trimadapter  &(E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+AL) Trim adapter sequences from reads   \\\cline{1-2}
@@ -308,18 +308,19 @@ samtools mpileup -d 1000 -A -Q 0 -F 0 test.bam | ivar consensus -p test -q 20 -t
 
 
 The command above will produce a test.\+fa fasta file with the consensus sequence and a test.\+qual.\+txt with the average quality of each base in the consensus sequence.\hypertarget{manualpage_autotoc_md18}{}\subsection{Get primers with mismatches to the reference sequence}\label{manualpage_autotoc_md18}
-i\+Var uses a .tsv file with variants to get the zero based indices(based on the B\+E\+D file) of mismatched primers. The output is the primer indices delimited by a space. The output is written to stdout and can be written to a file by redirecting output into a file using {\ttfamily $>$}.
+i\+Var uses a .tsv file with variants to get the zero based indices(based on the B\+E\+D file) of mismatched primers. This command requires another .tsv file with each line containing the left and right primer names separated by a tab. This is used to get both the primers for an amplicon with a single mismatched primer. The output is a text file with the zero based primer indices delimited by a space. The output is written to a a text file using the prefix provided.
 
 Command\+: 
 \begin{DoxyCode}
 ivar getmasked
-Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>
+Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -f <primer\_pairs.tsv> -p <prefix>
 Note: This step is used only for amplicon-based sequencing.
 
 Input Options    Description
-           -i    (Required) Input filtered variants tsv generated from ivar filtervariants
+           -i    (Required) Input filtered variants tsv generated from 'ivar filtervariants'
            -b    (Required) BED file with primer sequences and positions
-
+           -f    (Required) Primer pair information file containing left and right primer names for the
+       same amplicon separated by a tab
 Output Options   Description
            -p    (Required) Prefix for the output text file
 \end{DoxyCode}
@@ -327,7 +328,7 @@ Output Options   Description
 
 Example Usage\+: 
 \begin{DoxyCode}
-ivar getmasked -i test.filtered.tsv -b primers.bed -p test.masked.txt
+ivar getmasked -i test.filtered.tsv -b primers.bed -f pair\_information.tsv -p test.masked.txt
 \end{DoxyCode}
 
 
