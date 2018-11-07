@@ -33,6 +33,10 @@ int primer::get_length(){
   return end - start + 1;
 }
 
+int primer::get_pair_indice(){
+  return pair_indice;
+}
+
 void primer::set_start(unsigned int s){
   start = s;
 }
@@ -56,6 +60,11 @@ void primer::set_name(std::string n){
 void primer::set_score(int s){
   score = s;
 }
+
+void primer::set_pair_indice(int i){
+  pair_indice = i;
+}
+
 
 std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path.c_str());
@@ -88,7 +97,61 @@ std::vector<primer> populate_from_file(std::string path){
       }
       ctr++;
     }
+    p.set_pair_indice(-1);
     primers.push_back(p);
   }
   return primers;
+}
+
+int get_primer_indice(std::vector<primer> p, unsigned int pos){
+  for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
+    if(it->get_start() <= pos && it->get_end() >= pos){
+      return it - p.begin();
+    }
+  }
+  return -1;
+}
+
+int get_primer_indice(std::vector<primer> p, std::string name){
+  for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
+    if(it->get_name() == name){
+      return it - p.begin();
+    }
+  }
+  return -1;
+}
+
+int populate_pair_indices(std::vector<primer> &primers, std::string path){
+  std::ifstream fin(path.c_str());
+  std::string line, cell, p1,p2;
+  std::stringstream line_stream;
+  std::vector<primer>::iterator it;
+  int indice = -1;
+  while (std::getline(fin, line)){
+    line_stream << line;
+    std::getline(line_stream, cell, '\t');
+    p1 = cell;
+    line_stream.clear();
+    std::getline(line_stream, cell, '\t');
+    p2 = cell;
+    line_stream.clear();
+    if(!p1.empty() && !p2.empty()){
+      for(it = primers.begin(); it != primers.end(); ++it) {
+	if (it->get_name() == p1) {
+	  indice = get_primer_indice(primers, p2);
+	  if (indice != -1)
+	    it->set_pair_indice(indice);
+	  else
+	    std::cout << "Primer pair for " << p1 << " not found in BED file." <<std::endl;
+	} else if (it->get_name() == p2){
+	  indice = get_primer_indice(primers, p1);
+	  if(indice != -1)
+	    it->set_pair_indice(indice);
+	  else
+	    std::cout << "Primer pair for " << p2 << " not found in BED file." << std::endl;
+	}
+      }
+    }
+  }
+  return 0;
 }

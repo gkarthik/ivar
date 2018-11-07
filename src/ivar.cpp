@@ -30,18 +30,19 @@ struct args_t {
   int min_depth;		// -m
   char gap;			// -n
   bool keep_min_coverage;	// -k
+  std::string primer_pair_file;	// -f
 } g_args;
 
 void print_usage(){
   std::cout <<
-    "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|createbed|getmasked|removereads|version|help>]\n"
+    "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|getmasked|removereads|version|help>]\n"
     "\n"
     "        Command       Description\n"
     "           trim       Trim reads in aligned BAM file\n"
     "       variants       Call variants from aligned BAM file\n"
     " filtervariants       Filter variants across replicates\n"
     "      consensus       Call consensus from aligned BAM file\n"
-    "      getmasked       Get amplicons with primer mismatches\n"
+    "      getmasked       Detect primer mismatches and get primer indices for the amplicon to be masked\n"
     "    removereads       Remove reads from trimmed BAM file\n"
     "        version       Show version information\n"
     "    trimadapter       (EXPERIMENTAL) Trim adapter sequences from reads\n"
@@ -115,17 +116,19 @@ void print_removereads_usage(){
 
 void print_getmasked_usage(){
   std::cout <<
-    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -p <prefix>\n"
+    "Usage: ivar getmasked -i <input-filtered.tsv> -b <primers.bed> -f <primer_pairs.tsv> -p <prefix>\n"
     "Note: This step is used only for amplicon-based sequencing.\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Input filtered variants tsv generated from `ivar filtervariants`\n"
-    "           -b    (Required) BED file with primer sequences and positions\n\n"
+    "           -b    (Required) BED file with primer sequences and positions\n"
+    "           -f    (Required) Primer pair information file containing left and right primer names for the same amplicon separated by a tab\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output text file\n";
 }
 
 void print_trimadapter_usage(){
   std::cout <<
+    "NOTE: EXPERIMENTAL FEATURE\n"
     "Usage: ivar trimadapter [-f1 <input-fastq>] [-f2 <input-fastq-2>] [-p prefix] [-a <adapter-fasta-file>]\n\n"
     "Input Options    Description\n"
     "           -1    (Required) Input fastq file\n"
@@ -145,7 +148,7 @@ static const char *variants_opt_str = "p:t:q:h?";
 static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:h?";
 static const char *filtervariants_opt_str = "p:h?";
-static const char *getmasked_opt_str = "i:b:p:h?";
+static const char *getmasked_opt_str = "i:b:f:p:h?";
 static const char *trimadapter_opt_str = "1:2:p:a:h?";
 
 std::string get_filename_without_extension(std::string f, std::string ext){
@@ -374,6 +377,9 @@ int main(int argc, char* argv[]){
       case 'b':
 	g_args.bed = optarg;
 	break;
+      case 'f':
+	g_args.primer_pair_file = optarg;
+	break;	
       case 'p':
 	g_args.prefix = optarg;
 	break;
@@ -385,12 +391,12 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, getmasked_opt_str);
     }
-    if(g_args.bed.empty() || g_args.bam.empty() || g_args.prefix.empty()){
+    if(g_args.bed.empty() || g_args.bam.empty() || g_args.prefix.empty() || g_args.primer_pair_file.empty()){
       print_getmasked_usage();
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".txt");
-    res = get_primers_with_mismatches(g_args.bed, g_args.bam, g_args.prefix);
+    res = get_primers_with_mismatches(g_args.bed, g_args.bam, g_args.prefix, g_args.primer_pair_file);
   } else if (cmd.compare("trimadapter") == 0){
     opt = getopt( argc, argv, trimadapter_opt_str);
     while( opt != -1 ) {
