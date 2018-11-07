@@ -326,6 +326,35 @@ Output Options   Description
 \end{DoxyCode}
 
 
+Example B\+ED file
+
+
+\begin{DoxyCode}
+Puerto  28  52  400\_1\_out\_L 60  +
+Puerto  482 504 400\_1\_out\_R 60  -
+Puerto  359 381 400\_2\_out\_L 60  +
+Puerto  796 818 400\_2\_out\_R 60  -
+Puerto  658 680 400\_3\_out\_L*    60  +
+Puerto  1054    1076    400\_3\_out\_R*    60  -
+.
+.
+.
+.
+\end{DoxyCode}
+
+
+Example primer pair information file 
+\begin{DoxyCode}
+400\_1\_out\_L    400\_1\_out\_R
+400\_2\_out\_L    400\_2\_out\_R
+400\_3\_out\_L    400\_3\_out\_R
+.
+.
+.
+.
+\end{DoxyCode}
+
+
 Example Usage\+: 
 \begin{DoxyCode}
 ivar getmasked -i test.filtered.tsv -b primers.bed -f pair\_information.tsv -p test.masked.txt

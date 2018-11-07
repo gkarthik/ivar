@@ -277,6 +277,32 @@ Output Options   Description
 
 ```
 
+Example BED file
+
+```
+Puerto	28	52	400_1_out_L	60	+
+Puerto	482	504	400_1_out_R	60	-
+Puerto	359	381	400_2_out_L	60	+
+Puerto	796	818	400_2_out_R	60	-
+Puerto	658	680	400_3_out_L*	60	+
+Puerto	1054	1076	400_3_out_R*	60	-
+.
+.
+.
+.
+```
+
+Example primer pair information file
+```
+400_1_out_L    400_1_out_R
+400_2_out_L    400_2_out_R
+400_3_out_L    400_3_out_R
+.
+.
+.
+.
+```
+
 Example Usage:
 ```
 ivar getmasked -i test.filtered.tsv -b primers.bed -f pair_information.tsv -p test.masked.txt
