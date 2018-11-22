@@ -317,11 +317,11 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
 }
 
 void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
-  size_t len = strlen((*hdr)->text) + strlen(cmd);
+  size_t len = strlen((*hdr)->text) + strlen(cmd)+1;
   char * new_text = (char *)malloc(len);
   memcpy(new_text, (*hdr)->text, strlen((*hdr)->text));
   strcat(new_text, cmd);
-  delete (*hdr)->text;
+  free((*hdr)->text);
   (*hdr)->text = new_text;
   new_text = NULL;
   (*hdr)->l_text = len;
@@ -352,6 +352,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     sam_close(in);
     std::cout << "Unable to open BAM/SAM header." << std::endl;
   }
+  std::cout << cmd <<std::endl;
+  printf("%s", header->text);
   add_pg_line_to_header(&header, const_cast<char *>(cmd.c_str()));
   printf("%s", header->text);
   if(bam_hdr_write(out, header) < 0){
