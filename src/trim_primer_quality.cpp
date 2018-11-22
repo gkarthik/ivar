@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstring>
+#include <string.h>
 
 #include "trim_primer_quality.h"
 #include "primer_bed.h"
@@ -315,7 +316,18 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
   return t;
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, int min_length = 30){
+void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
+  size_t len = strlen((*hdr)->text) + strlen(cmd);
+  char * new_text = (char *)malloc(len);
+  memcpy(new_text, (*hdr)->text, strlen((*hdr)->text));
+  strcat(new_text, cmd);
+  delete (*hdr)->text;
+  (*hdr)->text = new_text;
+  new_text = NULL;
+  (*hdr)->l_text = len;
+}
+
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, int min_length = 30){
   std::vector<primer> primers = populate_from_file(bed);
   if(bam.empty()){
     std::cout << "Bam file in empty." << std::endl;
@@ -340,6 +352,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     sam_close(in);
     std::cout << "Unable to open BAM/SAM header." << std::endl;
   }
+  add_pg_line_to_header(&header, const_cast<char *>(cmd.c_str()));
+  printf("%s", header->text);
   if(bam_hdr_write(out, header) < 0){
     std::cout << "Unable to write BAM header to path." << std::endl;
     sam_close(in);

@@ -14,7 +14,9 @@ struct cigar_ {
   int32_t start_pos;
 };
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, int min_length);
+void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd);
+
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, int min_length);
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start);
 int32_t get_pos_on_reference(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_t ref_start);
 void reverse_qual(uint8_t *q, int l);

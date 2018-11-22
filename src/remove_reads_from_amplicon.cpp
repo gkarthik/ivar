@@ -1,11 +1,12 @@
 #include "primer_bed.h"
+#include "trim_primer_quality.h"
 #include "htslib/sam.h"
 #include "htslib/bgzf.h"
 
 #include<iostream>
 #include <stdint.h>
 
-int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, uint16_t* amplicon, int amp_n){
+int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, uint16_t* amplicon, int amp_n, std::string cmd){
   std::cout << "Primer indices ";
   for (int i = 0; i < amp_n; ++i){
     std::cout << amplicon[i] << " ";
@@ -32,6 +33,7 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
   }
   //Get the header
   bam_hdr_t *header = sam_hdr_read(in);
+  add_pg_line_to_header(&header, const_cast<char *>(cmd.c_str()));
   if(bam_hdr_write(out, header) < 0){
     std::cout << "Unable to write BAM header to path." << std::endl;
     sam_close(in);

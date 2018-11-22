@@ -4,6 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <stdint.h>
+#include <sstream>
 
 #include "remove_reads_from_amplicon.h"
 #include "call_consensus_pileup.h"
@@ -168,6 +169,14 @@ std::string get_filename_without_extension(std::string f, std::string ext){
  */
 
 int main(int argc, char* argv[]){
+  std::stringstream cl_cmd;
+  cl_cmd << "@PG\tID:ivar\tPN:ivar\tVN:1.0.0\tCL:" << argv[0] << " ";
+  for (int i = 1; i < argc; ++i) {
+    cl_cmd << argv[i];
+    if(i != argc-1)
+      cl_cmd << " ";
+  }
+  cl_cmd << "\n\0";
   if(argc == 1){
     print_usage();
     return -1;
@@ -220,7 +229,7 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, g_args.min_length);
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.min_length);
   } else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;
@@ -335,7 +344,7 @@ int main(int argc, char* argv[]){
       i++;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, i);
+    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, i, cl_cmd.str());
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
     while( opt != -1 ) {
