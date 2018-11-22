@@ -60,7 +60,7 @@ rule remove_reads:
         """
         mkdir -p $(dirname {output})/
         ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked -t {input[1]}
-        samtools sort -o {output} {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked.bam
+        samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked.bam
         samtools index {output}
         """
 
@@ -100,7 +100,7 @@ rule realigned_trim_primer_quality:
         """
         mkdir -p $(dirname {output})/
         ivar trim -b {input[1]} -p {wildcards.out_dir}/realigned/{wildcards.sample}_{wildcards.rep}.realigned.trimmed -i {input[0]}
-        samtools sort -o {output} {wildcards.out_dir}/realigned/{wildcards.sample}_{wildcards.rep}.realigned.trimmed.bam
+        samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/realigned/{wildcards.sample}_{wildcards.rep}.realigned.trimmed.bam
         samtools index {output}
         """
 
@@ -127,7 +127,7 @@ rule align_to_consensus:
     shell:
         """
         mkdir -p $(dirname {output})
-        bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb | samtools sort -o {output}
+        bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample} -o {output}
         samtools index {output}
         """
 
@@ -166,7 +166,7 @@ rule trim_primer_quality:
         """
         mkdir -p {wildcards.out_dir}/trimmed/
         ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed -i {input[0]}
-        samtools sort -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed.bam
+        samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed.bam
         samtools index {output}
         """
 
@@ -179,6 +179,6 @@ rule align_reads:
     shell:
         """
         mkdir -p $(dirname {output})/
-        bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -o {output}
+        bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample} -o {output}
         samtools index {output}
         """
