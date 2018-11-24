@@ -318,13 +318,16 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
 
 void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   size_t len = strlen((*hdr)->text) + strlen(cmd)+1;
+  std::cout << strlen((*hdr)->text) << " " << strlen(cmd) << " " << len << std::endl;
   char * new_text = (char *)malloc(len);
   memcpy(new_text, (*hdr)->text, strlen((*hdr)->text));
+  new_text[strlen((*hdr)->text)] = '\0';
   strcat(new_text, cmd);
+  new_text[len] = '\0';
   free((*hdr)->text);
   (*hdr)->text = new_text;
   new_text = NULL;
-  (*hdr)->l_text = len;
+  (*hdr)->l_text = len-1;
 }
 
 int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, int min_length = 30){
