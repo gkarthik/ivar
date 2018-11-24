@@ -354,10 +354,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     sam_close(in);
     std::cout << "Unable to open BAM/SAM header." << std::endl;
   }
-  std::cout << cmd <<std::endl;
-  printf("%s", header->text);
   add_pg_line_to_header(&header, const_cast<char *>(cmd.c_str()));
-  printf("%s", header->text);
   if(bam_hdr_write(out, header) < 0){
     std::cout << "Unable to write BAM header to path." << std::endl;
     sam_close(in);
