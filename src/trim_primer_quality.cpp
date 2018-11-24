@@ -323,7 +323,6 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   memcpy(new_text, (*hdr)->text, strlen((*hdr)->text));
   new_text[strlen((*hdr)->text)] = '\0';
   strcat(new_text, cmd);
-  new_text[len] = '\0';
   free((*hdr)->text);
   (*hdr)->text = new_text;
   new_text = NULL;
