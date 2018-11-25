@@ -1,16 +1,29 @@
 from os import listdir
 from os.path import isfile, join
 
-in_dir = "/Users/karthik/hpc_downloads/2018.06.26/field"
-out_dir = "/Users/karthik/hpc_downloads/test_field"
-bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed"
-ref="/Users/karthik/Documents/code/ivar/data/db/ZIKV_PRV.fasta"
-primer_csv = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.csv"
+in_dir = "/home/gk/analysis/intrahost/raw_reads/field_samples/zika"
+out_dir = "/home/gk/analysis/2018.11.22.1542874525.ZI"
+bed = "/home/gk/db/zika/amplicons/zika_primers.bed"
+ref="/home/gk/db/zika/ZIKV_RIO.fasta"
+index="/home/gk/db/zika/ZIKV_RIO"
+pair_information="/home/gk/db/zika/amplicons/pair_information.tsv"
 
-# File name format - ZI26a_R1.fastq.gz
+primer_csv = "/home/gk/db/zika/amplicons/zika_primers.csv"
+
+
+#in_dir = "/home/gk/analysis/intrahost/raw_reads/field_samples/wnv"
+
+#bed = "/home/gk/db/wnv/WNV_400.bed"
+#ref="/home/gk/db/wnv/JF703162.fa"
+#index="/home/gk/db/wnv/JF703162"
+#pair_information="/home/gk/db/wnv/pair_information.tsv"
+
+#primer_csv = "/home/gk/db/wnv/wnv_primers.csv"
+
+# File name format of replicates - ZI26_a_R{1-2}.fastq.gz ZI26_b_R{1-2}.fastq.gz
 lst = listdir(in_dir)
-lst.sort()
 files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
+files.sort()
 
 SAMPLES = []
 for i in files:
@@ -21,7 +34,7 @@ REPS=["a","b"]
 
 call_vrnts_cmd = """
         mkdir -p $(dirname {output})/
-        samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {output} -t 0.03
+        samtools mpileup -A -d 0 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {output} -t 0.03
 """
 
 fltr_vrnts_cmd = """
@@ -60,18 +73,19 @@ rule remove_reads:
         """
         mkdir -p $(dirname {output})/
         ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked -t {input[1]}
-        samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked.bam
+        samtools sort -T {wildcards.sample}_{wildcards.rep}_remove_reads -o {output} {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked.bam
         samtools index {output}
         """
 
 rule get_masked:
     input:
         "{out_dir}/variants/{sample}.filtered.tsv",
-        "{out_dir}/bed/{sample}.bed"
+        "{out_dir}/bed/{sample}.bed",
+        "{pair_information}".format(pair_information = pair_information)
     output:
         "{out_dir}/{sample}_{rep}_masked_primer_indices.txt"
     shell:
-        "ivar getmasked -i {input[0]} -b {input[1]} -p {output}"
+        "ivar getmasked -i {input[0]} -b {input[1]} -f {input[2]} -p {output}"
 
 rule filter_variants_before_masking:
     input:
@@ -100,7 +114,7 @@ rule realigned_trim_primer_quality:
         """
         mkdir -p $(dirname {output})/
         ivar trim -b {input[1]} -p {wildcards.out_dir}/realigned/{wildcards.sample}_{wildcards.rep}.realigned.trimmed -i {input[0]}
-        samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/realigned/{wildcards.sample}_{wildcards.rep}.realigned.trimmed.bam
+        samtools sort -T {wildcards.sample}_{wildcards.rep}_retrim -o {output} {wildcards.out_dir}/realigned/{wildcards.sample}_{wildcards.rep}.realigned.trimmed.bam
         samtools index {output}
         """
 
@@ -114,7 +128,7 @@ rule create_bed:
         """
         mkdir -p $(dirname {output})
         cut -f 1,2 -d ',' {input[1]} | sed 's/^/>/g' | tr ',' '\n' > {wildcards.out_dir}/bed/{wildcards.sample}.fa
-        ~/Documents/bwa/bwa mem -k 5 -T 20 {wildcards.out_dir}/index/{wildcards.sample} {wildcards.out_dir}/bed/{wildcards.sample}.fa | samtools view -bS -F 4 -o {wildcards.out_dir}/bed/{wildcards.sample}.bam
+        bwa mem -k 5 -T 20 {wildcards.out_dir}/index/{wildcards.sample} {wildcards.out_dir}/bed/{wildcards.sample}.fa | samtools view -bS -F 4 -o {wildcards.out_dir}/bed/{wildcards.sample}.bam
         bedtools bamtobed -i {wildcards.out_dir}/bed/{wildcards.sample}.bam > {output}
         """
 
@@ -127,7 +141,7 @@ rule align_to_consensus:
     shell:
         """
         mkdir -p $(dirname {output})
-        bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample} -o {output}
+        bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample}_{wildcards.rep}_align_consensus -o {output}
         samtools index {output}
         """
 
@@ -140,7 +154,7 @@ rule call_consensus:
     shell:
         """
         mkdir -p $(dirname {output[0]})/
-        samtools mpileup -A -d 300000 -Q 0 -F 0 {input} | ivar consensus -p {output[0]}
+        samtools mpileup -A -d 0 -Q 0 -F 0 {input} | ivar consensus -p {output[0]}
         mkdir -p $(dirname {output[1]})
         bwa index -p {wildcards.out_dir}/index/{wildcards.sample} {output[0]}
         """
@@ -166,19 +180,20 @@ rule trim_primer_quality:
         """
         mkdir -p {wildcards.out_dir}/trimmed/
         ivar trim -b {input[1]} -p {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed -i {input[0]}
-        samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed.bam
+        samtools sort -T {wildcards.sample}_{wildcards.rep}_trim -o {output} {wildcards.out_dir}/trimmed/{wildcards.sample}_{wildcards.rep}.trimmed.bam
         samtools index {output}
         """
 
 rule align_reads:
     input:
-        expand("{in_dir}/{{sample}}_{{rep}}_R{num}.fastq.gz", in_dir = in_dir, num=[1,2]),
-        "{ref}".format(ref = ref)
+        expand("{in_dir}/{{sample}}_{{rep}}_R{num}.fastq.gz", in_dir = in_dir, num=[1,2])
+    params:
+        index="{i}".format(i = index)
     output:
         "{out_dir}/aligned/{sample}_{rep}.sorted.bam"
     shell:
         """
         mkdir -p $(dirname {output})/
-        bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample} -o {output}
+        bwa mem {params.index} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample}_{wildcards.rep}_align -o {output}
         samtools index {output}
         """
