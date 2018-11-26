@@ -1,20 +1,24 @@
 from os import listdir
 from os.path import isfile, join
 
-in_dir = "/Users/karthik/hpc_downloads/2018.06.26"
-out_dir = "/Users/karthik/hpc_downloads/test"
-bed = "/Users/karthik/Documents/code/ivar/data/ZKV_primers.bed"
-ref="/Users/karthik/Documents/code/ivar/data/db/ZIKV_PRV.fasta"
+in_dir = "/home/gk/analysis/intrahost/raw_reads/invivo_samples"
+out_dir = "/home/gk/analysis/2018.11.21.1542865383.ZI.invivo"
+bed = "/home/gk/db/zika/amplicons/zika_primers.bed"
+ref="/home/gk/db/zika/PRVABC59.fa"
+bwa_index="/home/gk/db/zika/PRVABC59"
+pair_information="/home/gk/db/zika/amplicons/pair_information.tsv"
 
-# File name format - ZI26a_R1.fastq.gz
+# File name format of replicates - ZI26_a_R{1-2}.fastq.gz ZI26_b_R{1-2}.fastq.gz
 lst = listdir(in_dir)
-lst.sort()
-files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
+files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f and "08_a" not in f and "08_b" not in f]
+files.sort()
 
 SAMPLES = []
 for i in files:
     SAMPLES.append(i.split("_")[0])
 SAMPLES = list(set(SAMPLES))
+
+print(SAMPLES)
 
 REPS=["a","b"]
 
@@ -29,7 +33,7 @@ rule filter_variants:
         "{out_dir}/masked_variants/{sample}.masked.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar filtervariants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}.masked.filtered {input}"
+        "ivar filtervariants -p {output} {input}"
 
 rule call_variants_post_removal:
     input:
@@ -39,7 +43,7 @@ rule call_variants_post_removal:
         "{out_dir}/masked_variants/{sample}_{rep}.masked.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {wildcards.out_dir}/masked_variants/{wildcards.sample}_{wildcards.rep}.masked -t 0.03"
+        "samtools mpileup -A -d 0 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {output} -t 0.03"
 
 rule remove_reads:
     input:
@@ -49,18 +53,19 @@ rule remove_reads:
         "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked -t {input[1]} && "
-        "samtools sort -T {wildcards.sample} -o {output} {wildcards.out_dir}/masked/{wildcards.sample}{wildcards.rep}.masked.bam && "
+        "ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked -t {input[1]} && "
+        "samtools sort -T {wildcards.sample}_{wildcards.rep} -o {output} {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked.bam && "
         "samtools index {output}"
 
 rule get_masked:
     input:
         "{out_dir}/variants/{sample}.filtered.tsv",
-        "{b}".format(b = bed)
+        "{b}".format(b = bed),
+        "{pair_information}".format(pair_information = pair_information)
     output:
         "{out_dir}/{sample}_masked_primer_indices.txt"
     shell:
-        "ivar getmasked -i {input[0]} -b {input[1]} -p {output}"
+        "ivar getmasked -i {input[0]} -b {input[1]}  -f {input[2]} -p {output}"
 
 rule filter_variants_before_masking:
     input:
@@ -69,7 +74,7 @@ rule filter_variants_before_masking:
         "{out_dir}/variants/{sample}.filtered.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "ivar filtervariants -p {wildcards.out_dir}/variants/{wildcards.sample}.filtered {input}"
+        "ivar filtervariants -p {output} {input}"
 
 rule call_variants:
     input:
@@ -79,7 +84,7 @@ rule call_variants:
         "{out_dir}/variants/{sample}.tsv"
     shell:
         "mkdir -p $(dirname {output})/ &&"
-        "samtools mpileup -A -d 300000 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {wildcards.out_dir}/variants/{wildcards.sample} -t 0.03"
+        "samtools mpileup -A -d 0 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {wildcards.out_dir}/variants/{wildcards.sample} -t 0.03"
 
 rule trim_primer_quality:
     input:
@@ -95,11 +100,12 @@ rule trim_primer_quality:
 
 rule align_reads:
     input:
-        expand("{in_dir}/{{sample}}_R{num}.fastq.gz", in_dir = in_dir, num=[1,2]),
-        "{ref}".format(ref = ref)
+        expand("{in_dir}/{{sample}}_R{num}.fastq.gz", in_dir = in_dir, num=[1,2])
+    params:
+        index="{i}".format(i = bwa_index)
     output:
         "{out_dir}/aligned/{sample}.sorted.bam"
     shell:
         "mkdir -p $(dirname {output})/ && "
-        "bwa mem {ref} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample} -o {output} && "
+        "bwa mem {params.index} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample} -o {output} && "
         "samtools index {output}"
