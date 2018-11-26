@@ -414,18 +414,19 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     aln->core.pos += t.start_pos;
     replace_cigar(aln, t.nlength, t.cigar);
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-      if(p < primers.size())
+      if(p < primers.size()){	// Write to BAM only if primer found.
 	bam_aux_append(aln, "XA", 'C', 1, (uint8_t*) &p);
-      if(bam_write1(out, aln) < 0){
-	std::cout << "Not able to write to BAM" << std::endl;
-	hts_itr_destroy(iter);
-	hts_idx_destroy(idx);
-	bam_destroy1(aln);
-	bam_hdr_destroy(header);
-	sam_close(in);
-	bgzf_close(out);
-	return -1;
-      };
+	if(bam_write1(out, aln) < 0){
+	  std::cout << "Not able to write to BAM" << std::endl;
+	  hts_itr_destroy(iter);
+	  hts_idx_destroy(idx);
+	  bam_destroy1(aln);
+	  bam_hdr_destroy(header);
+	  sam_close(in);
+	  bgzf_close(out);
+	  return -1;
+	};	
+      }
     }
     ctr++;
     if(ctr % 1000000 == 0){

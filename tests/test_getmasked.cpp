@@ -1,0 +1,16 @@
+#include <iostream>
+#include <fstream>
+
+#include "../src/get_masked_amplicons.h"
+
+int main(int argc, char *argv[])
+{
+  int num_tests = 1, success = 0;
+  get_primers_with_mismatches("../data/test.bed", "../data/test.filtered.tsv", "../data/test.masked_primer_indices.txt", "../data/pair_information.tsv");
+  std::ifstream masked_indices_file("../data/test.masked_primer_indices.txt");
+  std::string indices;
+  getline(masked_indices_file, indices);
+  if(indices.compare("1 3 4") == 0)
+    success += 1;
+  return (num_tests == success) ? 0 : -1;
+}

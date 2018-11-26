@@ -35,6 +35,7 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
       line_stream.clear();
       continue;
     }
+    pos--;			// 1 based to 0 based
     ind = get_primer_indice(primers, pos);
     if(std::find(indices.begin(), indices.end(), ind) == indices.end() && ind != -1){
       indices.push_back(ind);
