@@ -26,7 +26,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window);
 void print_cigar(uint32_t *cigar, int nlength);
 cigar_ primer_trim(bam1_t *r, int32_t new_pos);
 void replace_cigar(bam1_t *b, int n, uint32_t *cigar);
-int16_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers);
+uint8_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers);
 cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n);
 cigar_ condense_cigar(uint32_t* cigar, uint32_t n);
 
