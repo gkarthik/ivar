@@ -236,7 +236,7 @@ uint8_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
     query_pos = start_pos - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos);
   }
   uint8_t i;
-  for(i = 0; i<=primers.size();i++){
+  for(i = 0; i < primers.size();i++){
     if(query_pos >= primers[i].get_start() && query_pos <= primers[i].get_end() && start_pos >= primers[i].get_start() && start_pos <= primers[i].get_end()) // Change int to int32_t in primer_bed.cpp
       return i;
   }
