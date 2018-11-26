@@ -75,7 +75,7 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
   int ctr = 0;
   bool w;
   while(sam_itr_next(in, iter, aln) >= 0) {
-    uint8_t* a = bam_aux_get(aln, "xa");
+    uint8_t* a = bam_aux_get(aln, "XA");
     w = true;
     if(a != 0){
       for (int i = 0; i < amp_n; ++i){

@@ -393,17 +393,17 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   bam1_t *aln = bam_init1();
   int ctr = 0;
   cigar_ t;
-  uint8_t *p = (uint8_t*)malloc(sizeof(uint8_t));
+  uint8_t p;
   uint32_t primer_trim_count = 0;
   while(sam_itr_next(in, iter, aln) >= 0) {
-    *p = get_overlapping_primer_indice(aln, primers);
-    if(*p < primers.size()){
+    p = get_overlapping_primer_indice(aln, primers);
+    if(p < primers.size()){
       primer_trim_count++;
       if(bam_is_rev(aln)){
-	t = primer_trim(aln, primers[*p].get_start() - 1);
+	t = primer_trim(aln, primers[p].get_start() - 1);
       } else {
-	t = primer_trim(aln, primers[*p].get_end() + 1);
-	aln->core.pos = primers[*p].get_end() + 1;
+	t = primer_trim(aln, primers[p].get_end() + 1);
+	aln->core.pos = primers[p].get_end() + 1;
       }
       replace_cigar(aln, t.nlength, t.cigar);
     }
@@ -414,8 +414,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     aln->core.pos += t.start_pos;
     replace_cigar(aln, t.nlength, t.cigar);
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-      if(*p < primers.size())
-	bam_aux_append(aln, "xa", 'i', 4, p);
+      if(p < primers.size())
+	bam_aux_append(aln, "XA", 'C', 1, (uint8_t*) &p);
       if(bam_write1(out, aln) < 0){
 	std::cout << "Not able to write to BAM" << std::endl;
 	hts_itr_destroy(iter);
@@ -503,22 +503,22 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 //     bam1_t *aln = bam_init1();
 //     int ctr = 0;
 //     cigar_ t;
-//     int16_t *p = (int16_t*)malloc(sizeof(int16_t));
+//     int16_t p = (int16_t*)malloc(sizeof(int16_t));
 //     while(sam_itr_next(in, iter, aln) >= 0) {
 //       // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
 //       // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
 //       // std::cout << "Query Start: " << get_query_start(aln) << std::endl;
 //       // std::cout << "Query End: " << get_query_end(aln) << std::endl;
-//       *p = get_overlapping_primer_indice(aln, primers);
-//       if(*p == -1)
+//       p = get_overlapping_primer_indice(aln, primers);
+//       if(p == -1)
 // 	continue;
 //       if(bam_is_rev(aln)){
-// 	t = primer_trim(aln, primers[*p].get_start() - 1);
+// 	t = primer_trim(aln, primers[p].get_start() - 1);
 //       } else {
-// 	t = primer_trim(aln, primers[*p].get_end() + 1);
-// 	aln->core.pos = primers[*p].get_end() + 1;
+// 	t = primer_trim(aln, primers[p].get_end() + 1);
+// 	aln->core.pos = primers[p].get_end() + 1;
 //       }
-//       // std::cout << *p << std::endl;
+//       // std::cout << p << std::endl;
 //       replace_cigar(aln, t.nlength, t.cigar);
 //       // Quality Trimming
 //       t = quality_trim(aln);
