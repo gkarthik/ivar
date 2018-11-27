@@ -30,17 +30,10 @@ for i in files:
     SAMPLES.append(i.split("_")[0])
 SAMPLES = list(set(SAMPLES))
 
+SAMPLES=SAMPLES[:2]
+
 REPS=["a","b"]
 
-call_vrnts_cmd = """
-        mkdir -p $(dirname {output})/
-        samtools mpileup -A -d 0 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {output} -t 0.03
-"""
-
-fltr_vrnts_cmd = """
-        mkdir -p $(dirname {output})/
-        ivar filtervariants -p {output} {input}
-"""
 
 rule all:
     input:
@@ -52,7 +45,9 @@ rule filter_variants:
     output:
         "{out_dir}/masked_variants/{sample}.filtered.tsv"
     shell:
-        fltr_vrnts_cmd
+        """
+        ivar filtervariants -p {output} {input}
+        """
 
 rule call_variants_post_removal:
     input:
@@ -61,48 +56,43 @@ rule call_variants_post_removal:
     output:
         "{out_dir}/masked_variants/{sample}_{rep}.tsv"
     shell:
-        call_vrnts_cmd
+        """
+        samtools mpileup -A -d 0 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {output} -t 0.03
+        """
 
 rule remove_reads:
     input:
         "{out_dir}/realigned/{sample}_{rep}.realigned.trimmed.sorted.bam",
-        "{out_dir}/{sample}_{rep}_masked_primer_indices.txt"
+        "{out_dir}/{sample}_{rep}_masked_primer_names.txt",
+        "{out_dir}/bed/{sample}.bed"
     output:
         "{out_dir}/masked/{sample}_{rep}.masked.sorted.bam"
     shell:
         """
         mkdir -p $(dirname {output})/
-        ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked -t {input[1]}
+        ivar removereads -i {input[0]} -p {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked -t {input[1]} -b {input[2]}
         samtools sort -T {wildcards.sample}_{wildcards.rep}_remove_reads -o {output} {wildcards.out_dir}/masked/{wildcards.sample}_{wildcards.rep}.masked.bam
         samtools index {output}
         """
 
 rule get_masked:
     input:
-        "{out_dir}/variants/{sample}.filtered.tsv",
+        "{out_dir}/primer_mismatches/{sample}.tsv",
         "{out_dir}/bed/{sample}.bed",
         "{pair_information}".format(pair_information = pair_information)
     output:
-        "{out_dir}/{sample}_{rep}_masked_primer_indices.txt"
+        "{out_dir}/{sample}_{rep}_masked_primer_names.txt"
     shell:
-        "ivar getmasked -i {input[0]} -b {input[1]} -f {input[2]} -p {output}"
+        "ivar getmasked -i {input[0]} -b {input[1]}  -f {input[2]} -p {output}"
 
-rule filter_variants_before_masking:
+rule call_variants_in_primer:
     input:
-        expand("{{out_dir}}/variants/{{sample}}_{rep}.tsv", rep=REPS)
-    output:
-        "{out_dir}/variants/{sample}.filtered.tsv"
-    shell:
-        fltr_vrnts_cmd
-
-rule call_variants:
-    input:
-        "{out_dir}/realigned/{sample}_{rep}.realigned.trimmed.sorted.bam",
+        "{out_dir}/bed/{sample}.bam",
         "{out_dir}/consensus/{sample}.fa"
     output:
-        "{out_dir}/variants/{sample}_{rep}.tsv"
+        "{out_dir}/primer_mismatches/{sample}.tsv"
     shell:
-        call_vrnts_cmd
+        "samtools mpileup -A -d 0 --reference {input[1]} -Q 0 -F 0 {input[0]} | ivar variants -p {output} -t 0.03"
 
 rule realigned_trim_primer_quality:
     input:
@@ -120,17 +110,34 @@ rule realigned_trim_primer_quality:
 
 rule create_bed:
     input:
-        "{out_dir}/index/{sample}.bwt",
-        "{csv}".format(csv = primer_csv)
+        "{out_dir}/bed/{sample}.bam"
     output:
         "{out_dir}/bed/{sample}.bed"
     shell:
         """
-        mkdir -p $(dirname {output})
-        cut -f 1,2 -d ',' {input[1]} | sed 's/^/>/g' | tr ',' '\n' > {wildcards.out_dir}/bed/{wildcards.sample}.fa
-        bwa mem -k 5 -T 20 {wildcards.out_dir}/index/{wildcards.sample} {wildcards.out_dir}/bed/{wildcards.sample}.fa | samtools view -bS -F 4 -o {wildcards.out_dir}/bed/{wildcards.sample}.bam
-        bedtools bamtobed -i {wildcards.out_dir}/bed/{wildcards.sample}.bam > {output}
+        bedtools bamtobed -i {input} > {output}
         """
+
+rule create_primer_bam:
+    input:
+        "{out_dir}/index/{sample}.bwt",
+        "{out_dir}/bed/primers.fa"
+    output:
+        "{out_dir}/bed/{sample}.bam"
+    params:
+        index= "{out_dir}/index/{sample}"
+    shell:
+        """
+        bwa mem -k 5 -T 16 {params.index} {input[1]} | samtools view -bS -F 4 -o {output}
+        """
+
+rule create_primer_fasta:
+    input:
+        "{csv}".format(csv = primer_csv)
+    output:
+        "{out_dir}/bed/primers.fa"
+    shell:
+        "cut -f 1,2 -d ',' {input} | sed 's/^/>/g' | tr ',' '\n' > {output}"
 
 rule align_to_consensus:
     input:
@@ -140,7 +147,6 @@ rule align_to_consensus:
         "{out_dir}/realigned/{sample}_{rep}.realigned.sorted.bam"
     shell:
         """
-        mkdir -p $(dirname {output})
         bwa mem {wildcards.out_dir}/index/{wildcards.sample} {input[1]} {input[2]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample}_{wildcards.rep}_align_consensus -o {output}
         samtools index {output}
         """
@@ -153,9 +159,7 @@ rule call_consensus:
         "{out_dir}/index/{sample}.bwt"
     shell:
         """
-        mkdir -p $(dirname {output[0]})/
         samtools mpileup -A -d 0 -Q 0 -F 0 {input} | ivar consensus -p {output[0]}
-        mkdir -p $(dirname {output[1]})
         bwa index -p {wildcards.out_dir}/index/{wildcards.sample} {output[0]}
         """
 
