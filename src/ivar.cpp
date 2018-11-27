@@ -18,6 +18,7 @@ const std::string VERSION = "1.0";
 struct args_t {
   std::string bam;		// -i
   std::string bed;		// -b
+  std::string text;		// -t
   std::string prefix;		// -p
   std::string ref;		// -r
   std::string region;		// -R
@@ -169,6 +170,10 @@ std::string get_filename_without_extension(std::string f, std::string ext){
  */
 
 int main(int argc, char* argv[]){
+  if(argc == 1){
+    print_usage();
+    return -1;
+  }
   std::stringstream cl_cmd;
   cl_cmd << "@PG\tID:ivar-" << argv[1]  <<  "\tPN:ivar\tVN:1.0.0\tCL:" << argv[0] << " ";
   for (int i = 1; i < argc; ++i) {
@@ -176,11 +181,7 @@ int main(int argc, char* argv[]){
     if(i != argc-1)
       cl_cmd << " ";
   }
-  cl_cmd << "\n\0";
-  if(argc == 1){
-    print_usage();
-    return -1;
-  }
+  cl_cmd << "\n\0";  
   std::string cmd(argv[1]);
   if(cmd.compare("-v") == 0){
     print_version_info();
@@ -319,6 +320,9 @@ int main(int argc, char* argv[]){
 	g_args.bam = optarg;
 	break;
       case 't':
+	g_args.text = optarg;
+	break;
+      case 'b':
 	g_args.bed = optarg;
 	break;
       case 'p':
@@ -332,19 +336,18 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, removereads_opt_str);
     }
-    if(g_args.bam.empty() || g_args.prefix.empty() || g_args.bed.empty()){
+    if(g_args.bam.empty() || g_args.prefix.empty() || g_args.bed.empty() || g_args.text.empty()){
       print_removereads_usage();
       return -1;
     }
-    uint16_t amp[150], i = 0;	// Max primer indices set to 150.
     std::string s;
-    std::ifstream fin(g_args.bed.c_str());
-    while(getline(fin, s, ' ' ) ){
-      amp[i] = stoi(s);
-      i++;
+    std::vector<std::string> amp;
+    std::ifstream fin(g_args.text.c_str());
+    while(getline(fin, s, '\t' ) ){
+      amp.push_back(s);
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, i, cl_cmd.str());
+    res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, g_args.bed, cl_cmd.str());
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
     while( opt != -1 ) {

@@ -6,11 +6,8 @@
 #include<iostream>
 #include <stdint.h>
 
-int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, uint16_t* amplicon, int amp_n, std::string cmd){
-  std::cout << "Primer indices ";
-  for (int i = 0; i < amp_n; ++i){
-    std::cout << amplicon[i] << " ";
-  }
+int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, std::vector<std::string> amp, std::string bed, std::string cmd){
+  std::vector<primer> primers = populate_from_file(bed);
   bam_out += ".bam";
   std::cout << std::endl;
   std::cout << bam_out << std::endl;
@@ -78,8 +75,8 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
     uint8_t* a = bam_aux_get(aln, "XA");
     w = true;
     if(a != 0){
-      for (int i = 0; i < amp_n; ++i){
-	if(bam_aux2i(a) == amplicon[i]){
+      for(std::vector<std::string>::iterator it = amp.begin(); it != amp.end(); ++it) {
+	if(bam_aux2i(a) == get_primer_indice(primers, *it)){
 	  w = false;
 	}
       }

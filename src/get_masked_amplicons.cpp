@@ -45,11 +45,11 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
     line_stream.clear();
   }
   for(std::vector<unsigned int>::iterator it = indices.begin(); it != indices.end(); ++it) {
-    fout << *it;
-    std::cout << *it;
+    fout << primers.at(*it).get_name();
+    std::cout << primers.at(*it).get_name();
     if(it != indices.end() - 1){
-      fout << " ";
-      std::cout << " ";
+      fout << "\t";
+      std::cout << "\t";
     }
   }
   std::cout << std::endl;

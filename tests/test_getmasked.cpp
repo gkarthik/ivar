@@ -6,11 +6,11 @@
 int main(int argc, char *argv[])
 {
   int num_tests = 1, success = 0;
-  get_primers_with_mismatches("../data/test.bed", "../data/test.filtered.tsv", "../data/test.masked_primer_indices.txt", "../data/pair_information.tsv");
+  get_primers_with_mismatches("../data/test.bed", "../data/test.filtered.tsv", "../data/test.masked_primer_indices", "../data/pair_information.tsv");
   std::ifstream masked_indices_file("../data/test.masked_primer_indices.txt");
   std::string indices;
   getline(masked_indices_file, indices);
-  if(indices.compare("1 3 4") == 0)
+  if(indices.compare("WNV_400_2_LEFT\tWNV_400_2_RIGHT\tWNV_400_3_LEFT") == 0)
     success += 1;
   return (num_tests == success) ? 0 : -1;
 }
