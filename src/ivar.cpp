@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sstream>
+#include <vector>
 
 #include "remove_reads_from_amplicon.h"
 #include "call_consensus_pileup.h"
@@ -67,7 +68,7 @@ void print_trim_usage(){
 
 void print_variants_usage(){
   std::cout <<
-      "Usage: samtools mpileup -A -d 300000 --reference <reference-fasta> -B -Q 0 -F 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>]\n\n"
+      "Usage: samtools mpileup -A -d 0 --reference <reference-fasta> -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
@@ -86,7 +87,7 @@ void print_filtervariants_usage(){
 
 void print_consensus_usage(){
   std::cout <<
-    "Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix> \n\n"
+    "Usage: samtools mpileup -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix> \n\n"
     "Note : samtools mpileup output must be piped into `ivar consensus`\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
@@ -107,11 +108,12 @@ void print_consensus_usage(){
 
 void print_removereads_usage(){
   std::cout <<
-    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices> \n"
+    "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices> -b <primers.bed> \n"
     "Note: This step is used only for amplicon-based sequencing.\n\n"
     "Input Options    Description\n"
-    "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using sort_index_bam.sh\n"
-    "           -t    (Required) Text file with primer indices separated by spaces. This is the output of `getmasked` command.\n\n"
+    "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using samtools sort, followed by samtools index\n"
+    "           -t    (Required) Text file with primer indices separated by spaces. This is the output of `getmasked` command.\n"
+    "           -b    (Required) BED file with primer sequences and positions.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered BAM file\n";
 }
