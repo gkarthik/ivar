@@ -433,7 +433,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     }
     ctr++;
     if(ctr % 1000000 == 0){
-      std::cout << "Processed " << ctr << "reads ... " << std::endl;
+      std::cout << "Processed " << ctr << " reads ... " << std::endl;
     }
   }
   std::cout << "Results: " << std::endl;

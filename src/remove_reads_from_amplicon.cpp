@@ -72,7 +72,7 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
   }
   //Initiate the alignment record
   bam1_t *aln = bam_init1();
-  int ctr = 0;
+  int ctr = 0, rmv_ctr = 0;
   bool w;
   while(sam_itr_next(in, iter, aln) >= 0) {
     uint8_t* a = bam_aux_get(aln, "XA");
@@ -95,12 +95,16 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
 	bgzf_close(out);
 	return -1;
       };
+    } else {
+      rmv_ctr++;
     }
     ctr++;
-    if(ctr % 100000 == 0){
-      std::cout << ctr << std::endl;
+    if(ctr % 1000000 == 0){
+      std::cout << "Processed " << ctr << " reads" << std::endl;
     }
   }
+  std::cout << "Results:" << std::endl;
+  std::cout << rmv_ctr << " reads were removed." << std::endl;
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
   bam_destroy1(aln);
