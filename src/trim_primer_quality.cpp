@@ -319,7 +319,6 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
 
 void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   size_t len = strlen((*hdr)->text) + strlen(cmd)+1;
-  std::cout << strlen((*hdr)->text) << " " << strlen(cmd) << " " << len << std::endl;
   char * new_text = (char *)malloc(len);
   memcpy(new_text, (*hdr)->text, strlen((*hdr)->text));
   new_text[strlen((*hdr)->text)] = '\0';

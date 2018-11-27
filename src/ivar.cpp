@@ -348,6 +348,7 @@ int main(int argc, char* argv[]){
     while(getline(fin, s, '\t' ) ){
       amp.push_back(s);
     }
+    fin.close();
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
     res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, g_args.bed, cl_cmd.str());
   } else if(cmd.compare("filtervariants") == 0){

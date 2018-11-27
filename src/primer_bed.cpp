@@ -114,7 +114,7 @@ int get_primer_indice(std::vector<primer> p, unsigned int pos){
 
 int get_primer_indice(std::vector<primer> p, std::string name){
   for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
-    if(it->get_name() == name){
+    if(it->get_name().compare(name) == 0){
       return it - p.begin();
     }
   }
