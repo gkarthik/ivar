@@ -57,7 +57,7 @@ void print_trim_usage(){
   std::cout <<
     "Usage: ivar trim -i <input.bam> -b <primers.bed> -p <prefix> [-m <min-length>] [-q <min-quality>] [-s <sliding-window-width>]\n\n"
     "Input Options    Description\n"
-    "           -i    (Required) Indexed aligned bam file to trim primers and quality\n"
+    "           -i    (Required) Sorted bam file, with aligned reads, to trim primers and quality\n"
     "           -b    (Required) BED file with primer sequences and positions\n"
     "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
@@ -111,7 +111,7 @@ void print_removereads_usage(){
     "Usage: ivar removereads -i <input.trimmed.bam> -p <prefix> -t <text-file-with-primer-indices> -b <primers.bed> \n"
     "Note: This step is used only for amplicon-based sequencing.\n\n"
     "Input Options    Description\n"
-    "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted and indexed, which can be done using samtools sort, followed by samtools index\n"
+    "           -i    (Required) Input BAM file  trimmed with ‘ivar trim’. Must be sorted which can be done using `samtools sort`.\n"
     "           -t    (Required) Text file with primer indices separated by spaces. This is the output of `getmasked` command.\n"
     "           -b    (Required) BED file with primer sequences and positions.\n\n"
     "Output Options   Description\n"
