@@ -345,8 +345,12 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   //Load the index
   hts_idx_t *idx = sam_index_load(in, bam.c_str());
   if(idx == NULL) {
-    std::cout << ("Unable to open BAM/SAM index.") << std::endl; // TODO: Generate index
-    return -1;
+    if(sam_index_build2(bam.c_str(), 0, 0)< 0){
+      std::cout << ("Unable to open BAM/SAM index.") << std::endl;
+      return -1;
+    } else {
+      idx = sam_index_load(in, bam.c_str());
+    }
   }
   //Get the header
   bam_hdr_t *header = sam_hdr_read(in);

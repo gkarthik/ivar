@@ -25,7 +25,7 @@ int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string ba
   hts_idx_t *idx = sam_index_load(in, bam.c_str());
   if(idx == NULL) {
     if(sam_index_build2(bam.c_str(), 0, 0)< 0){
-      std::cout << ("Unable to open BAM/SAM index.") << std::endl; // TODO: Generate index
+      std::cout << ("Unable to open BAM/SAM index.") << std::endl;
       return -1;
     } else {
       idx = sam_index_load(in, bam.c_str());
