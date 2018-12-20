@@ -48,7 +48,6 @@ void print_usage(){
     "      getmasked       Detect primer mismatches and get primer indices for the amplicon to be masked\n"
     "    removereads       Remove reads from trimmed BAM file\n"
     "        version       Show version information\n"
-    "    trimadapter       (EXPERIMENTAL) Trim adapter sequences from reads\n"
     "\n"
     "To view detailed usage for each command type `ivar <command>` \n";
 }

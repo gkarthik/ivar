@@ -397,7 +397,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   int ctr = 0;
   cigar_ t;
   uint8_t p;
-  uint32_t primer_trim_count = 0;
+  uint32_t primer_trim_count = 0, no_primer = 0, low_quality = 0;
   while(sam_itr_next(in, iter, aln) >= 0) {
     p = get_overlapping_primer_indice(aln, primers);
     if(p < primers.size()){
@@ -428,8 +428,12 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  sam_close(in);
 	  bgzf_close(out);
 	  return -1;
-	};	
+	} else {
+	  no_primer++;
+	}
       }
+    } else {
+      low_quality++;
     }
     ctr++;
     if(ctr % 1000000 == 0){
@@ -438,6 +442,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   }
   std::cout << "Results: " << std::endl;
   std::cout << "Trimmed primers from " << primer_trim_count << " reads." << std::endl;
+  std::cout << low_quality << " reads were shortened below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
+  std::cout << no_primer << " reads that started outside of primer regions were not written to file." << std::endl;
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
   bam_destroy1(aln);
@@ -446,125 +452,3 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   bgzf_close(out);
   return 0;
 }
-
-// int main_old(int argc, char* argv[]) {
-//   std::cout << "Path " << argv[1] <<std::endl;
-//   std::string bam = std::string(argv[1]);
-//   std::string region_;
-//   std::string bed = std::string(argv[2]);
-//   std::string bam_out = std::string(argv[3]);
-//   std::vector<primer> primers = populate_from_file(bed);
-//   if(argc > 4) {
-//     region_ = std::string(argv[4]);
-//   }
-//   if(!bam.empty()) {
-//     //open BAM for reading
-//     samFile *in = hts_open(bam.c_str(), "r");
-//     BGZF *out = bgzf_open(bam_out.c_str(), "w");
-//     if(in == NULL) {
-//       throw std::runtime_error("Unable to open BAM/SAM file.");
-//     }
-//     //Load the index
-//     hts_idx_t *idx = sam_index_load(in, bam.c_str());
-//     if(idx == NULL) {
-//       throw std::runtime_error("Unable to open BAM/SAM index."); // Generate index
-//     }
-//     //Get the header
-//     bam_hdr_t *header = sam_hdr_read(in);
-//     bam_hdr_write(out, header);
-//     if(header == NULL) {
-//       sam_close(in);
-//       throw std::runtime_error("Unable to open BAM header.");
-//     }
-//     if (region_.empty()){
-//       std::cout << "Number of references: " << header->n_targets << std::endl;
-//       for (int i = 0; i < header->n_targets; ++i){
-// 	std::cout << "Reference Name: " << header->target_name[i] << std::endl;
-// 	std::cout << "Reference Length: " << header->target_len[i] << std::endl;
-// 	if(i==0){
-// 	  region_.assign(header->target_name[i]);
-// 	}
-//       }
-//       std::cout << "Using Region: " << region_ << std::endl;
-//     }
-//     std::string hdr_text(header->text);
-//     if (hdr_text.find(std::string("SO:coordinate"))) {
-//       std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
-//     } if(hdr_text.find(std::string("SO:queryname"))) {
-//       std::cout << "Sorted By Query Name" << std::endl; // Sort by name
-//     } else {
-//       std::cout << "Not sorted" << std::endl;
-//     }
-//     //Initialize iterator
-//     hts_itr_t *iter = NULL;
-//     //Move the iterator to the region we are interested in
-//     iter  = sam_itr_querys(idx, header, region_.c_str());
-//     if(header == NULL || iter == NULL) {
-//       sam_close(in);
-//       throw std::runtime_error("Unable to iterate to region within BAM.");
-//     }
-//     //Initiate the alignment record
-//     bam1_t *aln = bam_init1();
-//     int ctr = 0;
-//     cigar_ t;
-//     int16_t p = (int16_t*)malloc(sizeof(int16_t));
-//     while(sam_itr_next(in, iter, aln) >= 0) {
-//       // std::cout << "Query Length: " << bam_cigar2qlen(aln->core.n_cigar, cigar) << std::endl;
-//       // std::cout << "Read Length: " << bam_cigar2rlen(aln->core.n_cigar, cigar) << std::endl;
-//       // std::cout << "Query Start: " << get_query_start(aln) << std::endl;
-//       // std::cout << "Query End: " << get_query_end(aln) << std::endl;
-//       p = get_overlapping_primer_indice(aln, primers);
-//       if(p == -1)
-// 	continue;
-//       if(bam_is_rev(aln)){
-// 	t = primer_trim(aln, primers[p].get_start() - 1);
-//       } else {
-// 	t = primer_trim(aln, primers[p].get_end() + 1);
-// 	aln->core.pos = primers[p].get_end() + 1;
-//       }
-//       // std::cout << p << std::endl;
-//       replace_cigar(aln, t.nlength, t.cigar);
-//       // Quality Trimming
-//       t = quality_trim(aln);
-//       if(bam_is_rev(aln))
-// 	aln->core.pos = t.start_pos;
-//       // std::cout << "Old: " << t.nlength << std::endl;
-//       // print_cigar(t.cigar, t.nlength);
-//       // std::cout << std::endl;
-//       t = condense_cigar(t.cigar, t.nlength);
-//       aln->core.pos += t.start_pos;
-//       // std::cout << "New: " << t.nlength << std::endl;
-//       // print_cigar(t.cigar, t.nlength);
-//       // std::cout << std::endl;
-//       replace_cigar(aln, t.nlength, t.cigar);
-//       // std::cout << "Name: " << name  << std::endl;
-//       // std::cout << "Seq: " << seq << "\tQual: " << qual;
-//       // std::cout << std::endl;
-//       // if (strcmp(bam_get_qname(aln), "M01244:143:000000000-BHWC7:1:1104:13925:8758") == 0){
-//       // 	std::cout << "Start Pos: " << aln->core.pos << std::endl;
-//       // 	uint8_t *q = bam_get_qual(aln);
-//       // 	for (int i = 0; i < aln->core.l_qseq -4; ++i){
-//       // 	  std::cout << mean_quality(q, i, i+4) << " ";
-//       // 	}
-//       // 	std::cout << std::endl;
-//       // }
-//       int min_length = 30;
-//       if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-// 	// bam1_t *b, const char tag[2], char type, int len, const uint8_t *data
-// 	bam_aux_append(aln, "xa", 'i', 4, (uint8_t*) p);
-// 	bam_write1(out, aln);
-//       }
-//       ctr++;
-//       if(ctr % 100000 == 0){
-// 	std::cout << ctr << std::endl;
-//       }
-//     }
-//     hts_itr_destroy(iter);
-//     hts_idx_destroy(idx);
-//     bam_destroy1(aln);
-//     bam_hdr_destroy(header);
-//     sam_close(in);
-//     bgzf_close(out);
-//   }
-//   return 0;
-// }

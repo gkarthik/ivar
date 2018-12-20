@@ -11,7 +11,7 @@ primer_csv="/home/gk/db/zika/amplicons/zika_primers.csv"
 
 # File name format of replicates - ZI26_a_R{1-2}.fastq.gz ZI26_b_R{1-2}.fastq.gz
 lst = listdir(in_dir)
-files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f and "08_a" not in f and "08_b" not in f]
+files = [f for f in lst  if isfile(join(in_dir, f)) and ".fastq.gz" in f]
 files.sort()
 
 SAMPLES = []
