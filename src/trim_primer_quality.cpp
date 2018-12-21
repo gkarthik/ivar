@@ -428,9 +428,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  sam_close(in);
 	  bgzf_close(out);
 	  return -1;
-	} else {
-	  no_primer++;
 	}
+      } else {
+	no_primer++;
       }
     } else {
       low_quality++;
