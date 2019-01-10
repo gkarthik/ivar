@@ -72,19 +72,12 @@ $(function() {
 <div class="textblock"><p>Two pipelines to call iSNVs from known and unknown reference sequences have been written in <a href="https://snakemake.readthedocs.io/en/stable/">snakemake</a>.</p>
 <p>The two pipelines are distributed along with iVar and are present in the<a href="https://github.com/andersen-lab/ivar/tree/master/pipeline">pipeline/</a> and <a href="https://github.com/andersen-lab/ivar/tree/master/pipeline_field">pipeline_field/</a> fodlers respectively.</p>
 <p>For both pipelines, there are four parameters that will have to be set in beginning of the Snakefile.</p>
-<div class="fragment"><div class="line">in_dir = &quot;&lt;input fastq files&gt;&quot;</div><div class="line">out_dir = &quot;&lt;output directory&gt;&quot;</div><div class="line">bed = &quot;&lt;bed-file-with-primer-positions&gt;&quot;</div><div class="line">ref=&quot;&lt;path to reference fasta&gt;&quot;</div></div><!-- fragment --><h3>Call iSNVs from samples with known reference sequence</h3>
-<p><a href="https://github.com/andersen-lab/ivar/tree/master/pipeline">Link to pipeline</a></p>
-<h4>Dependencies:</h4>
-<ul>
-<li><a href="https://github.com/andersen-lab/ivar">iVar</a></li>
-<li><a href="https://htslib.org/">samtools</a></li>
-<li><a href="https://github.com/lh3/bwa">bwa</a></li>
-</ul>
-<div class="image">
+<div class="fragment"><div class="line">in_dir = &quot;&lt;input fastq files&gt;&quot;</div><div class="line">out_dir = &quot;&lt;output directory&gt;&quot;</div><div class="line">bed = &quot;&lt;bed-file-with-primer-positions&gt;&quot;</div><div class="line">ref=&quot;&lt;path to reference fasta&gt;&quot;</div></div><!-- fragment --><div class="image">
 <img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline/pipeline.png" width="500"/>
 </div>
-<h3>Call iSNVs from samples with unknown reference sequence</h3>
-<p><a href="https://github.com/andersen-lab/ivar/tree/master/pipeline_field/">Link to pipeline</a></p>
+<h3>Call iSNVs from samples with known reference sequence</h3>
+<p><a href="https://github.com/andersen-lab/paper_2018_primalseq-ivar/blob/master/cookbook/CookBook.ipynb">Link to Jupyter Notebook</a></p>
+<p><a href="https://github.com/andersen-lab/ivar/tree/master/pipeline">Link to pipeline</a></p>
 <h4>Dependencies:</h4>
 <ul>
 <li><a href="https://github.com/andersen-lab/ivar">iVar</a></li>
@@ -92,10 +85,16 @@ $(function() {
 <li><a href="https://github.com/lh3/bwa">bwa</a></li>
 <li><a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a></li>
 </ul>
-<div class="image">
-<img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline_field/pipeline_field.png" width="500"/>
-</div>
- </div></div><!-- contents -->
+<h3>Call iSNVs from samples with unknown reference sequence</h3>
+<p><a href="https://github.com/andersen-lab/ivar/tree/master/pipeline_field/">Link to pipeline</a></p>
+<h4>Dependencies:</h4>
+<ul>
+<li><a href="https://github.com/andersen-lab/ivar">iVar</a></li>
+<li><a href="https://htslib.org/">samtools</a></li>
+<li><a href="https://github.com/lh3/bwa">bwa</a></li>
+<li><a href="https://bedtools.readthedocs.io/en/latest/">bedtools</a> </li>
+</ul>
+</div></div><!-- contents -->
 <!-- HTML footer for doxygen 1.8.14-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -1,4 +1,4 @@
-.TH "installpage" 3 "Wed Nov 7 2018" "iVar" \" -*- nroff -*-
+.TH "installpage" 3 "Wed Jan 9 2019" "iVar" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -17,6 +17,25 @@ installpage \- Installation
 Note:
 .IP "\(bu" 2
 It is highly recommended that \fCsamtools\fP also be installed alongside iVar\&. iVar uses the output of samtools mpileup to call variants and generate consensus sequences\&. In addition, samtools \fCsort\fP and \fCindex\fP commands are very useful to setup a pipeline using iVar\&.
+.PP
+.SH "Installing via conda"
+.PP
+iVar is available on bioconda\&. To install conda, please use the \fCminiconda\fP package\&. After intalling conda please add the following channels,
+.PP
+.PP
+.nf
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+.fi
+.PP
+.PP
+To install iVar,
+.PP
+.PP
+.nf
+conda install ivar
+.fi
 .PP
 .SH "Installing on Mac"
 .PP

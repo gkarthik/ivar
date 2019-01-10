@@ -25,7 +25,7 @@ Description of commands
 Trim primer sequences with iVar
 ----
 
-iVar uses primer positions supplied in a BED file to soft clip primer sequences from an aligned, sorted and indexed BAM file. Following this, the reads are trimmed based on a quality threshold(Default: 20). To do the quality trimming, iVar uses a sliding window approach(Default: 4). The windows slides from the 5' end to the 3' end and if at any point the average base quality in the window falls below the threshold, the remaining read is soft clipped. If after trimming, the length of the read is greater than the minimum length specified(Default: 30), the read is written to the new trimmed BAM file.
+iVar uses primer positions supplied in a BED file to soft clip primer sequences from an aligned and sorted BAM file. Following this, the reads are trimmed based on a quality threshold(Default: 20). To do the quality trimming, iVar uses a sliding window approach(Default: 4). The windows slides from the 5' end to the 3' end and if at any point the average base quality in the window falls below the threshold, the remaining read is soft clipped. If after trimming, the length of the read is greater than the minimum length specified(Default: 30), the read is written to the new trimmed BAM file.
 
 To sort and index an aligned BAM file, the following command can be used,
 
@@ -319,7 +319,7 @@ Example Output:
 Remove reads associated with mismatched primer indices
 ----
 
-This command accepts an aligned, sorted and indexed BAM file trimmed using `ivar trim` and removes the reads corresponding to the supplied primer indices, which is the output of `ivar getmasked` command. Under the hood, `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read. Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`.
+This command accepts an aligned and sorted BAM file trimmed using `ivar trim` and removes the reads corresponding to the supplied primer indices, which is the output of `ivar getmasked` command. Under the hood, `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read. Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`.
 
 Command:
 ```

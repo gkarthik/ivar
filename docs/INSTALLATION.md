@@ -12,6 +12,22 @@ Installation {#installpage}
 Note:
 * It is highly recommended that [samtools](https://github.com/samtools/samtools) also be installed alongside iVar. iVar uses the output of samtools mpileup to call variants and generate consensus sequences. In addition, samtools `sort` and `index` commands are very useful to setup a pipeline using iVar.
 
+Installing via conda
+====================
+
+iVar is available on bioconda. To install conda, please use the [miniconda](https://conda.io/miniconda.html) package. After intalling conda please add the following channels,
+
+```
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+```
+
+To install iVar,
+
+```
+conda install ivar
+```
 
 Installing on Mac
 =================
