@@ -14,7 +14,7 @@ bed = "<bed-file-with-primer-positions>"
 ref="<path to reference fasta>"
 ```
 
-<img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline/pipeline.png" width="500" />
+<img src="https://raw.githubusercontent.com/andersen-lab/ivar/master/pipeline/pipeline.png" width="500" />
 
 ### Call iSNVs from samples with known reference sequence
 
