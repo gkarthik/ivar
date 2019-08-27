@@ -24,6 +24,18 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
   return ad.end();
 }
 
+double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){ // pos_depth is ungapped depth after passing quality. total_depth is depth without quality filtering for indels.
+  double *val = new double[2];
+  if(a.nuc[0] == '+'){	// For insertions use depth discarding quality
+    val[0] = a.depth/(double)total_depth;
+    val[1] = total_depth;
+    return val;
+  }
+  val[0] = a.depth/(double)pos_depth;
+  val[1] = pos_depth;
+  return val;
+}
+
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
   std::string line, cell, bases, qualities, region;
   std::ofstream fout((out_file+".tsv").c_str());
@@ -42,8 +54,9 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tPVAL"
     "\tPASS"
        << std::endl;
-  int ctr = 0, pos = 0, mdepth = 0;
-  double pval_left, pval_right, pval_twotailed, freq, err;
+  int ctr = 0, pos = 0;
+  uint32_t mdepth = 0, pdepth = 0; // mpdeth for mpileup depth and pdeth for ungapped depth at position
+  double pval_left, pval_right, pval_twotailed, *freq_depth, err;
   std::stringstream lineStream;
   char ref;
   std::vector<allele> ad;
@@ -92,17 +105,17 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       ref_it = ad.end() - 1;
     }
     // Get ungapped coverage
-    mdepth = 0;
+    pdepth = 0;
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
 	continue;
-      mdepth += it->depth;
+      pdepth += it->depth;
     }
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((*it == *ref_it) || it->nuc[0]=='*')
 	continue;
-      freq = it->depth/(double)mdepth;
-      if(freq < min_threshold)
+      freq_depth = get_frequency_depth(*it, pdepth, mdepth);
+      if(freq_depth[0] < min_threshold)
 	continue;
       fout << region << "\t";
       fout << pos << "\t";
@@ -114,8 +127,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       fout << it->depth << "\t";
       fout << it->reverse << "\t";
       fout << (uint16_t) it->mean_qual << "\t";
-      fout << freq << "\t";
-      fout << mdepth << "\t";
+      fout << freq_depth[0] << "\t";
+      fout << freq_depth[1] << "\t";
       /*
 	    | Var   | Ref      |
 	Exp | Error | Err free |

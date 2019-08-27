@@ -261,6 +261,11 @@ int main(int argc, char* argv[]){
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     g_args.min_threshold = (g_args.min_threshold < 0 || g_args.min_threshold > 1) ? 0.03: g_args.min_threshold;
+    if(isatty(STDIN_FILENO)){
+      std::cout << "Please pipe mpileup into `ivar variants` command.\n\n";
+      print_variants_usage();
+      return -1;
+    }
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
@@ -299,6 +304,11 @@ int main(int argc, char* argv[]){
       opt = getopt( argc, argv, consensus_opt_str);
     }
     if(g_args.prefix.empty()){
+      print_consensus_usage();
+      return -1;
+    }
+    if(isatty(STDIN_FILENO)){
+      std::cout << "Please pipe mpileup into `ivar consensus` command.\n\n";
       print_consensus_usage();
       return -1;
     }
