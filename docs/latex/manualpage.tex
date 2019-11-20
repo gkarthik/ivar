@@ -43,11 +43,12 @@ Usage: ivar trim -i <input.bam> -b <primers.bed> -p <prefix> [-m <min-length>] [
        <sliding-window-width>]
 
 Input Options    Description
-           -i    (Required) Indexed aligned bam file to trim primers and quality
+           -i    (Required) Sorted bam file, with aligned reads, to trim primers and quality
            -b    (Required) BED file with primer sequences and positions
            -m    Minimum length of read to retain after trimming (Default: 30)
            -q    Minimum quality threshold for sliding window to pass (Default: 20)
            -s    Width of sliding window (Default: 4)
+           -e    Include reads with no primers. By default, reads with no primers are excluded
 
 Output Options   Description
            -p    (Required) Prefix for the output BAM file
