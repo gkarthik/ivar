@@ -34,6 +34,7 @@ struct args_t {
   char gap;			// -n
   bool keep_min_coverage;	// -k
   std::string primer_pair_file;	// -f
+  bool write_no_primers_flag;	// -e
 } g_args;
 
 void print_usage(){
@@ -60,7 +61,8 @@ void print_trim_usage(){
     "           -b    (Required) BED file with primer sequences and positions\n"
     "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
-    "           -s    Width of sliding window (Default: 4)\n\n"
+    "           -s    Width of sliding window (Default: 4)\n"
+    "           -e    Include reads with no primers. By default, reads with no primers are excluded\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output BAM file\n";
 }
@@ -146,7 +148,7 @@ void print_version_info(){
     "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
-static const char *trim_opt_str = "i:b:p:m:q:s:h?";
+static const char *trim_opt_str = "i:b:p:m:q:s:eh?";
 static const char *variants_opt_str = "p:t:q:h?";
 static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
@@ -197,6 +199,7 @@ int main(int argc, char* argv[]){
     g_args.min_qual = 20;
     g_args.sliding_window = 4;
     g_args.min_length = 30;
+    g_args.write_no_primers_flag = false;
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -219,6 +222,9 @@ int main(int argc, char* argv[]){
 	g_args.sliding_window = std::stoi(optarg);
 	break;
       case 'h':
+      case 'e':
+	g_args.write_no_primers_flag = true;
+	break;
       case '?':
 	print_trim_usage();
 	return -1;
@@ -231,7 +237,7 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.min_length);
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.min_length);
   } else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;

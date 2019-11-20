@@ -329,7 +329,7 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   (*hdr)->l_text = len-1;
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, int min_length = 30){
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, int min_length = 30){
   std::vector<primer> primers = populate_from_file(bed);
   if(bam.empty()){
     std::cout << "Bam file in empty." << std::endl;
@@ -430,6 +430,19 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  return -1;
 	}
       } else {
+	if(write_no_primer_reads){
+	  // bam_aux_append(aln, "XA", 'C', 1, NULL);
+	  if(bam_write1(out, aln) < 0){
+	    std::cout << "Not able to write to BAM" << std::endl;
+	    hts_itr_destroy(iter);
+	    hts_idx_destroy(idx);
+	    bam_destroy1(aln);
+	    bam_hdr_destroy(header);
+	    sam_close(in);
+	    bgzf_close(out);
+	    return -1;
+	  }
+	}
 	no_primer++;
       }
     } else {
@@ -443,7 +456,11 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   std::cout << "Results: " << std::endl;
   std::cout << "Trimmed primers from " << primer_trim_count << " reads." << std::endl;
   std::cout << low_quality << " reads were shortened below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
-  std::cout << no_primer << " reads that started outside of primer regions were not written to file." << std::endl;
+  if(write_no_primer_reads){
+    std::cout << no_primer << " reads started outside of primer regions. Since the -e flag was given, these reads were written to file" << std::endl;
+  } else {
+    std::cout << no_primer << " reads that started outside of primer regions were not written to file." << std::endl;
+  }
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
   bam_destroy1(aln);
