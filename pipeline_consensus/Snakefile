@@ -31,7 +31,7 @@ rule call_consensus:
         "{out_dir}/consensus_sequences/{sample}.fa"
     shell:
         """
-        samtools mpileup -A -Q 0 -d 300000 {input} | ivar consensus -p {output} -n N -m 10
+        samtools mpileup -A -Q 0 -d 300000 {input} | ivar consensus -p {output} -m 10
         """
 
 rule trim_reads:
@@ -44,7 +44,7 @@ rule trim_reads:
         tmp="{out_dir}/trimmed_bams/{sample}.trimmed.bam"
     shell:
         """
-        ivar trim -i {input} -b {params.bed} -p {params.tmp}
+        ivar trim -e -i {input} -b {params.bed} -p {params.tmp}
         samtools sort -T {wildcards.sample}.trim -o {output} {params.tmp}
         rm {params.tmp}
         """
