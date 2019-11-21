@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 MAINTAINER Karthik G <gkarthik@scripps.edu>
 
 RUN apt-get update
-RUN apt-get install -y build-essential autoconf zlib1g-dev python3 wget libbz2-dev liblzma-dev libncurses-dev git bedtools python3-pip
+RUN apt-get install -y build-essential autoconf zlib1g-dev python3 wget libbz2-dev liblzma-dev libncurses-dev git bedtools python3-pip vim nano
 # HTSlib
 RUN cd root/ &&\
     wget https://github.com/samtools/htslib/releases/download/1.9/htslib-1.9.tar.bz2 &&\
@@ -42,4 +42,4 @@ RUN cd root/ &&\
     rm v0.7.17.tar.gz
 ENV PATH /root/bwa-0.7.17:$PATH
 # Snakemake
-RUN pip3 install snakemake
+RUN pip3 install pandas snakemake
