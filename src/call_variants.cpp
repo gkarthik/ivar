@@ -36,7 +36,7 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
   return val;
 }
 
-int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
+int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold, uint8_t min_depth){
   std::string line, cell, bases, qualities, region;
   std::ofstream fout((out_file+".tsv").c_str());
   fout << "REGION"
@@ -55,7 +55,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tPASS"
        << std::endl;
   int ctr = 0, pos = 0;
-  uint32_t mdepth = 0, pdepth = 0; // mpdeth for mpileup depth and pdeth for ungapped depth at position
+  uint32_t mdepth = 0, pdepth = 0; // mpdepth for mpileup depth and pdeth for ungapped depth at position
   double pval_left, pval_right, pval_twotailed, *freq_depth, err;
   std::stringstream lineStream;
   char ref;
@@ -88,6 +88,10 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	break;
       }
       ctr++;
+    }
+    if(mdepth < min_depth) {	// Check for minimum depth
+      lineStream.clear();
+      continue;
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     if(ad.size() == 0){

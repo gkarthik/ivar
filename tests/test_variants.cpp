@@ -4,10 +4,10 @@
 #include "../src/allele_functions.h"
 #include "../src/call_variants.h"
 
-int call_var_check_outfile(std::string prefix, uint8_t min_qual, double min_threshold, std::string out1, std::string out2){
+int call_var_check_outfile(std::string prefix, uint8_t min_qual, uint8_t min_depth, double min_threshold, std::string out1, std::string out2){
   std::string path = "../data/test.indel.mpileup";
   std::ifstream mplp(path);
-  call_variants_from_plup(mplp, prefix, min_qual, min_threshold);
+  call_variants_from_plup(mplp, prefix, min_qual, min_threshold, min_depth);
   std::ifstream outFile(prefix+".tsv");
   std::string l;
   getline(outFile, l);		// Ignore first line
@@ -32,11 +32,15 @@ int main() {
   std::string t_20_03 = "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE";
   // Quality threshold 25. Frequency threshold: 0.03. Total_DP = 2. Freq = 0.5 No Indel.
   std::string t_25_03 = "test\t210\tA\tT\t1\t1\t41\t1\t1\t58\t0.5\t2\t0.4\tFALSE";
-  num_success = call_var_check_outfile("../data/test.indel", 20, 0.02, t_20_02_1, t_20_02_2);
+  // Minimum depth threshold. Should be empty
+  std::string t_25_03_20 = "";
+  num_success = call_var_check_outfile("../data/test.indel", 20, 0, 0.02, t_20_02_1, t_20_02_2);
   std::cout << num_success << std::endl;
-  num_success += call_var_check_outfile("../data/test.indel", 20, 0.03, t_20_03, "");
+  num_success += call_var_check_outfile("../data/test.indel", 20, 0, 0.03, t_20_03, "");
   std::cout << num_success << std::endl;
-  num_success += call_var_check_outfile("../data/test.indel", 25, 0.03, t_25_03, "");
+  num_success += call_var_check_outfile("../data/test.indel", 25, 0, 0.03, t_25_03, "");
+  std::cout << num_success << std::endl;
+  num_success += call_var_check_outfile("../data/test.indel", 25, 20, 0.03, t_25_03_20, "");
   std::cout << num_success << std::endl;
   if(num_success == 0)
     return 0;

@@ -30,7 +30,7 @@ struct args_t {
   std::string f1;		// -1
   std::string f2;		// -2
   std::string adp_path;	// -a
-  int min_depth;		// -m
+  uint8_t min_depth;		// -m
   char gap;			// -n
   bool keep_min_coverage;	// -k
   std::string primer_pair_file;	// -f
@@ -69,11 +69,12 @@ void print_trim_usage(){
 
 void print_variants_usage(){
   std::cout <<
-      "Usage: samtools mpileup -A -d 0 --reference <reference-fasta> -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>]\n\n"
+      "Usage: samtools mpileup -A -d 0 --reference <reference-fasta> -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
-    "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n\n"
+    "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n"
+    "           -m    Minimum read depth to call variants (Default: 0)\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output tsv variant file\n\n";
 }
@@ -241,6 +242,7 @@ int main(int argc, char* argv[]){
   } else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;
+    g_args.min_depth = 0;
     opt = getopt( argc, argv, variants_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -252,6 +254,9 @@ int main(int argc, char* argv[]){
 	break;
       case 'q':
 	g_args.min_qual = std::stoi(optarg);
+	break;
+      case 'm':
+	g_args.min_depth = std::stoi(optarg);
 	break;
       case 'h':
       case '?':
@@ -272,7 +277,7 @@ int main(int argc, char* argv[]){
       print_variants_usage();
       return -1;
     }
-    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
+    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.min_threshold = 0;
