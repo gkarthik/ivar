@@ -45,7 +45,7 @@ void print_usage(){
     "        Command       Description\n"
     "           trim       Trim reads in aligned BAM file\n"
     "       variants       Call variants from aligned BAM file\n"
-    " filtervariants       Filter variants across replicates\n"
+    " filtervariants       Filter variants across replicates or samples\n"
     "      consensus       Call consensus from aligned BAM file\n"
     "      getmasked       Detect primer mismatches and get primer indices for the amplicon to be masked\n"
     "    removereads       Remove reads from trimmed BAM file\n"
@@ -83,7 +83,9 @@ void print_variants_usage(){
 void print_filtervariants_usage(){
   std::cout <<
     "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... \n\n"
-    "Input: Variant tsv files for each replicate\n\n"
+    "Input: Variant tsv files for each replicate/sample\n\n"
+    "Input Options    Description\n"
+    "           -t    Minimum fration of files required to contain the same variant. Specify value within [0,1]. (Default: 1)\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered tsv file\n";
 }
@@ -390,6 +392,10 @@ int main(int argc, char* argv[]){
 	break;
       }
       opt = getopt( argc, argv, filtervariants_opt_str);
+    }
+    if(g_args.min_threshold < 0 || g_args.min_threshold > 1){
+      print_filtervariants_usage();
+      return -1;
     }
     if(optind >= argc){
       print_filtervariants_usage();
