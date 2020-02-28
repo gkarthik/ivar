@@ -92,7 +92,8 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
   for (i = 0; i < nfiles; ++i) {
     fin.open(files[i]);
     if(read_variant_file(fin, i, counts, file_tab_delimited_str) != 0){
-      std::cout << "Header format did not match!" << std::endl;
+      std::cout << "Header format of "  << files[i]  << " did not match!";
+      std::cout << " Please use files generated using \"ivar variants\" command." << std::endl;
     }
     fin.close();
   }

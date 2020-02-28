@@ -407,13 +407,6 @@ int main(int argc, char* argv[]){
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     res = common_variants(g_args.prefix, g_args.min_threshold, argv + optind, argc - optind);
-    // std::string rep = "get_common_variants.sh ";
-    // for(int i = optind; i<argc;i++){
-    //   rep += argv[i];
-    //   rep += " ";
-    // }
-    // rep += " | sort -s -n -k 2 > "+g_args.prefix+".tsv";
-    // system(rep.c_str());
   } else if(cmd.compare("getmasked") == 0){
     opt = getopt( argc, argv, getmasked_opt_str);
     while( opt != -1 ) {
