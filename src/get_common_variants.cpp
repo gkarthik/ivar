@@ -27,18 +27,16 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
   std::string region, ref, alt;
   // Make sure format of header matches
   std::getline(fin, line);
-  while (std::getline(fin, line)){
-    line_stream << line;
-    ctr = 0;
-    pos = 0;
-    while(std::getline(line_stream,cell,'\t')){
-      if(cell.compare(fields[ctr]) != 0){
-	return -1;
-      }
-      ctr++;
+  line_stream << line;
+  ctr = 0;
+  pos = 0;
+  while(std::getline(line_stream,cell,'\t')){
+    if(cell.compare(fields[ctr]) != 0){
+      return -1;
     }
-    line_stream.clear();
+    ctr++;
   }
+  line_stream.clear();
   while (std::getline(fin, line)){
     line_stream << line;
     ctr = 0;
@@ -93,7 +91,9 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
   std::map<std::string, std::string> file_tab_delimited_str = std::map<std::string, std::string>();
   for (i = 0; i < nfiles; ++i) {
     fin.open(files[i]);
-    read_variant_file(fin, i, counts, file_tab_delimited_str);
+    if(read_variant_file(fin, i, counts, file_tab_delimited_str) != 0){
+      std::cout << "Header format did not match!" << std::endl;
+    }
     fin.close();
   }
   std::map<std::string, unsigned int>::iterator it = counts.begin();
@@ -102,7 +102,7 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
     fout << fields[i] << "\t";
   }
   for (i = 0; i < nfiles; ++i) {
-    for (i = 4; i < 14; ++i) {
+    for (j = 4; j < 14; ++j) {
       fout << fields[i] << "_" << files[i] << "\t";
     }
   }
@@ -120,22 +120,7 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
       }
       fout << "\n";
     }
+    it++;
   }
   return 0;
 }
-
-// Fields
-// "REGION"
-// "POS"
-// "REF"
-// "ALT"
-// "REF_DP"
-// "REF_RV"
-// "REF_QUAL"
-// "ALT_DP"
-// "ALT_RV"
-// "ALT_QUAL"
-// "ALT_FREQ"
-// "TOTAL_DP"
-// "PVAL"
-// "PASS"
