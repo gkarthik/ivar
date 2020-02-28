@@ -1,0 +1,141 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <map>
+
+const std::string fields[] = {"REGION"
+			,"POS"
+			,"REF"
+			,"ALT"
+			,"REF_DP"
+			,"REF_RV"
+			,"REF_QUAL"
+			,"ALT_DP"
+			,"ALT_RV"
+			,"ALT_QUAL"
+			,"ALT_FREQ"
+			,"TOTAL_DP"
+			,"PVAL"
+			,"PASS"};
+
+const std::string na_tab_delimited_str = "\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
+
+int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std::string, unsigned int> &counts, std::map<std::string, std::string> &file_tab_delimited_str){
+  unsigned int ctr, pos;
+  std::string line, cell, tab_delimited_key, tab_delimited_val;
+  std::stringstream line_stream;
+  std::string region, ref, alt;
+  // Make sure format of header matches
+  std::getline(fin, line);
+  while (std::getline(fin, line)){
+    line_stream << line;
+    ctr = 0;
+    pos = 0;
+    while(std::getline(line_stream,cell,'\t')){
+      if(cell.compare(fields[ctr]) != 0){
+	return -1;
+      }
+      ctr++;
+    }
+    line_stream.clear();
+  }
+  while (std::getline(fin, line)){
+    line_stream << line;
+    ctr = 0;
+    pos = 0;
+    tab_delimited_key = "";
+    tab_delimited_val = "";
+    while(std::getline(line_stream,cell,'\t')){
+      switch(ctr){
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+	tab_delimited_key += cell + "\t";
+	break;
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+      case 13:
+      case 14:
+      default:
+	tab_delimited_val += cell;
+	if(ctr < 14){
+	  tab_delimited_val += "\t";
+	}
+	break;
+      }
+      ctr++;
+    }
+    if(counts.find(tab_delimited_key) == counts.end()){
+      counts[tab_delimited_key] = 1;
+    } else {
+      counts[tab_delimited_key] += 1;
+    }
+    file_tab_delimited_str[tab_delimited_key + std::to_string(file_number)] = tab_delimited_val;
+    line_stream.clear();
+  }
+  return 0;
+}
+
+int common_variants(std::string out, double min_threshold, char* files[], int nfiles){
+  out += ".tsv";
+  std::ofstream fout(out.c_str());
+  unsigned int i, j;
+  std::ifstream fin;
+  std::map<std::string, unsigned int> counts = std::map<std::string, unsigned int>();
+  std::map<std::string, std::string> file_tab_delimited_str = std::map<std::string, std::string>();
+  for (i = 0; i < nfiles; ++i) {
+    fin.open(files[i]);
+    read_variant_file(fin, i, counts, file_tab_delimited_str);
+    fin.close();
+  }
+  std::map<std::string, unsigned int>::iterator it = counts.begin();
+  // Write header
+  for (i = 0; i < 4; ++i) {
+    fout << fields[i] << "\t";
+  }
+  for (i = 0; i < nfiles; ++i) {
+    for (i = 4; i < 14; ++i) {
+      fout << fields[i] << "_" << files[i] << "\t";
+    }
+  }
+  fout << "\n";
+  // Write rows
+  while(it != counts.end()){
+    if(((unsigned int)it->second)/nfiles >= min_threshold){ // Check if variant occurs in more 'min_threshold' fraction of files
+      fout << it->first;
+      for (j = 0; j < nfiles; ++j) {
+	if(file_tab_delimited_str.find(it->first + std::to_string(j)) == file_tab_delimited_str.end()){
+	  fout << na_tab_delimited_str;
+	} else {
+	  fout << file_tab_delimited_str[it->first + std::to_string(j)];
+	}
+      }
+      fout << "\n";
+    }
+  }
+  return 0;
+}
+
+// Fields
+// "REGION"
+// "POS"
+// "REF"
+// "ALT"
+// "REF_DP"
+// "REF_RV"
+// "REF_QUAL"
+// "ALT_DP"
+// "ALT_RV"
+// "ALT_QUAL"
+// "ALT_FREQ"
+// "TOTAL_DP"
+// "PVAL"
+// "PASS"

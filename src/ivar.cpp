@@ -13,6 +13,7 @@
 #include "trim_primer_quality.h"
 #include "get_masked_amplicons.h"
 #include "suffix_tree.h"
+#include "get_common_variants.h"
 
 const std::string VERSION = "1.0";
 
@@ -150,10 +151,10 @@ void print_version_info(){
 }
 
 static const char *trim_opt_str = "i:b:p:m:q:s:eh?";
-static const char *variants_opt_str = "p:t:q:h?";
+static const char *variants_opt_str = "p:t:q:m:h?";
 static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
-static const char *filtervariants_opt_str = "p:h?";
+static const char *filtervariants_opt_str = "p:t:h?";
 static const char *getmasked_opt_str = "i:b:f:p:h?";
 static const char *trimadapter_opt_str = "1:2:p:a:h?";
 
@@ -373,10 +374,14 @@ int main(int argc, char* argv[]){
     res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, g_args.bed, cl_cmd.str());
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
+    g_args.min_threshold = 1;
     while( opt != -1 ) {
       switch( opt ) {
       case 'p':
 	g_args.prefix = optarg;
+	break;
+      case 't':
+	g_args.min_threshold = atof(optarg);
 	break;
       case 'h':
       case '?':
@@ -395,13 +400,14 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
-    std::string rep = "get_common_variants.sh ";
-    for(int i = optind; i<argc;i++){
-      rep += argv[i];
-      rep += " ";
-    }
-    rep += " | sort -s -n -k 2 > "+g_args.prefix+".tsv";
-    system(rep.c_str());
+    res = common_variants(g_args.prefix, g_args.min_threshold, argv + optind, argc - optind);
+    // std::string rep = "get_common_variants.sh ";
+    // for(int i = optind; i<argc;i++){
+    //   rep += argv[i];
+    //   rep += " ";
+    // }
+    // rep += " | sort -s -n -k 2 > "+g_args.prefix+".tsv";
+    // system(rep.c_str());
   } else if(cmd.compare("getmasked") == 0){
     opt = getopt( argc, argv, getmasked_opt_str);
     while( opt != -1 ) {

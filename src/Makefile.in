@@ -104,7 +104,7 @@ am_ivar_OBJECTS = ivar.$(OBJEXT) call_consensus_pileup.$(OBJEXT) \
 	trim_primer_quality.$(OBJEXT) \
 	remove_reads_from_amplicon.$(OBJEXT) call_variants.$(OBJEXT) \
 	primer_bed.$(OBJEXT) allele_functions.$(OBJEXT) \
-	get_masked_amplicons.$(OBJEXT)
+	get_masked_amplicons.$(OBJEXT) get_common_variants.$(OBJEXT)
 ivar_OBJECTS = $(am_ivar_OBJECTS)
 am__DEPENDENCIES_1 =
 ivar_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -127,6 +127,7 @@ am__depfiles_remade = ./$(DEPDIR)/alignment.Po \
 	./$(DEPDIR)/allele_functions.Po \
 	./$(DEPDIR)/call_consensus_pileup.Po \
 	./$(DEPDIR)/call_variants.Po \
+	./$(DEPDIR)/get_common_variants.Po \
 	./$(DEPDIR)/get_masked_amplicons.Po ./$(DEPDIR)/ivar.Po \
 	./$(DEPDIR)/primer_bed.Po \
 	./$(DEPDIR)/remove_reads_from_amplicon.Po \
@@ -266,7 +267,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ivar_SOURCES = ivar.cpp call_consensus_pileup.cpp alignment.cpp suffix_tree.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp get_masked_amplicons.cpp
+ivar_SOURCES = ivar.cpp call_consensus_pileup.cpp alignment.cpp suffix_tree.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp get_masked_amplicons.cpp get_common_variants.cpp
 ivar_LDADD = $(LIBS)
 all: all-am
 
@@ -358,6 +359,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/allele_functions.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/call_consensus_pileup.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/call_variants.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_common_variants.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/get_masked_amplicons.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ivar.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/primer_bed.Po@am__quote@ # am--include-marker
@@ -518,6 +520,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/allele_functions.Po
 	-rm -f ./$(DEPDIR)/call_consensus_pileup.Po
 	-rm -f ./$(DEPDIR)/call_variants.Po
+	-rm -f ./$(DEPDIR)/get_common_variants.Po
 	-rm -f ./$(DEPDIR)/get_masked_amplicons.Po
 	-rm -f ./$(DEPDIR)/ivar.Po
 	-rm -f ./$(DEPDIR)/primer_bed.Po
@@ -573,6 +576,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/allele_functions.Po
 	-rm -f ./$(DEPDIR)/call_consensus_pileup.Po
 	-rm -f ./$(DEPDIR)/call_variants.Po
+	-rm -f ./$(DEPDIR)/get_common_variants.Po
 	-rm -f ./$(DEPDIR)/get_masked_amplicons.Po
 	-rm -f ./$(DEPDIR)/ivar.Po
 	-rm -f ./$(DEPDIR)/primer_bed.Po
