@@ -18,7 +18,7 @@ const std::string fields[] = {"REGION"
 			,"PVAL"
 			,"PASS"};
 
-const std::string na_tab_delimited_str = "\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
+const std::string na_tab_delimited_str = "NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
 
 int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std::string, unsigned int> &counts, std::map<std::string, std::string> &file_tab_delimited_str){
   unsigned int ctr, pos;
@@ -109,7 +109,7 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
   fout << "\n";
   // Write rows
   while(it != counts.end()){
-    if(((unsigned int)it->second)/nfiles >= min_threshold){ // Check if variant occurs in more 'min_threshold' fraction of files
+    if(((float)it->second)/(float)nfiles >= min_threshold){ // Check if variant occurs in more 'min_threshold' fraction of files
       fout << it->first;
       for (j = 0; j < nfiles; ++j) {
 	if(file_tab_delimited_str.find(it->first + std::to_string(j)) == file_tab_delimited_str.end()){
