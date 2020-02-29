@@ -4,6 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 #include <sstream>
 #include <vector>
 
@@ -35,6 +36,7 @@ struct args_t {
   char gap;			// -n
   bool keep_min_coverage;	// -k
   std::string primer_pair_file;	// -f
+  std::string file_list;		// -f
   bool write_no_primers_flag;	// -e
 } g_args;
 
@@ -82,10 +84,11 @@ void print_variants_usage(){
 
 void print_filtervariants_usage(){
   std::cout <<
-    "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... \n\n"
+    "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... OR ivar filtervariants -p <prefix> -f <text file with one variant file per line> \n"
     "Input: Variant tsv files for each replicate/sample\n\n"
     "Input Options    Description\n"
     "           -t    Minimum fration of files required to contain the same variant. Specify value within [0,1]. (Default: 1)\n"
+    "           -f    A text file with one variant file per line.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered tsv file\n";
 }
@@ -156,7 +159,7 @@ static const char *trim_opt_str = "i:b:p:m:q:s:eh?";
 static const char *variants_opt_str = "p:t:q:m:h?";
 static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
-static const char *filtervariants_opt_str = "p:t:h?";
+static const char *filtervariants_opt_str = "p:t:f:h?";
 static const char *getmasked_opt_str = "i:b:f:p:h?";
 static const char *trimadapter_opt_str = "1:2:p:a:h?";
 
@@ -385,6 +388,9 @@ int main(int argc, char* argv[]){
       case 't':
 	g_args.min_threshold = atof(optarg);
 	break;
+      case 'f':
+	g_args.file_list = optarg;
+	break;
       case 'h':
       case '?':
 	print_filtervariants_usage();
@@ -397,7 +403,7 @@ int main(int argc, char* argv[]){
       print_filtervariants_usage();
       return -1;
     }
-    if(optind >= argc){
+    if(optind >= argc && g_args.file_list.empty()){
       print_filtervariants_usage();
       return -1;
     }
@@ -406,7 +412,31 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
-    res = common_variants(g_args.prefix, g_args.min_threshold, argv + optind, argc - optind);
+    // Read files from list
+    char **files = new char*[100];
+    int nfiles = 100, ctr = 0;
+    std::string line;
+    if (!g_args.file_list.empty()){	// File list supplied
+      std::ifstream file_fin = std::ifstream(g_args.file_list);
+      while (std::getline(file_fin, line)){
+	files[ctr] = strdup(line.c_str());
+	if(ctr == nfiles - 1){
+	  nfiles += 100;
+	  *files = (char*) realloc(*files, nfiles * (sizeof(char*)));
+	}
+	ctr++;
+      }
+      file_fin.close();
+      nfiles = (nfiles > ctr) ? ctr : nfiles;
+      res = common_variants(g_args.prefix, g_args.min_threshold, files, nfiles);
+      // Free files, nfiles
+      for (int i = 0; i < nfiles; ++i) {
+	free(files[i]);
+      }
+      free(files);
+    } else {
+      res = common_variants(g_args.prefix, g_args.min_threshold, argv + optind, argc - optind);
+    }
   } else if(cmd.compare("getmasked") == 0){
     opt = getopt( argc, argv, getmasked_opt_str);
     while( opt != -1 ) {

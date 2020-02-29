@@ -1,6 +1,6 @@
 LIBS = -lhts -lz -lpthread
 
-CXXFLAGS = -g -std=c++11
+CXXFLAGS = -g -std=c++11 -Wall -Wextra
 
 TESTS = check_quality_trim check_consensus check_allele_depth check_consensus_threshold check_consensus_min_depth check_primer_bed check_getmasked check_removereads check_variants check_common_variants
 check_PROGRAMS = check_quality_trim check_consensus check_allele_depth check_consensus_threshold check_consensus_min_depth check_primer_bed check_getmasked check_removereads check_variants check_common_variants
