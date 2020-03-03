@@ -50,7 +50,7 @@ int write_aa(std::ofstream &fout, uint64_t start_pos, uint64_t pos, char *ref_se
   fout << codon2aa(*(ref_seq + start_pos), *(ref_seq + start_pos + 1), *(ref_seq + start_pos + 2)) << "\t";
   for (tmp = 0 ; tmp < 3; ++tmp) {
     if(pos - 1 == start_pos + tmp){
-      fout << alt; // Only 1 character if not insertion or deletion
+      fout << alt;
       aa_codon[tmp] = alt;
     } else {
       fout << *(ref_seq + start_pos + tmp);
@@ -71,7 +71,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
   char *ref_seq;
   int ref_len;
   std::vector<gff3_feature> features;
-  fai = fai_load(ref_path.c_str());
+  if(!ref_path.empty())
+    fai = fai_load(ref_path.c_str());
   if(!fai && !ref_path.empty()){
     std::cout << "Reference file does not exist at " << ref_path << std::endl;
     return -1;
@@ -118,7 +119,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	// Read new reference if region changes
 	if (region.compare(cell) != 0){
 	  region = cell;
-	  ref_seq = fai_fetch(fai, region.c_str(), &ref_len);
+	  if(fai)
+	    ref_seq = fai_fetch(fai, region.c_str(), &ref_len);
 	}
 	break;
       case 1:
@@ -126,7 +128,10 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	break;
       case 2:
 	// Read from ref if ref_seq is set, else read from mpileup
-	ref = (ref_seq == NULL) ? cell[0] : *(ref_seq + (pos - 1));
+	if(fai)
+	  ref = (ref_seq == NULL) ? cell[0] : *(ref_seq + (pos - 1));
+	else
+	  ref = cell[0];
 	break;
       case 3:
 	mdepth = stoi(cell);
@@ -199,23 +204,28 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       } else {
 	out_str << "FALSE" << "\t";
       }
-      // Codons and amino acids for only snvs
+      // Codons and amino acids for only CDS
       features = gff.query_features(pos, "CDS");
-      if(!features.empty() && it->nuc[0] != '+' && it->nuc[0] != '-'){
+      if(!features.empty() && it->nuc[0] != '+' && it->nuc[0] != '-'){ // Remove insertions and deletions for aa
 	std::vector<gff3_feature>::iterator gff_it;
 	// Write variant line for each ORF
 	for(gff_it = features.begin(); gff_it != features.end(); ++gff_it){
 	  fout << out_str.str();
-	  start_pos = (gff_it->get_start() - 1) + ((pos-1)/3)*3;
+	  start_pos = (gff_it->get_start() - 1) + ((pos - ((gff_it->get_start())))/3)*3; // Start position of codon: 0 based
 	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"));
 	}
       } else {
 	// If empty start translation from first ORF
 	fout << out_str.str();
-	if(gff.empty()){	// GFF never populated
-	  start_pos = ((pos-1)/3)*3; // Start from pos 1
-	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1");
-	} else {		// GFF given but no features matched
+	if(fai){	// Reference sequence supplied
+	  if(gff.empty()){	       // GFF not supplied so translate from ORF1
+	    start_pos = ((pos-1)/3)*3; // Start from pos 1
+	    write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1");
+	  } else {		// GFF supplied but no GFF features match
+	    fout << "\t\t\t\t\t";
+	    fout << std::endl;
+	  }
+	} else {		// Reference not supplied
 	  fout << "\t\t\t\t\t";
 	  fout << std::endl;
 	}
