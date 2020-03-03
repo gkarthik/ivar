@@ -1,0 +1,3 @@
+## GFF3 file format
+test	Genbank	primer_binding_site	2	290	.	+	.	ID=id-test1;Note=daft punk
+test	Genbank	long_terminal_repeat	1	55	.	+	.	ID=id-test2;Note=random access memories
