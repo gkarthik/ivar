@@ -97,6 +97,10 @@ uint64_t gff3_feature::get_end(){
   return end;
 }
 
+std::string gff3_feature::get_type(){
+  return type;
+}
+
 int gff3::print(){
   std::vector<gff3_feature>::iterator it;
   for(it = features.begin(); it != features.end(); it++){
@@ -134,10 +138,12 @@ int gff3::read_file(std::string path){
   return 0;
 }
 
-std::vector<gff3_feature> gff3::query_features(uint64_t pos){
+std::vector<gff3_feature> gff3::query_features(uint64_t pos, std::string type){
   std::vector<gff3_feature>::iterator it;
   std::vector<gff3_feature> res;
   for(it = features.begin(); it != features.end(); it++){
+    if(it->get_type() != type)
+      continue;
     if(pos >= it->get_start() && pos <= it->get_end()){
       res.push_back(*it);
     }

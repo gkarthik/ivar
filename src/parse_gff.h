@@ -57,7 +57,7 @@ public:
   std::vector<gff3_feature> get_features();
   int print();
   int read_file(std::string path);
-  std::vector<gff3_feature> query_features(uint64_t pos);
+  std::vector<gff3_feature> query_features(uint64_t pos, std::string type);
   int get_count();
   bool empty();
 
