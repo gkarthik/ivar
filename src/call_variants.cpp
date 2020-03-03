@@ -46,12 +46,14 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
   char *ref_seq;
   int ref_len;
   fai = fai_load(ref_path.c_str());
-  if(!fai){
+  if(!fai && !ref_path.empty()){
     std::cout << "Reference file does not exist at " << ref_path << std::endl;
     return -1;
   }
   // Read GFF file
-  gff3 gff(gff_path);
+  gff3 gff;
+  if(!gff_path.empty())
+    gff.read_file(gff_path);
   std::ofstream fout((out_file+".tsv").c_str());
   fout << "REGION"
     "\tPOS"
@@ -81,13 +83,18 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     while(std::getline(lineStream,cell,'\t')){
       switch(ctr){
       case 0:
-	region = cell;
+	// Read new reference if region changes
+	if (region.compare(cell) != 0){
+	  region = cell;
+	  ref_seq = fai_fetch(fai, region.c_str(), &ref_len);
+	}
 	break;
       case 1:
 	pos = stoi(cell);
 	break;
       case 2:
-	ref = cell[0];
+	// Read from ref if ref_seq is set, else read from mpileup
+	ref = (ref_seq == NULL) ? cell[0] : *(ref_seq + (pos - 1));
 	break;
       case 3:
 	mdepth = stoi(cell);
