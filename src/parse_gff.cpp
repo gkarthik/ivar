@@ -121,3 +121,14 @@ int gff3::read_file(std::string path){
   }
   return 0;
 }
+
+std::vector<gff3_feature> gff3::query_features(uint64_t pos){
+  std::vector<gff3_feature>::iterator it;
+  std::vector<gff3_feature> res;
+  for(it = features.begin(); it != features.end(); it++){
+    if(pos >= it->get_start() && pos <= it->get_end()){
+      res.push_back(*it);
+    }
+  }
+  return res;
+}

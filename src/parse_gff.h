@@ -50,7 +50,6 @@ private:
   char strand, phase;
 };
 
-
 class gff3{
 public:
   gff3();
@@ -58,6 +57,8 @@ public:
   std::vector<gff3_feature> get_features();
   int print();
   int read_file(std::string path);
+  std::vector<gff3_feature> query_features(uint64_t pos);
+  int get_count();
 
 private:
   std::vector<gff3_feature> features;
