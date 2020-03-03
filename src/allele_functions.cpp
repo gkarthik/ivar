@@ -264,13 +264,13 @@ char gt2iupac(char a, char b){
     ['CCA', 'CCT', 'CCG', 'CCC']]]
  */
 
-char codon2aa(char *codon){
-  if ( codon[0]>='a' ) codon[0] -= 'a' - 'A';
-  if ( codon[1]>='a' ) codon[1] -= 'a' - 'A';
-  if ( codon[2]>='a' ) codon[2] -= 'a' - 'A';
-  int _n1 = get_index(codon[0]),
-    _n2 = get_index(codon[1]),
-    _n3 = get_index(codon[2]);
+char codon2aa(char n1, char n2, char n3){
+  if ( n1>='a' ) n1 -= 'a' - 'A';
+  if ( n2>='a' ) n2 -= 'a' - 'A';
+  if ( n3>='a' ) n3 -= 'a' - 'A';
+  int _n1 = get_index(n1),
+    _n2 = get_index(n2),
+    _n3 = get_index(n3);
   static const char iupac_aa[4][4][4] = {
     {
       {'K', 'N', 'K', 'N'},	// 'AAA', 'AAT', 'AAG', 'AAC'
