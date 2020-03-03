@@ -200,7 +200,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	out_str << "FALSE" << "\t";
       }
       // Codons and amino acids for only snvs
-      features = gff.query_features(pos);
+      features = gff.query_features(pos, "CDS");
       if(!features.empty() && it->nuc[0] != '+' && it->nuc[0] != '-'){
 	std::vector<gff3_feature>::iterator gff_it;
 	// Write variant line for each ORF
@@ -212,11 +212,11 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       } else {
 	// If empty start translation from first ORF
 	fout << out_str.str();
-	if(gff.empty()){	// GFF given but no features
+	if(gff.empty()){	// GFF never populated
 	  start_pos = ((pos-1)/3)*3; // Start from pos 1
 	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1");
-	} else {		// No GFF or empty GFF provided
-	  fout << "\t\t\t\t";
+	} else {		// GFF given but no features matched
+	  fout << "\t\t\t\t\t";
 	  fout << std::endl;
 	}
       }
