@@ -59,6 +59,7 @@ public:
   int read_file(std::string path);
   std::vector<gff3_feature> query_features(uint64_t pos);
   int get_count();
+  bool empty();
 
 private:
   std::vector<gff3_feature> features;

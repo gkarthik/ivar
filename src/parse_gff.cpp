@@ -132,3 +132,13 @@ std::vector<gff3_feature> gff3::query_features(uint64_t pos){
   }
   return res;
 }
+
+int gff3::get_count(){
+  return features.size();
+}
+
+bool gff3::empty(){
+  if(this->get_count() == 0)
+    return true;
+  return false;
+}
