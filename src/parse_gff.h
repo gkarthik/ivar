@@ -7,6 +7,8 @@
 
 /* 
 GFF3 file format:
+Defined at https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
+
 | Col        | Desc                                                          |
 | seqid      | ID of ref                                                     |
 | source     | algorithm/operating procedure                                 |
