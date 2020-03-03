@@ -32,7 +32,7 @@ public:
   uint64_t get_start();
   uint64_t get_end();
   char get_strand();
-  char get_phase();
+  int get_phase();
   std::map<std::string, std::string> get_attributes();
   std::string get_attribute(std::string key);
 
@@ -49,7 +49,8 @@ private:
   std::map<std::string, std::string> attributes;
   uint64_t start, end;
   float score;
-  char strand, phase;
+  char strand;
+  int phase;
 };
 
 class gff3{

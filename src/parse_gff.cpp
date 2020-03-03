@@ -36,7 +36,7 @@ gff3_feature::gff3_feature(std::string line){
       this->strand = cell[0];
       break;
     case 7:
-      this->phase = cell[0];
+      this->phase = stoi(cell);
       break;
     case 8:
       this->set_attributes(cell);
@@ -95,6 +95,10 @@ uint64_t gff3_feature::get_start(){
 
 uint64_t gff3_feature::get_end(){
   return end;
+}
+
+int gff3_feature::get_phase(){
+  return phase;
 }
 
 std::string gff3_feature::get_type(){
