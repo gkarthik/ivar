@@ -69,12 +69,16 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tTOTAL_DP"
     "\tPVAL"
     "\tPASS"
+    "\tREF_CODON"
+    "\tREF_AA"
+    "\tALT_CODON"
+    "\tALT_AA"
        << std::endl;
   int ctr = 0, pos = 0;
   uint32_t mdepth = 0, pdepth = 0; // mpdepth for mpileup depth and pdeth for ungapped depth at position
   double pval_left, pval_right, pval_twotailed, *freq_depth, err;
   std::stringstream lineStream;
-  char ref;
+  char ref, *ref_codon = new char[3], *alt_codon = new char[3];
   std::vector<allele> ad;
   std::vector<allele>::iterator ref_it;
   while (std::getline(cin, line)){
