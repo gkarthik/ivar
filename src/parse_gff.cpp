@@ -101,18 +101,23 @@ std::vector<gff3_feature> gff3::get_features(){
   return features;
 }
 
-gff3::gff3(std::ifstream &fin){
+gff3::gff3(){}
+
+gff3::gff3(std::string path){
+  this->read_file(path);
+}
+
+int gff3::read_file(std::string path){
+  std::ifstream fin = std::ifstream(path);
+  if(!fin){
+    std::cout << "GFF file does not exist at " << path << std::endl;
+    return -1;
+  }
   std::string line;
   while (std::getline(fin, line)){
     if(line[0] == '#' && line[1] == '#') // Avoid comments in GFF file
       continue;
     features.push_back(gff3_feature(line));
   }
-}
-
-int main(int argc, char *argv[]){
-  std::ifstream fin = std::ifstream(argv[1]);
-  gff3 gff(fin);
-  gff.print();
   return 0;
 }

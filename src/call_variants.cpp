@@ -9,8 +9,11 @@
 #include<cmath>
 #include<htslib/kfunc.h>
 #include "htslib/kfunc.h"
+#include "htslib/faidx.h"
+#include "htslib/hts.h"
 
 #include "allele_functions.h"
+#include "parse_gff.h"
 
 const char gap='N';
 const float sig_level = 0.01;
@@ -36,8 +39,19 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
   return val;
 }
 
-int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold, uint8_t min_depth){
+int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold, uint8_t min_depth, std::string ref_path, std::string gff_path){
   std::string line, cell, bases, qualities, region;
+  // Read reference file
+  faidx_t *fai = NULL;
+  char *ref_seq;
+  int ref_len;
+  fai = fai_load(ref_path.c_str());
+  if(!fai){
+    std::cout << "Reference file does not exist at " << ref_path << std::endl;
+    return -1;
+  }
+  // Read GFF file
+  gff3 gff(gff_path);
   std::ofstream fout((out_file+".tsv").c_str());
   fout << "REGION"
     "\tPOS"

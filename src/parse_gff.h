@@ -53,9 +53,11 @@ private:
 
 class gff3{
 public:
-  gff3(std::ifstream &fin);
+  gff3();
+  gff3(std::string path);
   std::vector<gff3_feature> get_features();
   int print();
+  int read_file(std::string path);
 
 private:
   std::vector<gff3_feature> features;

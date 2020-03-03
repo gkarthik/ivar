@@ -16,7 +16,7 @@
 #include "suffix_tree.h"
 #include "get_common_variants.h"
 
-const std::string VERSION = "1.0.2";
+const std::string VERSION = "1.1";
 
 struct args_t {
   std::string bam;		// -i
@@ -38,11 +38,12 @@ struct args_t {
   std::string primer_pair_file;	// -f
   std::string file_list;		// -f
   bool write_no_primers_flag;	// -e
+  std::string gff;		// -g
 } g_args;
 
 void print_usage(){
   std::cout <<
-    "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|getmasked|removereads|version|help>]\n"
+    "Usage:	ivar [command <trim|variants|filtervariants|consensus|getmasked|removereads|version|help>]\n"
     "\n"
     "        Command       Description\n"
     "           trim       Trim reads in aligned BAM file\n"
@@ -72,12 +73,14 @@ void print_trim_usage(){
 
 void print_variants_usage(){
   std::cout <<
-      "Usage: samtools mpileup -A -d 0 --reference <reference-fasta> -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>]\n\n"
+      "Usage: samtools mpileup -A -d 0 -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
     "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n"
-    "           -m    Minimum read depth to call variants (Default: 0)\n\n"
+    "           -m    Minimum read depth to call variants (Default: 0)\n"
+    "           -r    Reference file used for alignment. This is used to translate the nucleotide sequences and identify intra host single nucleotide variants\n"
+    "           -g    A GFF file in the GFF3 format can be supplied to specify coordinates of open reading frames (ORFs). In absence of a GFF file, ivar will start translation from the first ORF\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output tsv variant file\n\n";
 }
@@ -156,7 +159,7 @@ void print_version_info(){
 }
 
 static const char *trim_opt_str = "i:b:p:m:q:s:eh?";
-static const char *variants_opt_str = "p:t:q:m:h?";
+static const char *variants_opt_str = "p:t:q:m:r:g:h?";
 static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
 static const char *filtervariants_opt_str = "p:t:f:h?";
@@ -249,6 +252,8 @@ int main(int argc, char* argv[]){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;
     g_args.min_depth = 0;
+    g_args.ref = "";
+    g_args.gff = "";
     opt = getopt( argc, argv, variants_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -264,6 +269,12 @@ int main(int argc, char* argv[]){
       case 'm':
 	g_args.min_depth = std::stoi(optarg);
 	break;
+      case 'r':
+	g_args.ref = optarg;
+	break;
+      case 'g':
+	g_args.gff = optarg;
+	break;
       case 'h':
       case '?':
 	print_variants_usage();
@@ -276,6 +287,10 @@ int main(int argc, char* argv[]){
       print_variants_usage();
       return -1;
     }
+    if(g_args.gff.empty())
+      std::cout << "A GFF file containing the open reading frames (ORFs) has not been provided. Amino acid translation will begin from the first ORF." << std::endl;
+    if(g_args.ref.empty())
+      std::cout << "A reference sequence has not been supplied. Amino acid metrics will not be calculated." << std::endl;
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     g_args.min_threshold = (g_args.min_threshold < 0 || g_args.min_threshold > 1) ? 0.03: g_args.min_threshold;
     if(isatty(STDIN_FILENO)){
@@ -283,7 +298,7 @@ int main(int argc, char* argv[]){
       print_variants_usage();
       return -1;
     }
-    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth);
+    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.ref, g_args.gff);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.min_threshold = 0;
