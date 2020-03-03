@@ -64,7 +64,7 @@ int gff3_feature::print(){
   return 0;
 }
 
-std::string gff3_feature::get_attr(std::string key){
+std::string gff3_feature::get_attribute(std::string key){
   std::string val;
   if(attributes.find(key) != attributes.end()){
     val = attributes[key];
@@ -87,6 +87,14 @@ int gff3_feature::set_attributes(std::string attr){
     ++it;
   }
   return 0;
+}
+
+uint64_t gff3_feature::get_start(){
+  return start;
+}
+
+uint64_t gff3_feature::get_end(){
+  return end;
 }
 
 int gff3::print(){

@@ -32,7 +32,7 @@ public:
   char get_strand();
   char get_phase();
   std::map<std::string, std::string> get_attributes();
-  std::string get_attr(std::string key);
+  std::string get_attribute(std::string key);
 
   int set_seqid();
   int set_source();
