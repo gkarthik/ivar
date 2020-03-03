@@ -241,3 +241,78 @@ char gt2iupac(char a, char b){
     return 'N';
   return iupac[_a][_b];
 }
+
+/*
+  ATGC: 6,7,8,9 indices set up with get_index()
+  Stop codon: *
+  Unknown codon: X
+  [[['AAA', 'AAT', 'AAG', 'AAC'],
+    ['ATA', 'ATT', 'ATG', 'ATC'],
+    ['AGA', 'AGT', 'AGG', 'AGC'],
+    ['ACA', 'ACT', 'ACG', 'ACC']],
+   [['TAA', 'TAT', 'TAG', 'TAC'],
+    ['TTA', 'TTT', 'TTG', 'TTC'],
+    ['TGA', 'TGT', 'TGG', 'TGC'],
+    ['TCA', 'TCT', 'TCG', 'TCC']],
+   [['GAA', 'GAT', 'GAG', 'GAC'],
+    ['GTA', 'GTT', 'GTG', 'GTC'],
+    ['GGA', 'GGT', 'GGG', 'GGC'],
+    ['GCA', 'GCT', 'GCG', 'GCC']],
+   [['CAA', 'CAT', 'CAG', 'CAC'],
+    ['CTA', 'CTT', 'CTG', 'CTC'],
+    ['CGA', 'CGT', 'CGG', 'CGC'],
+    ['CCA', 'CCT', 'CCG', 'CCC']]]
+ */
+
+char codon2aa(char n1, char n2, char n3){
+  if ( n1>='a' ) n1 -= 'a' - 'A';
+  if ( n2>='a' ) n2 -= 'a' - 'A';
+  if ( n3>='a' ) n2 -= 'a' - 'A';
+  int _n1 = get_index(n1),
+    _n2 = get_index(n2),
+    _n3 = get_index(n3);
+  static const char iupac_aa[4][4][4] = {
+    {
+      {'K', 'N', 'K', 'N'},	// 'AAA', 'AAT', 'AAG', 'AAC'
+      {'I', 'I', 'M', 'I'},	// 'ATA', 'ATT', 'ATG', 'ATC'
+      {'R', 'S', 'R', 'S'},	// 'AGA', 'AGT', 'AGG', 'AGC'
+      {'T', 'T', 'T', 'T'}	// 'ACA', 'ACT', 'ACG', 'ACC'
+    },
+    {
+      {'*', 'Y', '*', 'Y'},	// 'TAA', 'TAT', 'TAG', 'TAC'
+      {'L', 'F', 'L', 'F'},	// 'TTA', 'TTT', 'TTG', 'TTC'
+      {'*', 'C', 'W', 'C'},	// 'TGA', 'TGT', 'TGG', 'TGC'
+      {'S', 'S', 'S', 'S'}	// 'TCA', 'TCT', 'TCG', 'TCC'
+    },
+    {
+      {'E', 'D', 'E', 'D'},	// 'GAA', 'GAT', 'GAG', 'GAC'
+      {'V', 'V', 'V', 'V'},	// 'GTA', 'GTT', 'GTG', 'GTC'
+      {'G', 'G', 'G', 'G'},	// 'GGA', 'GGT', 'GGG', 'GGC'
+      {'A', 'A', 'A', 'A'}	// 'GCA', 'GCT', 'GCG', 'GCC'
+    },
+    {
+      {'Q', 'H', 'Q', 'H'},	// 'CAA', 'CAT', 'CAG', 'CAC'
+      {'L', 'L', 'L', 'L'},	// 'CTA', 'CTT', 'CTG', 'CTC'
+      {'R', 'R', 'R', 'R'},	// 'CGA', 'CGT', 'CGG', 'CGC'
+      {'P', 'P', 'P', 'P'}	// 'CCA', 'CCT', 'CCG', 'CCC'
+    }
+  };
+  if((_n1 < 6) || (_n1 > 9) || (_n2 < 6) || (_n2 > 9) || (_n3 < 6) || (_n3 > 9))
+    return 'X';
+  return iupac_aa[_n1-6][_n2-6][_n3-6];
+}
+
+int main(int argc, char *argv[])
+{
+  char a[] = {'A', 'T', 'G', 'C'};
+  for (int i = 0; i < 4; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      for (int k = 0; k < 4; ++k) {
+	std::cout << a[i] << a[j] << a[k] << " -> " << codon2aa(a[i],a[j],a[k]) << " , ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  }
+  return 0;
+}
