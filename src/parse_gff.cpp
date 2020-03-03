@@ -109,9 +109,12 @@ std::vector<gff3_feature> gff3::get_features(){
   return features;
 }
 
-gff3::gff3(){}
+gff3::gff3(){
+  this->is_empty = true;
+}
 
 gff3::gff3(std::string path){
+  this->is_empty = true;
   this->read_file(path);
 }
 
@@ -127,6 +130,7 @@ int gff3::read_file(std::string path){
       continue;
     features.push_back(gff3_feature(line));
   }
+  this->is_empty = false;
   return 0;
 }
 
@@ -146,7 +150,5 @@ int gff3::get_count(){
 }
 
 bool gff3::empty(){
-  if(this->get_count() == 0)
-    return true;
-  return false;
+  return is_empty;
 }

@@ -63,6 +63,8 @@ public:
 
 private:
   std::vector<gff3_feature> features;
+  // Flag to see if file has been populated
+  bool is_empty;
 };
 
 #endif
