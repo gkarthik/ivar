@@ -34,3 +34,7 @@ ref_antd::ref_antd(std::string ref_path, std::string gff_path){
   this->add_seq(ref_path);
   this->add_gff(gff_path);
 }
+
+std::ostringstream ref_antd::codon_aa_stream(std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
+  
+}

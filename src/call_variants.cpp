@@ -74,7 +74,7 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
 
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold, uint8_t min_depth, std::string ref_path, std::string gff_path){
   std::string line, cell, bases, qualities, region;
-  ref_antd ref_antd(ref_path, gff_path);
+  ref_antd refantd(ref_path, gff_path);
   char *ref_codon = new char[3], *alt_codon = new char[3];
   std::ostringstream out_str;
   std::ofstream fout((out_file+".tsv").c_str());
@@ -98,8 +98,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tALT_CODON"
     "\tALT_AA"
        << std::endl;
-  int ctr = 0, pos = 0, tmp;
-  int64_t start_pos = 0;
+  int ctr = 0, tmp;
+  int64_t start_pos = 0, pos = 0;
   uint32_t mdepth = 0, pdepth = 0; // mpdepth for mpileup depth and pdeth for ungapped depth at position
   double pval_left, pval_right, pval_twotailed, *freq_depth, err;
   std::stringstream line_stream;
@@ -119,7 +119,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	break;
       case 2:
 	// Read from ref if ref_seq is set, else read from mpileup
-	ref = ref_antd.get_base(pos, region);
+	ref = refantd.get_base(pos, region);
 	ref = (ref == 0) ? cell[0] : ref;
 	break;
       case 3:
@@ -194,7 +194,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	out_str << "FALSE" << "\t";
       }
       if(it->nuc[0] != '+'){
-	ref_antd.codon_aa_stream(out_str, fout, pos, it->nuc[0]);
+	refantd.codon_aa_stream(out_str, fout, pos, it->nuc[0]);
       } else {
 	fout << "\t\t\t\t\t";
       }

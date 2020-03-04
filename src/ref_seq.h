@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include <htslib/faidx.h>
 #include "parse_gff.h"

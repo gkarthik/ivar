@@ -105,7 +105,7 @@ am_ivar_OBJECTS = ivar.$(OBJEXT) call_consensus_pileup.$(OBJEXT) \
 	remove_reads_from_amplicon.$(OBJEXT) call_variants.$(OBJEXT) \
 	primer_bed.$(OBJEXT) allele_functions.$(OBJEXT) \
 	get_masked_amplicons.$(OBJEXT) get_common_variants.$(OBJEXT) \
-	parse_gff.$(OBJEXT)
+	parse_gff.$(OBJEXT) ref_seq.$(OBJEXT)
 ivar_OBJECTS = $(am_ivar_OBJECTS)
 am__DEPENDENCIES_1 =
 ivar_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -131,6 +131,7 @@ am__depfiles_remade = ./$(DEPDIR)/alignment.Po \
 	./$(DEPDIR)/get_common_variants.Po \
 	./$(DEPDIR)/get_masked_amplicons.Po ./$(DEPDIR)/ivar.Po \
 	./$(DEPDIR)/parse_gff.Po ./$(DEPDIR)/primer_bed.Po \
+	./$(DEPDIR)/ref_seq.Po \
 	./$(DEPDIR)/remove_reads_from_amplicon.Po \
 	./$(DEPDIR)/suffix_tree.Po ./$(DEPDIR)/trim_primer_quality.Po
 am__mv = mv -f
@@ -268,7 +269,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ivar_SOURCES = ivar.cpp call_consensus_pileup.cpp alignment.cpp suffix_tree.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp get_masked_amplicons.cpp get_common_variants.cpp parse_gff.cpp
+ivar_SOURCES = ivar.cpp call_consensus_pileup.cpp alignment.cpp suffix_tree.cpp trim_primer_quality.cpp remove_reads_from_amplicon.cpp call_variants.cpp primer_bed.cpp allele_functions.cpp get_masked_amplicons.cpp get_common_variants.cpp parse_gff.cpp ref_seq.cpp 
 ivar_LDADD = $(LIBS)
 all: all-am
 
@@ -365,6 +366,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ivar.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parse_gff.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/primer_bed.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ref_seq.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/remove_reads_from_amplicon.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/suffix_tree.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trim_primer_quality.Po@am__quote@ # am--include-marker
@@ -527,6 +529,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/ivar.Po
 	-rm -f ./$(DEPDIR)/parse_gff.Po
 	-rm -f ./$(DEPDIR)/primer_bed.Po
+	-rm -f ./$(DEPDIR)/ref_seq.Po
 	-rm -f ./$(DEPDIR)/remove_reads_from_amplicon.Po
 	-rm -f ./$(DEPDIR)/suffix_tree.Po
 	-rm -f ./$(DEPDIR)/trim_primer_quality.Po
@@ -584,6 +587,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/ivar.Po
 	-rm -f ./$(DEPDIR)/parse_gff.Po
 	-rm -f ./$(DEPDIR)/primer_bed.Po
+	-rm -f ./$(DEPDIR)/ref_seq.Po
 	-rm -f ./$(DEPDIR)/remove_reads_from_amplicon.Po
 	-rm -f ./$(DEPDIR)/suffix_tree.Po
 	-rm -f ./$(DEPDIR)/trim_primer_quality.Po

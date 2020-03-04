@@ -585,7 +585,6 @@ PACKAGE_STRING='ivar 1.0.2'
 PACKAGE_BUGREPORT='gkarthik@scripps.edu'
 PACKAGE_URL=''
 
-ac_unique_file="src/alignment.cpp"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -2989,7 +2988,6 @@ END
     as_fn_error $? "Your 'rm' program is bad, sorry." "$LINENO" 5
   fi
 fi
-
 
 ac_config_headers="$ac_config_headers config.h"
 
