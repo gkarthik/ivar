@@ -7,11 +7,39 @@ char ref_antd::get_base(int64_t pos, std::string region){
 }
 
 char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature){
-  
+  int64_t edit_pos = feature.get_edit_position(), codon_start_pos;
+  std::string edit_sequence = feature.get_edit_sequence();
+  char *codon = new char[3];
+  int i;
+  if(edit_pos == -1 || pos < edit_pos){
+    codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos - (feature.get_start() + feature.get_phase())))/3)*3;
+    for (i=0; i < 3; ++i) {
+      codon[i] = *(seq+ codon_start_pos + i);
+    }
+  } else if (pos >= edit_pos && pos <= edit_pos + edit_sequence.size()){
+    codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_sequence.size() - (feature.get_start() + feature.get_phase())))/3)*3;
+    for (i = 0; i < 3; ++i) {
+      if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos +i <= edit_pos - 1 + edit_sequence.size()){
+	codon[i] = edit_sequence[(codon_start_pos +i) - (edit_pos - 1)];
+      } else {
+	codon[i] = *(seq + codon_start_pos + i - edit_sequence.size()); // Subtract edit seq from ref and give nucleotide
+      }
+    }
+  } else {			// pos > edit_pos
+    codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_sequence.size() - (feature.get_start() + feature.get_phase())))/3)*3;
+    for (i = 0; i < 3; ++i) {
+      codon[i] = *(seq + codon_start_pos + i - edit_sequence.size()); // Subtract edit seq from ref and give nucleotide
+    }
+  }
+  return codon;
 }
 
 char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature, char alt){
-  
+  char *codon = new char[3];
+  codon[0] = 'N';
+  codon[1] = 'N';
+  codon[2] = 'N';
+  return codon;
 }
 
 int ref_antd::add_gff(std::string path){
