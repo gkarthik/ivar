@@ -15,6 +15,7 @@
 #include "allele_functions.h"
 #include "parse_gff.h"
 
+const std::string EMPTY_AA_FIELDS = "\t\t\t\t\t";
 const char gap='N';
 const float sig_level = 0.01;
 
@@ -39,10 +40,19 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
   return val;
 }
 
-int write_aa(std::ofstream &fout, uint64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len){
-  if(pos < 1 || start_pos < 1 || pos > ref_len || start_pos + 2 > ref_len){
-    std::cout << "Position exceeds length of reference sequence. Please make sure the right GFF file and/or reference sequence has been provided";
+int64_t calculate_codon_start_position(uint64_t feature_start, uint64_t current_pos, int phase, int ref_len){
+  int64_t start_pos;
+  start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3;
+  if(current_pos < start_pos || current_pos > start_pos + 2){ // Cases where current_pos is not contained in any CDS
     return -1;
+  }
+  return start_pos;
+}
+
+int write_aa(std::ofstream &fout, int64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len){
+  if(start_pos < 0 || start_pos + 2 > ref_len){ // Cases where the current_pos is not part of a codon presnt within reference sequence length.
+    fout << EMPTY_AA_FIELDS << std::endl;
+    fout << std::endl;
   }
   int tmp;
   char *aa_codon = new char[3];
@@ -107,7 +117,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tALT_AA"
        << std::endl;
   int ctr = 0, pos = 0, tmp;
-  uint64_t start_pos = 0;
+  int64_t start_pos = 0;
   uint32_t mdepth = 0, pdepth = 0; // mpdepth for mpileup depth and pdeth for ungapped depth at position
   double pval_left, pval_right, pval_twotailed, *freq_depth, err;
   std::stringstream lineStream;
@@ -215,26 +225,22 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	// Write variant line for each ORF
 	for(gff_it = features.begin(); gff_it != features.end(); ++gff_it){
 	  fout << out_str.str();
-	  start_pos = (gff_it->get_start() - 1) + ((pos - ((gff_it->get_start())))/3)*3; // Start position of codon: 0 based
-	  if(write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"), ref_len) < 0){
-	    return -1;
-	  }
+	  start_pos = calculate_codon_start_position(gff_it->get_start(), pos, gff_it->get_phase(), ref_len);
+	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"), ref_len);;
 	}
       } else {
 	// If empty start translation from first ORF
 	fout << out_str.str();
 	if(fai){	// Reference sequence supplied
 	  if(gff.empty()){	       // GFF not supplied so translate from ORF1
-	    start_pos = ((pos-1)/3)*3; // Start from pos 1
-	    if(write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1", ref_len) < 0){
-	      return -1;
-	    }
+	    // start_pos = ((pos-1)/3)*3; // Start from pos 1
+	    write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1", ref_len);
 	  } else {		// GFF supplied but no GFF features match
-	    fout << "\t\t\t\t\t";
+	    fout << EMPTY_AA_FIELDS;
 	    fout << std::endl;
 	  }
 	} else {		// Reference not supplied
-	  fout << "\t\t\t\t\t";
+	  fout << EMPTY_AA_FIELDS;
 	  fout << std::endl;
 	}
       }
