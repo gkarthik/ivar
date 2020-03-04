@@ -39,7 +39,11 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
   return val;
 }
 
-int write_aa(std::ofstream &fout, uint64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id){
+int write_aa(std::ofstream &fout, uint64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len){
+  if(pos < 1 || start_pos < 1 || pos > ref_len || start_pos + 2 > ref_len){
+    std::cout << "Position exceeds length of reference sequence. Please make sure the right GFF file and/or reference sequence has been provided";
+    return -1;
+  }
   int tmp;
   char *aa_codon = new char[3];
   fout << orf_id << "\t";
@@ -212,7 +216,9 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	for(gff_it = features.begin(); gff_it != features.end(); ++gff_it){
 	  fout << out_str.str();
 	  start_pos = (gff_it->get_start() - 1) + ((pos - ((gff_it->get_start())))/3)*3; // Start position of codon: 0 based
-	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"));
+	  if(write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"), ref_len) < 0){
+	    return -1;
+	  }
 	}
       } else {
 	// If empty start translation from first ORF
@@ -220,7 +226,9 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	if(fai){	// Reference sequence supplied
 	  if(gff.empty()){	       // GFF not supplied so translate from ORF1
 	    start_pos = ((pos-1)/3)*3; // Start from pos 1
-	    write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1");
+	    if(write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1", ref_len) < 0){
+	      return -1;
+	    }
 	  } else {		// GFF supplied but no GFF features match
 	    fout << "\t\t\t\t\t";
 	    fout << std::endl;
