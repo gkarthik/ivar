@@ -40,35 +40,46 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
   return val;
 }
 
-int64_t calculate_codon_start_position(uint64_t feature_start, uint64_t current_pos, int phase, int ref_len){
-  int64_t start_pos;
-  start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3;
-  if(current_pos < start_pos || current_pos > start_pos + 2){ // Cases where current_pos is not contained in any CDS
-    return -1;
+char get_ref_base(char* ref_seq, int64_t pos_offset, int64_t edit_pos, std::string edit_seq){
+  if(edit_pos == -1 || pos_offset < edit_pos){
+    return *(ref_seq + pos_offset); // Before edit_pos or no edit
+  } else if(pos_offset > edit_pos - 1 + edit_seq.size()){ // Curent position is after edit so just change positions
+    return *(ref_seq + pos_offset + edit_seq.size());
   }
+  // Current position is within the edited region: (pos_offset >= edit_pos - 1 && pos_offset <= edit_pos -1 + edit_seq.size())
+  return edit_seq[pos_offset - (edit_pos - 1)];
+}
+
+int64_t calculate_codon_start_position(uint64_t feature_start, uint64_t current_pos, int phase, int ref_len, int64_t edit_pos, std::string edit_seq){
+  int64_t start_pos;
+  if(edit_pos == -1 || current_pos < edit_pos)
+    start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3;
+  else if(current_pos >= edit_pos)
+    start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3; // Add edit_seq.size() here
   return start_pos;
 }
 
-int write_aa(std::ofstream &fout, int64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len){
-  if(start_pos < 0 || start_pos + 2 > ref_len){ // Cases where the current_pos is not part of a codon presnt within reference sequence length.
+int write_aa(std::ofstream &fout, int64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len, int64_t edit_pos, std::string edit_seq){
+  if(start_pos < 0 || start_pos + 2 > ref_len + edit_seq.size()){ // Cases where the current_pos is not part of a codon presnt within reference sequence length plus edit_seq which is 0 by default
     fout << EMPTY_AA_FIELDS << std::endl;
     fout << std::endl;
   }
   int tmp;
-  char *aa_codon = new char[3];
+  char *aa_codon = new char[3], *ref_codon = new char[3];
   fout << orf_id << "\t";
   for (tmp = 0 ; tmp < 3; ++tmp) {
-    fout << *(ref_seq + start_pos + tmp);
+    ref_codon[tmp] = get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
+    fout << ref_codon[tmp];
   }
   fout << "\t";
-  fout << codon2aa(*(ref_seq + start_pos), *(ref_seq + start_pos + 1), *(ref_seq + start_pos + 2)) << "\t";
+  fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
   for (tmp = 0 ; tmp < 3; ++tmp) {
     if(pos - 1 == start_pos + tmp){
       fout << alt;
       aa_codon[tmp] = alt;
     } else {
-      fout << *(ref_seq + start_pos + tmp);
-      aa_codon[tmp] = *(ref_seq + start_pos + tmp);
+      fout << get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
+      aa_codon[tmp] = get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
     }
   }
   fout << "\t";
@@ -225,16 +236,16 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	// Write variant line for each ORF
 	for(gff_it = features.begin(); gff_it != features.end(); ++gff_it){
 	  fout << out_str.str();
-	  start_pos = calculate_codon_start_position(gff_it->get_start(), pos, gff_it->get_phase(), ref_len);
-	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"), ref_len);;
+	  start_pos = calculate_codon_start_position(gff_it->get_start(), pos, gff_it->get_phase(), ref_len, gff_it->get_edit_position(), gff_it->get_edit_sequence());
+	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"), ref_len, gff_it->get_edit_position(), gff_it->get_edit_sequence() );
 	}
       } else {
 	// If empty start translation from first ORF
 	fout << out_str.str();
 	if(fai){	// Reference sequence supplied
 	  if(gff.empty()){	       // GFF not supplied so translate from ORF1
-	    // start_pos = ((pos-1)/3)*3; // Start from pos 1
-	    write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1", ref_len);
+	    start_pos = calculate_codon_start_position(1, pos, 0, ref_len, -1, "");
+	    write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1", ref_len, -1, "");
 	  } else {		// GFF supplied but no GFF features match
 	    fout << EMPTY_AA_FIELDS;
 	    fout << std::endl;
