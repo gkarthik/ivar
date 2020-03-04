@@ -1,14 +1,3 @@
-#include<stdint.h>
-#include<iostream>
-#include<fstream>
-#include<sstream>
-#include<vector>
-#include<algorithm>
-#include<string>
-#include<regex>
-#include<libgen.h>
-
-#include "allele_functions.h"
 #include "call_consensus_pileup.h"
 
 void format_alleles(std::vector<allele> &ad){

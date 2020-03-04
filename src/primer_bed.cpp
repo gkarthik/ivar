@@ -1,8 +1,3 @@
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <fstream>
-
 #include "primer_bed.h"
 
 std::string primer::get_name(){

@@ -1,7 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <map>
+#include "get_common_variants.h"
 
 const std::string fields[] = {"REGION"
 			,"POS"

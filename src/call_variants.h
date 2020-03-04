@@ -1,4 +1,16 @@
-#include<iostream>
+#include <stdint.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+#include <string>
+#include <regex>
+#include <cmath>
+#include <htslib/kfunc.h>
+
+#include "allele_functions.h"
+#include "ref_seq.h"
 
 #ifndef call_variants
 #define call_variants

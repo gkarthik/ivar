@@ -1,5 +1,7 @@
-#include<string>
-#include<vector>
+#include <iostream>
+#include <vector>
+#include <sstream>
+#include <fstream>
 
 #ifndef primer_bed
 #define primer_bed

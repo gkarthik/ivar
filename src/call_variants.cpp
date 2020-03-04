@@ -1,21 +1,5 @@
-#include<stdint.h>
-#include<iostream>
-#include<fstream>
-#include<sstream>
-#include<vector>
-#include<algorithm>
-#include<string>
-#include<regex>
-#include<cmath>
-#include<htslib/kfunc.h>
-#include "htslib/kfunc.h"
-#include "htslib/faidx.h"
-#include "htslib/hts.h"
+#include "call_variants.h"
 
-#include "allele_functions.h"
-#include "parse_gff.h"
-
-const std::string EMPTY_AA_FIELDS = "\t\t\t\t\t";
 const char gap='N';
 const float sig_level = 0.01;
 
@@ -40,72 +24,59 @@ double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){
   return val;
 }
 
-char get_ref_base(char* ref_seq, int64_t pos_offset, int64_t edit_pos, std::string edit_seq){
-  if(edit_pos == -1 || pos_offset < edit_pos){
-    return *(ref_seq + pos_offset); // Before edit_pos or no edit
-  } else if(pos_offset > edit_pos - 1 + edit_seq.size()){ // Curent position is after edit so just change positions
-    return *(ref_seq + pos_offset + edit_seq.size());
-  }
-  // Current position is within the edited region: (pos_offset >= edit_pos - 1 && pos_offset <= edit_pos -1 + edit_seq.size())
-  return edit_seq[pos_offset - (edit_pos - 1)];
-}
+// char get_ref_base(char* ref_seq, int64_t pos_offset, int64_t edit_pos, std::string edit_seq){
+//   if(edit_pos == -1 || pos_offset < edit_pos){
+//     return *(ref_seq + pos_offset); // Before edit_pos or no edit
+//   } else if(pos_offset > edit_pos - 1 + edit_seq.size()){ // Curent position is after edit so just change positions
+//     return *(ref_seq + pos_offset + edit_seq.size());
+//   }
+//   // Current position is within the edited region: (pos_offset >= edit_pos - 1 && pos_offset <= edit_pos -1 + edit_seq.size())
+//   return edit_seq[pos_offset - (edit_pos - 1)];
+// }
 
-int64_t calculate_codon_start_position(uint64_t feature_start, uint64_t current_pos, int phase, int ref_len, int64_t edit_pos, std::string edit_seq){
-  int64_t start_pos;
-  if(edit_pos == -1 || current_pos < edit_pos)
-    start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3;
-  else if(current_pos >= edit_pos)
-    start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3; // Add edit_seq.size() here
-  return start_pos;
-}
+// int64_t calculate_codon_start_position(uint64_t feature_start, uint64_t current_pos, int phase, int ref_len, int64_t edit_pos, std::string edit_seq){
+//   int64_t start_pos;
+//   if(edit_pos == -1 || current_pos < edit_pos)
+//     start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3;
+//   else if(current_pos >= edit_pos)
+//     start_pos = (feature_start - 1) + (((current_pos - (feature_start + phase)))/3)*3; // Add edit_seq.size() here
+//   return start_pos;
+// }
 
-int write_aa(std::ofstream &fout, int64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len, int64_t edit_pos, std::string edit_seq){
-  if(start_pos < 0 || start_pos + 2 > ref_len + edit_seq.size()){ // Cases where the current_pos is not part of a codon presnt within reference sequence length plus edit_seq which is 0 by default
-    fout << EMPTY_AA_FIELDS << std::endl;
-    fout << std::endl;
-  }
-  int tmp;
-  char *aa_codon = new char[3], *ref_codon = new char[3];
-  fout << orf_id << "\t";
-  for (tmp = 0 ; tmp < 3; ++tmp) {
-    ref_codon[tmp] = get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
-    fout << ref_codon[tmp];
-  }
-  fout << "\t";
-  fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
-  for (tmp = 0 ; tmp < 3; ++tmp) {
-    if(pos - 1 == start_pos + tmp){
-      fout << alt;
-      aa_codon[tmp] = alt;
-    } else {
-      fout << get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
-      aa_codon[tmp] = get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
-    }
-  }
-  fout << "\t";
-  fout << codon2aa(aa_codon[0], aa_codon[1], aa_codon[2]);
-  fout << std::endl;
-  return 0;
-}
+// int write_aa(std::ofstream &fout, int64_t start_pos, uint64_t pos, char *ref_seq, char alt, std::string orf_id, int ref_len, int64_t edit_pos, std::string edit_seq){
+//   if(start_pos < 0 || start_pos + 2 > ref_len + edit_seq.size()){ // Cases where the current_pos is not part of a codon presnt within reference sequence length plus edit_seq which is 0 by default
+//     fout << EMPTY_AA_FIELDS << std::endl;
+//     fout << std::endl;
+//   }
+//   int tmp;
+//   char *aa_codon = new char[3], *ref_codon = new char[3];
+//   fout << orf_id << "\t";
+//   for (tmp = 0 ; tmp < 3; ++tmp) {
+//     ref_codon[tmp] = get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
+//     fout << ref_codon[tmp];
+//   }
+//   fout << "\t";
+//   fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
+//   for (tmp = 0 ; tmp < 3; ++tmp) {
+//     if(pos - 1 == start_pos + tmp){
+//       fout << alt;
+//       aa_codon[tmp] = alt;
+//     } else {
+//       fout << get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
+//       aa_codon[tmp] = get_ref_base(ref_seq, start_pos + tmp, edit_pos, edit_seq);
+//     }
+//   }
+//   fout << "\t";
+//   fout << codon2aa(aa_codon[0], aa_codon[1], aa_codon[2]);
+//   fout << std::endl;
+//   return 0;
+// }
 
 int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold, uint8_t min_depth, std::string ref_path, std::string gff_path){
   std::string line, cell, bases, qualities, region;
+  ref_antd ref_antd(ref_path, gff_path);
+  char *ref_codon = new char[3], *alt_codon = new char[3];
   std::ostringstream out_str;
-  // Read reference file
-  faidx_t *fai = NULL;
-  char *ref_seq;
-  int ref_len;
-  std::vector<gff3_feature> features;
-  if(!ref_path.empty())
-    fai = fai_load(ref_path.c_str());
-  if(!fai && !ref_path.empty()){
-    std::cout << "Reference file does not exist at " << ref_path << std::endl;
-    return -1;
-  }
-  // Read GFF file
-  gff3 gff;
-  if(!gff_path.empty())
-    gff.read_file(gff_path);
   std::ofstream fout((out_file+".tsv").c_str());
   fout << "REGION"
     "\tPOS"
@@ -131,32 +102,25 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
   int64_t start_pos = 0;
   uint32_t mdepth = 0, pdepth = 0; // mpdepth for mpileup depth and pdeth for ungapped depth at position
   double pval_left, pval_right, pval_twotailed, *freq_depth, err;
-  std::stringstream lineStream;
+  std::stringstream line_stream;
   char ref;
   std::vector<allele> ad;
   std::vector<allele>::iterator ref_it;
   while (std::getline(cin, line)){
-    lineStream << line;
+    line_stream << line;
     ctr = 0;
-    while(std::getline(lineStream,cell,'\t')){
+    while(std::getline(line_stream,cell,'\t')){
       switch(ctr){
       case 0:
-	// Read new reference if region changes
-	if (region.compare(cell) != 0){
-	  region = cell;
-	  if(fai)
-	    ref_seq = fai_fetch(fai, region.c_str(), &ref_len);
-	}
+	region = cell;
 	break;
       case 1:
 	pos = stoi(cell);
 	break;
       case 2:
 	// Read from ref if ref_seq is set, else read from mpileup
-	if(fai)
-	  ref = (ref_seq == NULL) ? cell[0] : *(ref_seq + (pos - 1));
-	else
-	  ref = cell[0];
+	ref = ref_antd.get_base(pos, region);
+	ref = (ref == 0) ? cell[0] : ref;
 	break;
       case 3:
 	mdepth = stoi(cell);
@@ -173,12 +137,12 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       ctr++;
     }
     if(mdepth < min_depth) {	// Check for minimum depth
-      lineStream.clear();
+      line_stream.clear();
       continue;
     }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     if(ad.size() == 0){
-      lineStream.clear();
+      line_stream.clear();
       continue;
     }
     ref_it = get_ref_allele(ad, ref);
@@ -229,36 +193,13 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       } else {
 	out_str << "FALSE" << "\t";
       }
-      // Codons and amino acids for only CDS
-      features = gff.query_features(pos, "CDS");
-      if(!features.empty() && it->nuc[0] != '+' && it->nuc[0] != '-'){ // Remove insertions and deletions for aa
-	std::vector<gff3_feature>::iterator gff_it;
-	// Write variant line for each ORF
-	for(gff_it = features.begin(); gff_it != features.end(); ++gff_it){
-	  fout << out_str.str();
-	  start_pos = calculate_codon_start_position(gff_it->get_start(), pos, gff_it->get_phase(), ref_len, gff_it->get_edit_position(), gff_it->get_edit_sequence());
-	  write_aa(fout, start_pos, pos, ref_seq, it->nuc[0],  gff_it->get_attribute("ID"), ref_len, gff_it->get_edit_position(), gff_it->get_edit_sequence() );
-	}
+      if(it->nuc[0] != '+'){
+	ref_antd.codon_aa_stream(out_str, fout, pos, it->nuc[0]);
       } else {
-	// If empty start translation from first ORF
-	fout << out_str.str();
-	if(fai){	// Reference sequence supplied
-	  if(gff.empty()){	       // GFF not supplied so translate from ORF1
-	    start_pos = calculate_codon_start_position(1, pos, 0, ref_len, -1, "");
-	    write_aa(fout, start_pos, pos, ref_seq, it->nuc[0], "ORF1", ref_len, -1, "");
-	  } else {		// GFF supplied but no GFF features match
-	    fout << EMPTY_AA_FIELDS;
-	    fout << std::endl;
-	  }
-	} else {		// Reference not supplied
-	  fout << EMPTY_AA_FIELDS;
-	  fout << std::endl;
-	}
+	fout << "\t\t\t\t\t";
       }
-      out_str.str("");
-      out_str.clear();
     }
-    lineStream.clear();
+    line_stream.clear();
   }
   fout.close();
   return 0;

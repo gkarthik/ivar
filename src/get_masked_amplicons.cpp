@@ -1,9 +1,4 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
-
-#include "primer_bed.h"
+#include "get_masked_amplicons.h"
 
 int get_primers_with_mismatches(std::string bed, std::string vpath, std::string out, std::string primer_pair_file){
   std::vector<primer> primers = populate_from_file(bed);

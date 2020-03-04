@@ -1,5 +1,13 @@
-#include<iostream>
 #include<stdint.h>
+#include<iostream>
+#include<fstream>
+#include<sstream>
+#include<vector>
+#include<algorithm>
+#include<string>
+#include<regex>
+#include<libgen.h>
+
 #include "allele_functions.h"
 
 #ifndef call_consensus_from_pileup

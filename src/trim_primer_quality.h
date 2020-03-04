@@ -1,9 +1,17 @@
-#include<iostream>
-#include<vector>
-#include<stdint.h>
+#include "htslib/sam.h"
+#include "htslib/bgzf.h"
+
+#include <stdint.h>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <cstring>
+#include <string.h>
 
 #include "primer_bed.h"
-#include "htslib/sam.h"
 
 #ifndef trim_primer_quality
 #define trim_primer_quality

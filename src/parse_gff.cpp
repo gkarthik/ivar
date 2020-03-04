@@ -1,10 +1,3 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <regex>
-#include <map>
-#include <iterator>
-
 #include "parse_gff.h"
 
 gff3_feature::gff3_feature(std::string line){

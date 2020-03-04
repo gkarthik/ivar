@@ -1,5 +1,10 @@
+#include "primer_bed.h"
+#include "trim_primer_quality.h"
+#include "htslib/sam.h"
+#include "htslib/bgzf.h"
+
 #include<iostream>
-#include<stdint.h>
+#include <stdint.h>
 
 #ifndef removereads_from_amplicon
 #define removereads_from_amplicon

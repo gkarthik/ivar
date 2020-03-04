@@ -1,3 +1,8 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+
 #include "primer_bed.h"
 
 #ifndef get_masked_amplicons

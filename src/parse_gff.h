@@ -1,9 +1,12 @@
-#include<string>
-#include<map>
-#include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <regex>
+#include <map>
+#include <iterator>
 
 #ifndef parse_gff
-#define pare_gff
+#define parse_gff
 
 /* 
 GFF3 file format:

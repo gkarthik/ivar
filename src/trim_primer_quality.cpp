@@ -1,18 +1,4 @@
-#include "htslib/sam.h"
-#include "htslib/bgzf.h"
-
-#include <stdint.h>
-#include <iostream>
-#include <stdexcept>
-#include <string>
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <cstring>
-#include <string.h>
-
 #include "trim_primer_quality.h"
-#include "primer_bed.h"
 
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start){
   int cig;
