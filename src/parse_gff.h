@@ -21,6 +21,17 @@ Defined at https://github.com/The-Sequence-Ontology/Specifications/blob/master/g
 | attributes | list of attributes in the format tag=value;tag-value..        |
 */
 
+/* 
+Custom GFF3 attributes for RNA editing
+
+EditPosition: Position to make insertion
+EditSequence: Sequence to be inserted
+
+*/
+
+const std::string EDIT_POSITION = "EditPosition";
+const std::string EDIT_SEQUENCE = "EditSequence";
+
 class gff3_feature{
 public:
   gff3_feature(std::string line);
@@ -44,6 +55,9 @@ public:
   int set_strand();
   int set_phase();
   int set_attributes(std::string attr);
+  int64_t get_edit_position();
+  std::string get_edit_sequence();
+  
 private:
   std::string seqid, source, type;
   std::map<std::string, std::string> attributes;

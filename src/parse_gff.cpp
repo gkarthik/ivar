@@ -36,7 +36,7 @@ gff3_feature::gff3_feature(std::string line){
       this->strand = cell[0];
       break;
     case 7:
-      this->phase = stoi(cell);
+      this->phase = atoi(cell.c_str());
       break;
     case 8:
       this->set_attributes(cell);
@@ -103,6 +103,30 @@ int gff3_feature::get_phase(){
 
 std::string gff3_feature::get_type(){
   return type;
+}
+
+int64_t gff3_feature::get_edit_position(){
+  int64_t edit_pos = -1;
+  std::map<std::string, std::string>::iterator it;
+  for (it = attributes.begin(); it != attributes.end(); it++){
+    if(it->first.compare(EDIT_POSITION) == 0){
+      edit_pos = stoi(it->second);
+      break;
+    }
+  }
+  return edit_pos;
+}
+
+std::string gff3_feature::get_edit_sequence(){
+  std::string edit_seq = "";
+  std::map<std::string, std::string>::iterator it;
+  for (it = attributes.begin(); it != attributes.end(); it++){
+    if(it->first.compare(EDIT_SEQUENCE) == 0){
+      edit_seq = it->second;
+      break;
+    }
+  }
+  return edit_seq;
 }
 
 int gff3::print(){
