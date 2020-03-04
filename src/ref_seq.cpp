@@ -1,12 +1,16 @@
 #include "ref_seq.h"
 
 char ref_antd::get_base(int64_t pos, std::string region){
+  int len;
+  seq = fai_fetch(fai, region.c_str(), &len);
   if(seq == nullptr)
     return UNKNOWN_BASE;
   return *(seq + (pos - 1));
 }
 
 char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature){
+  int len;
+  seq = fai_fetch(fai, region.c_str(), &len);
   int64_t edit_pos = feature.get_edit_position(), codon_start_pos;
   std::string edit_sequence = feature.get_edit_sequence();
   char *codon = new char[3];
@@ -19,8 +23,8 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature)
   } else if (pos >= edit_pos && pos <= edit_pos + edit_sequence.size()){
     codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_sequence.size() - (feature.get_start() + feature.get_phase())))/3)*3;
     for (i = 0; i < 3; ++i) {
-      if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos +i <= edit_pos - 1 + edit_sequence.size()){
-	codon[i] = edit_sequence[(codon_start_pos +i) - (edit_pos - 1)];
+      if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos +i <= edit_pos - 1 + edit_sequence.size() - 1){
+	codon[i] = edit_sequence[(codon_start_pos +i) - (edit_pos - 1) - edit_sequence.size()];
       } else {
 	codon[i] = *(seq + codon_start_pos + i - edit_sequence.size()); // Subtract edit seq from ref and give nucleotide
       }
@@ -69,7 +73,7 @@ ref_antd::ref_antd(std::string ref_path, std::string gff_path){
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
   std::vector<gff3_feature>::iterator it;
-  char *ref_codon = new char[3], *alt_codon = new char[3];
+  char *ref_codon, *alt_codon;
   for(it = features.begin(); it != features.end(); it++){
     fout << line_stream.str() << "\t";
     fout << it->get_attribute("ID") << "\t";
@@ -84,4 +88,8 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
   line_stream.str("");
   line_stream.clear();
   return 0;
+}
+
+std::vector<gff3_feature> ref_antd::get_gff_features(){
+  return gff.get_features();
 }
