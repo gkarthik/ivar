@@ -15,24 +15,19 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature)
   std::string edit_sequence = feature.get_edit_sequence();
   char *codon = new char[3];
   int i;
-  if(edit_pos == -1 || pos < edit_pos){
-    codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos - (feature.get_start() + feature.get_phase())))/3)*3;
-    for (i=0; i < 3; ++i) {
-      codon[i] = *(seq+ codon_start_pos + i);
-    }
-  } else if (pos >= edit_pos && pos <= edit_pos + edit_sequence.size()){
-    codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_sequence.size() - (feature.get_start() + feature.get_phase())))/3)*3;
-    for (i = 0; i < 3; ++i) {
-      if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos +i <= edit_pos - 1 + edit_sequence.size() - 1){
-	codon[i] = edit_sequence[(codon_start_pos +i) - (edit_pos - 1) - edit_sequence.size()];
-      } else {
-	codon[i] = *(seq + codon_start_pos + i - edit_sequence.size()); // Subtract edit seq from ref and give nucleotide
-      }
-    }
-  } else {			// pos > edit_pos
-    codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_sequence.size() - (feature.get_start() + feature.get_phase())))/3)*3;
-    for (i = 0; i < 3; ++i) {
-      codon[i] = *(seq + codon_start_pos + i - edit_sequence.size()); // Subtract edit seq from ref and give nucleotide
+  int64_t edit_offset = 0;
+  if(pos > edit_pos + edit_sequence.size() && edit_pos != -1){
+    edit_offset = (pos - edit_pos) > edit_sequence.size() ? edit_sequence.size() : (pos - edit_pos); // Account for edits in position of insertion
+  }
+  codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_offset - (feature.get_start() + feature.get_phase())))/3)*3;
+  for (i = 0; i < 3; ++i) {
+    if(codon_start_pos + i < edit_pos - 1 || edit_pos == -1){ // If before edit or with no edit
+      codon[i] = *(seq + codon_start_pos + i);
+    } else if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos + i <= edit_pos - 1 + edit_sequence.size() - 1){ // size() - 1 since edit_pos include one base already
+      codon[i] = edit_sequence[codon_start_pos + i - (edit_pos - 1)];
+    } else if(codon_start_pos + i > edit_pos - 1 + edit_sequence.size() - 1) {
+      edit_offset = (codon_start_pos + i) - (edit_pos - 1) > edit_sequence.size() ? edit_sequence.size() : (codon_start_pos + i) - (edit_pos - 1);
+      codon[i] = *(seq + codon_start_pos + i - edit_offset);
     }
   }
   return codon;
