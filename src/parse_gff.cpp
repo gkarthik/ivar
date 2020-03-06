@@ -37,6 +37,8 @@ gff3_feature::gff3_feature(std::string line){
     }
     ctr++;
   }
+  if(ctr < 9)
+    std::cout << "GFF file is not in GFF3 file format!" << std::endl;
   line_stream.clear();
 }
 
