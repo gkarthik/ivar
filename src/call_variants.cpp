@@ -70,9 +70,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	pos = stoi(cell);
 	break;
       case 2:
-	// Read from ref if ref_seq is set, else read from mpileup
 	ref = refantd.get_base(pos, region);
-	ref = (ref == 0) ? cell[0] : ref;
+	ref = (ref == 0) ? cell[0] : ref; // If ref does not exist then use from mpileup
 	break;
       case 3:
 	mdepth = stoi(cell);
