@@ -103,13 +103,13 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
   std::vector<gff3_feature>::iterator it;
   char *ref_codon, *alt_codon;
   for(it = features.begin(); it != features.end(); it++){
-    fout << line_stream.str() << "\t";
+    fout << line_stream.str();
     fout << it->get_attribute("ID") << "\t";
     ref_codon = this->get_codon(pos, region, *it);
-    fout << ref_codon << "\t";
+    fout << ref_codon[0] << ref_codon[1] << ref_codon[2] << "\t";
     fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
     alt_codon = this->get_codon(pos, region, *it, alt);
-    fout << alt_codon << "\t";
+    fout << alt_codon[0] << alt_codon[1] << alt_codon[2] << "\t";
     fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]);
     fout << std::endl;
   }
