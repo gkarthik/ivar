@@ -2,9 +2,11 @@
 
 char ref_antd::get_base(int64_t pos, std::string region){
   int len;
-  seq = fai_fetch(fai, region.c_str(), &len);
+  if(!region.empty() && fai != NULL){
+    seq = fai_fetch(fai, region.c_str(), &len);
+  }
   if(seq == NULL)
-    return UNKNOWN_BASE;
+    return 0;
   return *(seq + (pos - 1));
 }
 
@@ -75,6 +77,7 @@ int ref_antd::add_gff(std::string path){
 }
 
 int ref_antd::add_seq(std::string path){
+  fai = NULL;
   // Read reference file
   if(!path.empty())
     fai = fai_load(path.c_str());
@@ -86,7 +89,7 @@ int ref_antd::add_seq(std::string path){
 }
 
 ref_antd::ref_antd(std::string ref_path, std::string gff_path){
-  this->seq = nullptr;
+  this->seq = NULL;
   this->add_seq(ref_path);
   this->add_gff(gff_path);
 }
