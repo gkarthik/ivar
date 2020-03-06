@@ -80,7 +80,7 @@ void print_variants_usage(){
     "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n"
     "           -m    Minimum read depth to call variants (Default: 0)\n"
     "           -r    Reference file used for alignment. This is used to translate the nucleotide sequences and identify intra host single nucleotide variants\n"
-    "           -g    A GFF file in the GFF3 format can be supplied to specify coordinates of open reading frames (ORFs). In absence of a GFF file, ivar will start translation from the first ORF\n\n"
+    "           -g    A GFF file in the GFF3 format can be supplied to specify coordinates of open reading frames (ORFs). In absence of GFF file, amino acid translation will not be done.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output tsv variant file\n\n";
 }
@@ -288,9 +288,14 @@ int main(int argc, char* argv[]){
       return -1;
     }
     if(g_args.gff.empty())
-      std::cout << "A GFF file containing the open reading frames (ORFs) has not been provided. Amino acid translation will begin from the first ORF." << std::endl;
+      std::cout << "A GFF file containing the open reading frames (ORFs) has not been provided. Amino acid translation will not be done." << std::endl;
     if(g_args.ref.empty())
-      std::cout << "A reference sequence has not been supplied. Amino acid metrics will not be calculated." << std::endl;
+      std::cout << "A reference sequence has not been supplied. Amino acid translation will not be done." << std::endl;
+    if(!g_args.gff.empty() && g_args.ref.empty()){ // GFF specified but no reference then exit
+      std::cout << "Please specify reference (using -r) based on which the GFF file was computed." << std::endl;
+      print_variants_usage();
+      return -1;
+    }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     g_args.min_threshold = (g_args.min_threshold < 0 || g_args.min_threshold > 1) ? 0.03: g_args.min_threshold;
     if(isatty(STDIN_FILENO)){
