@@ -3,7 +3,7 @@
 char ref_antd::get_base(int64_t pos, std::string region){
   int len;
   seq = fai_fetch(fai, region.c_str(), &len);
-  if(seq == nullptr)
+  if(seq == NULL)
     return UNKNOWN_BASE;
   return *(seq + (pos - 1));
 }
@@ -21,7 +21,9 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature)
   }
   codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_offset - (feature.get_start() + feature.get_phase())))/3)*3;
   for (i = 0; i < 3; ++i) {
-    if(codon_start_pos + i < edit_pos - 1 || edit_pos == -1){ // If before edit or with no edit
+    if(codon_start_pos +i < feature.get_start() - 1 || codon_start_pos +i > feature.get_end() - 1){ // If before or after CDS region return 'N'.
+      codon[i] = 'N';
+    } else if(codon_start_pos + i < edit_pos - 1 || edit_pos == -1){ // If before edit or with no edit
       codon[i] = *(seq + codon_start_pos + i);
     } else if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos + i <= edit_pos - 1 + edit_sequence.size() - 1){ // size() - 1 since edit_pos include one base already
       codon[i] = edit_sequence[codon_start_pos + i - (edit_pos - 1)];
@@ -91,6 +93,10 @@ ref_antd::ref_antd(std::string ref_path, std::string gff_path){
 
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
+  if(features.size() == 0){	// No matching CDS
+    fout << line_stream.str() << "\t\t\t\t\t" << std::endl;
+    return 0;
+  }
   std::vector<gff3_feature>::iterator it;
   char *ref_codon, *alt_codon;
   for(it = features.begin(); it != features.end(); it++){
@@ -104,8 +110,6 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
     fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]);
     fout << std::endl;
   }
-  line_stream.str("");
-  line_stream.clear();
   return 0;
 }
 
