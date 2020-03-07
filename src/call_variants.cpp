@@ -147,7 +147,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       if(it->nuc[0] != '+' && it->nuc[0] != '-'){
 	refantd.codon_aa_stream(region, out_str, fout, pos, it->nuc[0]);
       } else {
-	fout << out_str.str() << "\t" << "\t\t\t\t\t" << std::endl;
+	fout << out_str.str() << "\t\t\t\t" << std::endl;
       }
       out_str.str("");
       out_str.clear();
