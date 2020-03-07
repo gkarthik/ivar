@@ -19,48 +19,49 @@ int main() {
   std::map<std::string, std::string>::iterator it = file_tab_delimited_str.begin();
   // Test tab delimited strings for test.1.tsv.
   std::string keys[] = {
-    "test\t320\tA\tT\t0",
-    "test\t331\tT\tG\t0",
-    "test\t331\tT\tG\t1",
-    "test\t365\tA\tT\t0",
-    "test\t365\tA\tT\t1",
-    "test\t365\tA\tT\t2",
-    "test\t42\tG\tT\t0",
-    "test\t42\tG\tT\t1",
-    "test\t42\tG\tT\t2"
+    "test\t42\tG\tT\tid-test3\tAGG\tR\tATG\tM\t0",
+    "test\t69\tT\tG\tid-test3\tTTG\tL\tTGG\tW\t0",
+    "test\t320\tA\tT\tNA\tNA\tNA\tNA\tNA\t2"
   };
   std::string values[] = {
-    "1\t1\t35\t1\t1\t46\t0.5\t2\t0.666667\tFALSE\t",
-    "1\t1\t20\t1\t1\t21\t0.5\t2\t0.666667\tFALSE\t",
-    "2\t2\t20\t2\t2\t21\t0.5\t2\t0.666667\tFALSE\t",
-    "0\t0\t0\t1\t1\t27\t1\t1\t1\tFALSE\t",
-    "0\t0\t0\t1\t1\t27\t1\t1\t1\tFALSE\t",
-    "0\t0\t0\t1\t1\t22\t1\t1\t1\tFALSE\t",
-    "0\t0\t0\t1\t0\t49\t1\t1\t1\tFALSE\t",
-    "0\t0\t0\t1\t0\t49\t1\t1\t1\tFALSE\t",
-    "0\t0\t0\t1\t0\t49\t1\t1\t1\tFALSE\t"
+    "0\t0\t0\t1\t0\t49\t1\t1\t1\tFALSE",
+    "1\t0\t57\t1\t0\t53\t0.5\t2\t0.666667\tFALSE",
+    "1\t1\t35\t1\t1\t46\t0.5\t2\t0.666667\tFALSE"
   };
   int ctr = 0;
-  while(it!=file_tab_delimited_str.end()){
-    if((it->first).compare(keys[ctr]) != 0 || (it->second).compare(values[ctr]) != 0){
+  while(it!=file_tab_delimited_str.end() && ctr < 2){
+    // Check if key in map
+    if(file_tab_delimited_str.find(keys[ctr]) == file_tab_delimited_str.end()){
+      std::cout << keys[ctr] << std::endl;
+      num_success = -1;
+    } else {
+      ctr++;
+    }
+    if((it->first).compare(keys[ctr]) == 0 && (it->second).compare(values[ctr]) != 0){ // Check if value of key matches
       std::cout << it->first << ": " << it->second << std::endl;
+      std::cout << keys[ctr] << ": " << values[ctr] << " -> Correct" << std::endl;
       num_success = -1;
     }
     it++;
-    ctr++;
   }
   // Test counts
   std::map<std::string, unsigned int>::iterator count_it = counts.begin();
-  std::string count_keys[] = {"test\t320\tA\tT\t", "test\t331\tT\tG\t", "test\t365\tA\tT\t", "test\t42\tG\tT\t"};
-  int count_values[] = {1, 2, 3, 3};
+  std::string count_keys[] = {"test\t42\tG\tT\tid-test3\tAGG\tR\tATG\tM\t", "test\t320\tA\tT\tNA\tNA\tNA\tNA\tNA\t", "test\t365\tA\tT\tNA\tNA\tNA\tNA\tNA\t", "test\t42\tG\tT\tid-test4\tCAG\tQ\tCAT\tH\t"};
+  int count_values[] = {1, 2, 3, 1};
   ctr = 0;
-  while(count_it!=counts.end()){
-    if((count_it->first).compare(count_keys[ctr]) != 0 || count_it->second != count_values[ctr]){
+  while(count_it!=counts.end() && ctr < 3){
+    if(counts.find(count_keys[ctr]) == counts.end()){
+      std::cout << count_keys[ctr] << std::endl;
+      num_success = -1;
+    } else {
+      ctr++;
+    }
+    if((count_it->first).compare(count_keys[ctr]) == 0 && count_it->second != count_values[ctr]){
       std::cout << count_it->first << ": " << count_it->second << std::endl;
+      std::cout << count_keys[ctr] << ": " << count_values[ctr] << " -> Correct" << std::endl;
       num_success = -1;
     }
     count_it++;
-    ctr++;
   }  
   if(num_success == 0)
     return 0;

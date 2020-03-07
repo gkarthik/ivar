@@ -25,7 +25,7 @@ int call_var_check_outfile(std::string prefix, uint8_t min_qual, uint8_t min_dep
 int main() {
   int num_success = 0;
   // Quality threshold 20. Frequency threshold: 0.03. Total_DP = 3. Indel passes filters with total_depth 4. Has two lines.
-  std::string t_20_02_1[4] = {"test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-test3\tAAG\tK\tATG\tM", "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-testedit1\tGAA\tE\tGAT\tD", "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-testedit2\tAGA\tR\tTGA\t*", "test\t210\tA\t+GT\t1\t1\t41\t1\t0\t20\t0.25\t4\t0.4\tFALSE\t\t\t\t\t"};
+  std::string t_20_02_1[4] = {"test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-test3\tAAG\tK\tATG\tM", "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-testedit1\tGAA\tE\tGAT\tD", "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-testedit2\tAGA\tR\tTGA\t*", "test\t210\tA\t+GT\t1\t1\t41\t1\t0\t20\t0.25\t4\t0.4\tFALSE\tNA\tNA\tNA\tNA\tNA"};
   // Quality threshold 3-. Frequency threshold: 0.03. Total_DP = 3. Freq = 0.666667 No Indel
   std::string t_20_03[3] = {"test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-test3\tAAG\tK\tATG\tM", "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-testedit1\tGAA\tE\tGAT\tD", "test\t210\tA\tT\t1\t1\t41\t2\t1\t40\t0.666667\t3\t0.2\tFALSE\tid-testedit2\tAGA\tR\tTGA\t*"};
   // Quality threshold 25. Frequency threshold: 0.03. Total_DP = 2. Freq = 0.5 No Indel.
