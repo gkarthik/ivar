@@ -21,7 +21,6 @@ bioRxiv doi: [https://doi.org/10.1101/383513](https://doi.org/10.1101/383513)
 ### Dependencies
 
 * [HTSlib](http://www.htslib.org/download/)
-* [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
 * [GCC](https://gcc.gnu.org/) any version after v5.0. Support for C++11 standard required.
 
 Note:

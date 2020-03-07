@@ -6,7 +6,6 @@ Installation {#installpage}
 ### Dependencies
 
 * [HTSlib](http://www.htslib.org/download/)
-* [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
 * [GCC](https://gcc.gnu.org/) any version after v5.0. Support for c++11 standard required.
 
 Note:
