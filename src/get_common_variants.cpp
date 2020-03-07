@@ -1,21 +1,26 @@
 #include "get_common_variants.h"
 
-const std::string fields[] = {"REGION"
-			,"POS"
-			,"REF"
-			,"ALT"
-			,"REF_DP"
-			,"REF_RV"
-			,"REF_QUAL"
-			,"ALT_DP"
-			,"ALT_RV"
-			,"ALT_QUAL"
-			,"ALT_FREQ"
-			,"TOTAL_DP"
-			,"PVAL"
-			,"PASS"};
+const std::string fields[] = {"REGION",
+			      "POS",
+			      "REF",
+			      "ALT",
+			      "REF_DP",
+			      "REF_RV",
+			      "REF_QUAL",
+			      "ALT_DP",
+			      "ALT_RV",
+			      "ALT_QUAL",
+			      "ALT_FREQ",
+			      "TOTAL_DP",
+			      "PVAL",
+			      "PASS",
+			      "GFF_FEATURE",
+			      "REF_CODON",
+			      "REF_AA",
+			      "ALT_CODON",
+			      "ALT_AA"};
 
-const std::string na_tab_delimited_str = "NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
+const std::string na_tab_delimited_str = "NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
 
 int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std::string, unsigned int> &counts, std::map<std::string, std::string> &file_tab_delimited_str){
   unsigned int ctr, pos;
@@ -59,6 +64,11 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
       case 12:
       case 13:
       case 14:
+      case 15:
+      case 16:
+      case 17:
+	tab_delimited_key += cell; // Get ALT_CODON but keep it in text as well
+      case 18:
       default:
 	tab_delimited_val += cell;
 	if(ctr < 14){
