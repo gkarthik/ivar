@@ -97,7 +97,7 @@ ref_antd::ref_antd(std::string ref_path, std::string gff_path){
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
   if(features.size() == 0){	// No matching CDS
-    fout << line_stream.str() << "\t\t\t\t\t" << std::endl;
+    fout << line_stream.str() << "NA\tNA\tNA\tNA\tNA" << std::endl;
     return 0;
   }
   std::vector<gff3_feature>::iterator it;

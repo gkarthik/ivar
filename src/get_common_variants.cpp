@@ -1,6 +1,7 @@
 #include "get_common_variants.h"
 
-const std::string fields[] = {"REGION",
+const int NUM_FIELDS = 19;
+const std::string fields[NUM_FIELDS] = {"REGION",
 			      "POS",
 			      "REF",
 			      "ALT",
@@ -20,7 +21,7 @@ const std::string fields[] = {"REGION",
 			      "ALT_CODON",
 			      "ALT_AA"};
 
-const std::string na_tab_delimited_str = "NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
+const std::string na_tab_delimited_str = "NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
 
 int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std::string, unsigned int> &counts, std::map<std::string, std::string> &file_tab_delimited_str){
   unsigned int ctr, pos;
@@ -47,10 +48,15 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
     tab_delimited_val = "";
     while(std::getline(line_stream,cell,'\t')){
       switch(ctr){
-      case 0:
-      case 1:
-      case 2:
-      case 3:
+      case 0:			// REGION
+      case 1:			// POS
+      case 2:			// REF
+      case 3:			// ALT
+      case 14:			// GFF_FEATURE
+      case 15:			// REF_CODON
+      case 16:			// REF_AA
+      case 17:			// ALT_CODON
+      case 18:			// ALT_AA
 	tab_delimited_key += cell + "\t";
 	break;
       case 4:
@@ -63,15 +69,9 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
       case 11:
       case 12:
       case 13:
-      case 14:
-      case 15:
-      case 16:
-      case 17:
-	tab_delimited_key += cell; // Get ALT_CODON but keep it in text as well
-      case 18:
       default:
 	tab_delimited_val += cell;
-	if(ctr < 14){
+	if(ctr < 13){
 	  tab_delimited_val += "\t";
 	}
 	break;
@@ -109,6 +109,9 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
   for (i = 0; i < 4; ++i) {
     fout << fields[i] << "\t";
   }
+  for (i = 14; i < 19; ++i) {
+    fout << fields[i] << "\t";
+  }
   for (i = 0; i < nfiles; ++i) {
     for (j = 4; j < 14; ++j) {
       fout << fields[j] << "_" << files[i] << "\t";
@@ -125,6 +128,8 @@ int common_variants(std::string out, double min_threshold, char* files[], int nf
 	} else {
 	  fout << file_tab_delimited_str[it->first + std::to_string(j)];
 	}
+	if(j < nfiles - 1)
+	  fout << "\t";
       }
       fout << "\n";
     }
