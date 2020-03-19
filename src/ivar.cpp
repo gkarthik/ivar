@@ -519,6 +519,7 @@ int main(int argc, char* argv[]){
   } else if(cmd.compare("version") == 0){
     print_version_info();
   } else {
+    std::cout << "Unknown command: \"" << cmd  << "\"" << std::endl << std::endl;
     print_usage();
   }
   return res;
