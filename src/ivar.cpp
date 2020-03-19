@@ -354,7 +354,7 @@ int main(int argc, char* argv[]){
     g_args.gap = (g_args.gap != 'N' && g_args.gap != '-') ? '-' : g_args.gap; // Accept only N or -
     std::cout <<"Minimum Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
-    std::cout << "Minimum depth: " << g_args.min_depth << std::endl;
+    std::cout << "Minimum depth: " << (unsigned) g_args.min_depth << std::endl;
     if(!g_args.keep_min_coverage)
       std::cout << "Regions with depth less than minimum depth will not added to consensus" << std::endl;
     else
