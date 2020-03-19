@@ -1,4 +1,4 @@
-.TH "manualpage" 3 "Fri Mar 6 2020" "Version 1.1" "iVar" \" -*- nroff -*-
+.TH "manualpage" 3 "Wed Mar 18 2020" "iVar" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -114,7 +114,7 @@ Output Options   Description
 Example Usage: 
 .PP
 .nf
-samtools mpileup -A -d 600000 -F 0 -B -Q 0 test\&.trimmed\&.bam | ivar variants -p test -q 20 -t 0\&.03 -r test_reference\&.fa -g test\&.gff
+samtools mpileup -A -d 600000 -B -Q 0 test\&.trimmed\&.bam | ivar variants -p test -q 20 -t 0\&.03 -r test_reference\&.fa -g test\&.gff
 
 .fi
 .PP
@@ -220,7 +220,7 @@ Command:
 .nf
 ivar consensus
 
-Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input\&.bam> | ivar consensus -p <prefix>
+Usage: samtools mpileup -A -d 300000 -Q 0 <input\&.bam> | ivar consensus -p <prefix>
 
 Note : samtools mpileup output must be piped into ivar consensus
 
@@ -247,7 +247,7 @@ Output Options   Description
 Example Usage: 
 .PP
 .nf
-samtools mpileup -d 1000 -A -Q 0 -F 0 test\&.bam | ivar consensus -p test -q 20 -t 0
+samtools mpileup -d 1000 -A -Q 0 test\&.bam | ivar consensus -p test -q 20 -t 0
 
 .fi
 .PP

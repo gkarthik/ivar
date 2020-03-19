@@ -120,7 +120,7 @@ Output Options   Description
 
 Example Usage\+: 
 \begin{DoxyCode}
-samtools mpileup -A -d 600000 -F 0 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03 -r
+samtools mpileup -A -d 600000 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03 -r
        test\_reference.fa -g test.gff
 \end{DoxyCode}
 
@@ -327,7 +327,7 @@ Command\+:
 \begin{DoxyCode}
 ivar consensus
 
-Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix>
+Usage: samtools mpileup -A -d 300000 -Q 0 <input.bam> | ivar consensus -p <prefix>
 
 Note : samtools mpileup output must be piped into ivar consensus
 
@@ -356,7 +356,7 @@ Output Options   Description
 
 Example Usage\+: 
 \begin{DoxyCode}
-samtools mpileup -d 1000 -A -Q 0 -F 0 test.bam | ivar consensus -p test -q 20 -t 0
+samtools mpileup -d 1000 -A -Q 0 test.bam | ivar consensus -p test -q 20 -t 0
 \end{DoxyCode}
 
 
