@@ -114,7 +114,7 @@ Output Options   Description
 
 Example Usage:
 ```
-samtools mpileup -A -d 600000 -F 0 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03 -r test_reference.fa -g test.gff
+samtools mpileup -A -d 600000 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03 -r test_reference.fa -g test.gff
 ```
 
 The command above will generate a test.tsv file.
@@ -264,7 +264,7 @@ Command:
 ```
 ivar consensus
 
-Usage: samtools mpileup -A -d 300000 -Q 0 -F 0 <input.bam> | ivar consensus -p <prefix>
+Usage: samtools mpileup -A -d 300000 -Q 0 <input.bam> | ivar consensus -p <prefix>
 
 Note : samtools mpileup output must be piped into ivar consensus
 
@@ -289,7 +289,7 @@ Output Options   Description
 
 Example Usage:
 ```
-samtools mpileup -d 1000 -A -Q 0 -F 0 test.bam | ivar consensus -p test -q 20 -t 0
+samtools mpileup -d 1000 -A -Q 0 test.bam | ivar consensus -p test -q 20 -t 0
 ```
 
 The command above will produce a test.fa fasta file with the consensus sequence and a test.qual.txt with the average quality of each base in the consensus sequence.
