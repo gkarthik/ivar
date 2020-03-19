@@ -28,6 +28,15 @@ To install iVar,
 conda install ivar
 ```
 
+Installing via homebrew
+-----------------------
+
+iVar can be installed using [Homebrew](https://brew.sh/).
+
+```
+brew install brewsci/bio/ivar
+```
+
 Installing on Mac
 =================
 

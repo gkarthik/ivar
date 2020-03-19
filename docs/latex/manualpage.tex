@@ -1,4 +1,4 @@
-\hypertarget{manualpage_autotoc_md13}{}\section{Available Commands}\label{manualpage_autotoc_md13}
+\hypertarget{manualpage_autotoc_md14}{}\section{Available Commands}\label{manualpage_autotoc_md14}
 \tabulinesep=1mm
 \begin{longtabu} spread 0pt [c]{*{2}{|X[-1]}|}
 \hline
@@ -20,8 +20,8 @@ trimadapter  &(E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+AL) Trim adapter sequences from rea
 \end{longtabu}
 
 
-To view detailed usage for each command type {\ttfamily ivar $<$command$>$} Note \+: Commands maked (E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+AL) are still under active development.\hypertarget{manualpage_autotoc_md14}{}\section{Description of commands}\label{manualpage_autotoc_md14}
-\hypertarget{manualpage_autotoc_md15}{}\subsection{Trim primer sequences with i\+Var}\label{manualpage_autotoc_md15}
+To view detailed usage for each command type {\ttfamily ivar $<$command$>$} Note \+: Commands maked (E\+X\+P\+E\+R\+I\+M\+E\+N\+T\+AL) are still under active development.\hypertarget{manualpage_autotoc_md15}{}\section{Description of commands}\label{manualpage_autotoc_md15}
+\hypertarget{manualpage_autotoc_md16}{}\subsection{Trim primer sequences with i\+Var}\label{manualpage_autotoc_md16}
 i\+Var uses primer positions supplied in a B\+ED file to soft clip primer sequences from an aligned and sorted B\+AM file. Following this, the reads are trimmed based on a quality threshold(\+Default\+: 20). To do the quality trimming, i\+Var uses a sliding window approach(\+Default\+: 4). The windows slides from the 5\textquotesingle{} end to the 3\textquotesingle{} end and if at any point the average base quality in the window falls below the threshold, the remaining read is soft clipped. If after trimming, the length of the read is greater than the minimum length specified(\+Default\+: 30), the read is written to the new trimmed B\+AM file.
 
 To sort and index an aligned B\+AM file, the following command can be used,
@@ -78,7 +78,7 @@ Puerto  1054    1076    400\_3\_out\_R*    60  -
 .
 .
 \end{DoxyCode}
-\hypertarget{manualpage_autotoc_md16}{}\subsection{Call variants with i\+Var}\label{manualpage_autotoc_md16}
+\hypertarget{manualpage_autotoc_md17}{}\subsection{Call variants with i\+Var}\label{manualpage_autotoc_md17}
 i\+Var uses the output of the {\ttfamily samtools mpileup} command to call variants -\/ single nucleotide variants(\+S\+N\+Vs) and indels. In order to call variants correctly, the reference file used for alignment must be passed to i\+Var using the {\ttfamily -\/r} flag. The output of {\ttfamily samtools pileup} is piped into {\ttfamily ivar variants} to generate a .tsv file with the variants. There are two parameters that can be set for variant calling using i\+Var -\/ minimum quality(\+Default\+: 20) and minimum frequency(Default\+: 0.\+03). Minimum quality is the minimum quality for a base to be counted towards the ungapped depth to canculate i\+S\+NV frequency at a given position. For insertions, the quality metric is discarded and the mpileup depth is used directly. Minimum frequency is the minimum frequency required for a S\+NV or indel to be reported. \paragraph*{Amino acid translation of i\+S\+N\+Vs}
 
 i\+Var can identify codons and translate variants into amino acids using a G\+FF file in the https\+://github.com/\+The-\/\+Sequence-\/\+Ontology/\+Specifications/blob/master/gff3.\+md \char`\"{}\+G\+F\+F3\char`\"{} format containing the required coding regions (C\+DS). In absence of a G\+FF file, i\+Var will not perform the translation and \char`\"{}\+N\+A\char`\"{} will be added to the output file in place of the reference and alternate codons and amino acids. The G\+FF file in the G\+F\+F3 format can be downloaded via ftp from N\+C\+BI Ref\+Seq/\+Genbank. They are usually the files with the extension \char`\"{}.\+gff.\+gz\char`\"{}. For example, the G\+FF file for Zaire Ebolavirus can be found \href{ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/viral/Zaire_ebolavirus/all_assembly_versions/GCF_000848505.1_ViralProj14703}{\tt here}. More details on G\+F\+F3 files hosted by N\+C\+BI can be found in their ftp \href{https://www.ncbi.nlm.nih.gov/genome/doc/ftpfaq/}{\tt F\+A\+Qs}.
@@ -174,7 +174,7 @@ A\+L\+T\+\_\+\+AA  &Amino acid translated from the alternate codon   \\\cline{1-
 \end{longtabu}
 
 
-{\bfseries Note}\+: Please use the -\/B options with {\ttfamily samtools mpileup} to call variants and generate consensus. When a reference sequence is supplied, the quality of the reference base is reduced to 0 (A\+S\+C\+II\+: !) in the mpileup output. Disabling B\+AQ with -\/B seems to fix this. This was tested in samtools 1.\+7 and 1.\+8.\hypertarget{manualpage_autotoc_md17}{}\subsection{Filter variants across replicates with i\+Var}\label{manualpage_autotoc_md17}
+{\bfseries Note}\+: Please use the -\/B options with {\ttfamily samtools mpileup} to call variants and generate consensus. When a reference sequence is supplied, the quality of the reference base is reduced to 0 (A\+S\+C\+II\+: !) in the mpileup output. Disabling B\+AQ with -\/B seems to fix this. This was tested in samtools 1.\+7 and 1.\+8.\hypertarget{manualpage_autotoc_md18}{}\subsection{Filter variants across replicates with i\+Var}\label{manualpage_autotoc_md18}
 i\+Var can be used to get an intersection of variants(in .tsv files) called from any number of replicates or from different samples using the same reference sequence. This intersection will filter out any i\+S\+N\+Vs that do not occur in a minimum fraction of the files supplied. This parameter can be changed using the {\ttfamily -\/t} flag which range from 0 to 1 (default). Fields that are different across replicates(fields apart from R\+E\+G\+I\+O\+N, P\+O\+S, R\+E\+F, A\+L\+T, R\+E\+F\+\_\+\+C\+O\+D\+O\+N, R\+E\+F\+\_\+\+A\+A, A\+L\+T\+\_\+\+C\+O\+D\+O\+N, A\+L\+T\+\_\+\+A\+A) will have the filename added as a suffix. If there are a large number of files to be filtered, the {\ttfamily -\/f} flag can be used to supply a text file with one sample/replicate variant .tsv file per line.
 
 Command\+: 
@@ -276,7 +276,7 @@ Description of fields
 19  &P\+A\+S\+S\+\_\+$<$rep1-\/tsv-\/file-\/name$>$  &Result of p-\/value $<$= 0.\+05 in replicate 1   \\\cline{1-3}
 20  &Continue rows 10 -\/ 19 for every replicate provided  &\\\cline{1-3}
 \end{longtabu}
-\hypertarget{manualpage_autotoc_md18}{}\subsection{Generate a consensus sequences from an aligned B\+A\+M file}\label{manualpage_autotoc_md18}
+\hypertarget{manualpage_autotoc_md19}{}\subsection{Generate a consensus sequences from an aligned B\+A\+M file}\label{manualpage_autotoc_md19}
 To generate a consensus sequence i\+Var uses the output of {\ttfamily samtools mpileup} command. The mpileup output must be piped into {\ttfamily ivar consensus}. There are five parameters that can be set -\/ minimum quality(\+Default\+: 20), minimum frequency threshold(\+Default\+: 0), minimum depth to call a consensus(\+Default\+: 1), a flag to exclude nucleotides from regions with depth less than the minimum depth and a character to call in regions with coverage lower than the speicifed minimum depth(Default\+: \textquotesingle{}-\/\textquotesingle{}). Minimum quality is the minimum quality of a base to be considered in calculations of variant frequencies at a given position. Minimum frequency threshold is the minimum frequency that a base must match to be called as the consensus base at a position. If one base is not enough to match a given frequency, then an ambigious nucleotide is called at that position. Minimum depth is the minimum required depth to call a consensus. If \textquotesingle{}-\/k\textquotesingle{} flag is set then these regions are not included in the consensus sequence. If \textquotesingle{}-\/k\textquotesingle{} is not set then by default, a \textquotesingle{}-\/\textquotesingle{} is called in these regions. You can also specfy which character you want to add to the consensus to cover regions with depth less than the minimum depth. This can be done using -\/n options. It takes onr of two values\+: \textquotesingle{}-\/\textquotesingle{} or \textquotesingle{}N\textquotesingle{}.
 
 As an example, consider a position with 6\+As, 3\+Ts and 1C. The table below shows the consensus nucleotide called at different frequencies.
@@ -360,7 +360,7 @@ samtools mpileup -d 1000 -A -Q 0 test.bam | ivar consensus -p test -q 20 -t 0
 \end{DoxyCode}
 
 
-The command above will produce a test.\+fa fasta file with the consensus sequence and a test.\+qual.\+txt with the average quality of each base in the consensus sequence.\hypertarget{manualpage_autotoc_md19}{}\subsection{Get primers with mismatches to the reference sequence}\label{manualpage_autotoc_md19}
+The command above will produce a test.\+fa fasta file with the consensus sequence and a test.\+qual.\+txt with the average quality of each base in the consensus sequence.\hypertarget{manualpage_autotoc_md20}{}\subsection{Get primers with mismatches to the reference sequence}\label{manualpage_autotoc_md20}
 i\+Var uses a .tsv file with variants to get the zero based indices(based on the B\+E\+D file) of mismatched primers. This command requires another .tsv file with each line containing the left and right primer names separated by a tab. This is used to get both the primers for an amplicon with a single mismatched primer. The output is a text file with the zero based primer indices delimited by a space. The output is written to a a text file using the prefix provided.
 
 Command\+: 
@@ -422,7 +422,7 @@ Example Output\+:
 \begin{DoxyCode}
 1 2 7 8
 \end{DoxyCode}
-\hypertarget{manualpage_autotoc_md20}{}\subsection{Remove reads associated with mismatched primer indices}\label{manualpage_autotoc_md20}
+\hypertarget{manualpage_autotoc_md21}{}\subsection{Remove reads associated with mismatched primer indices}\label{manualpage_autotoc_md21}
 This command accepts an aligned and sorted B\+AM file trimmed using {\ttfamily ivar trim} and removes the reads corresponding to the supplied primer indices, which is the output of {\ttfamily ivar getmasked} command. Under the hood, {\ttfamily ivar trim} adds the zero based primer index(based on the B\+E\+D file) to the B\+AM auxillary data for every read. Hence, ivar removereads will only work on B\+AM files that have been trimmed using {\ttfamily ivar trim}.
 
 Command\+: 
@@ -450,7 +450,7 @@ ivar removereads -i test.trimmed.bam -p test.trimmed.masked.bam -t test.masked.t
 \end{DoxyCode}
 
 
-The {\ttfamily ivar trim} command above trims test.\+bam and produced test.\+trimmed.\+bam with the primer indice data added. The {\ttfamily ivar removereads} command produces an output file -\/ test.\+trimmed.\+masked.\+bam after removing all the reads corresponding to primer indices -\/ 1,2,7 and 8.\hypertarget{manualpage_autotoc_md21}{}\subsection{(\+Experimental) trimadapter}\label{manualpage_autotoc_md21}
+The {\ttfamily ivar trim} command above trims test.\+bam and produced test.\+trimmed.\+bam with the primer indice data added. The {\ttfamily ivar removereads} command produces an output file -\/ test.\+trimmed.\+masked.\+bam after removing all the reads corresponding to primer indices -\/ 1,2,7 and 8.\hypertarget{manualpage_autotoc_md22}{}\subsection{(\+Experimental) trimadapter}\label{manualpage_autotoc_md22}
 {\bfseries Note\+: This feature is under active development and not completely validated yet.}
 
 trimadapter in i\+Var can be used to trim adapter sequences from fastq files using a supplied fasta file. 
