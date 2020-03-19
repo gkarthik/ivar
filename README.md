@@ -14,7 +14,9 @@ Nathan D Grubaugh, Karthik Gangavarapu, Joshua Quick, Nathaniel L Matteson, Jaqu
 
 bioRxiv doi: [https://doi.org/10.1101/383513](https://doi.org/10.1101/383513)
 
-## [Manual](https://andersen-lab.github.io/ivar/html/)
+## Manual
+
+Manual for iVar is available [here](https://andersen-lab.github.io/ivar/html/).
 
 ## Insallation
 
