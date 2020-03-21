@@ -350,17 +350,26 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     sam_close(in);
     return -1;
   }
-  if (region_.empty()){
-    std::cout << "Number of references: " << header->n_targets << std::endl;
-    for (int i = 0; i < header->n_targets; ++i){
-      std::cout << "Reference Name: " << header->target_name[i] << std::endl;
-      std::cout << "Reference Length: " << header->target_len[i] << std::endl;
-      if(i==0){
-	region_.assign(header->target_name[i]);
-      }
+  // Get relevant region
+  int region_id;
+  uint64_t unmapped, mapped, log_skip;
+  std::cout << "Number of references: " << header->n_targets << std::endl;
+  for (int i = 0; i < header->n_targets; ++i){
+    std::cout << "Reference Name: " << header->target_name[i] << std::endl;
+    std::cout << "Reference Length: " << header->target_len[i] << std::endl;
+    if(region_.compare(std::string(header->target_name[i])) == 0){
+      region_id = i;
     }
-    std::cout << "Using Region: " << region_ << std::endl;
+    if(i==0){			// Reading only first reference
+      region_.assign(header->target_name[i]);
+      region_id = i;
+    }
   }
+  std::cout << "Using Region: " << region_ << std::endl;
+  // Get index stats
+  hts_idx_get_stat(idx, region_id, &mapped, &unmapped);
+  std::cout << "Found " << mapped << " mapped reads" << std::endl;
+  std::cout << "Found " << unmapped << " unmapped reads" << std::endl;
   std::string hdr_text(header->text);
   if (hdr_text.find(std::string("SO:coordinate"))) {
     std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
@@ -369,6 +378,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   } else {
     std::cout << "Not sorted" << std::endl;
   }
+  std::cout << "-------" << std::endl;
+  log_skip = (mapped + unmapped)/10;
   //Initialize iterator
   hts_itr_t *iter = NULL;
   //Move the iterator to the region we are interested in
@@ -383,25 +394,42 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   int ctr = 0;
   cigar_ t;
   uint8_t p;
-  uint32_t primer_trim_count = 0, no_primer = 0, low_quality = 0;
+  uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
+  uint32_t unmapped_counter = 0;
   while(sam_itr_next(in, iter, aln) >= 0) {
-    p = get_overlapping_primer_indice(aln, primers);
-    if(p < primers.size()){
-      primer_trim_count++;
-      if(bam_is_rev(aln)){
-	t = primer_trim(aln, primers[p].get_start() - 1);
-      } else {
-	t = primer_trim(aln, primers[p].get_end() + 1);
-	aln->core.pos = primers[p].get_end() + 1;
+    if((aln->core.flag&BAM_FUNMAP) == 0){
+      p = get_overlapping_primer_indice(aln, primers);
+      if(p < primers.size()){
+	primer_trim_count++;
+	if(bam_is_rev(aln)){
+	  t = primer_trim(aln, primers[p].get_start() - 1);
+	} else {
+	  t = primer_trim(aln, primers[p].get_end() + 1);
+	  aln->core.pos = primers[p].get_end() + 1;
+	}
+	replace_cigar(aln, t.nlength, t.cigar);
       }
+      t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
+      if(bam_is_rev(aln))
+	aln->core.pos = t.start_pos;
+      t = condense_cigar(t.cigar, t.nlength);
+      aln->core.pos += t.start_pos;
       replace_cigar(aln, t.nlength, t.cigar);
+    } else {
+      // Write unmapped reads to final BAM
+      if(bam_write1(out, aln) < 0){
+	std::cout << "Not able to write to BAM" << std::endl;
+	hts_itr_destroy(iter);
+	hts_idx_destroy(idx);
+	bam_destroy1(aln);
+	bam_hdr_destroy(header);
+	sam_close(in);
+	bgzf_close(out);
+	return -1;
+      }
+      unmapped_counter++;
+      continue;
     }
-    t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-    if(bam_is_rev(aln))
-      aln->core.pos = t.start_pos;
-    t = condense_cigar(t.cigar, t.nlength);
-    aln->core.pos += t.start_pos;
-    replace_cigar(aln, t.nlength, t.cigar);
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
       if(p < primers.size()){	// Write to BAM only if primer found.
 	bam_aux_append(aln, "XA", 'C', 1, (uint8_t*) &p);
@@ -429,23 +457,27 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    return -1;
 	  }
 	}
-	no_primer++;
+	no_primer_counter++;
       }
     } else {
       low_quality++;
     }
     ctr++;
-    if(ctr % 1000000 == 0){
-      std::cout << "Processed " << ctr << " reads ... " << std::endl;
+    if(ctr % log_skip == 0){
+      std::cout << "Processed " << (ctr/log_skip) * 10 << "% reads ... " << std::endl;
     }
   }
+  std::cout << "-------" << std::endl;
   std::cout << "Results: " << std::endl;
   std::cout << "Trimmed primers from " << primer_trim_count << " reads." << std::endl;
   std::cout << low_quality << " reads were shortened below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
   if(write_no_primer_reads){
-    std::cout << no_primer << " reads started outside of primer regions. Since the -e flag was given, these reads were written to file" << std::endl;
+    std::cout << no_primer_counter << " reads started outside of primer regions. Since the -e flag was given, these reads were written to file" << std::endl;
   } else {
-    std::cout << no_primer << " reads that started outside of primer regions were not written to file." << std::endl;
+    std::cout << no_primer_counter << " reads that started outside of primer regions were not written to file." << std::endl;
+  }
+  if(unmapped_counter > 0){
+    std::cout << unmapped_counter << " unmapped reads were written to file" << std::endl;
   }
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
