@@ -371,9 +371,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   std::cout << "Found " << mapped << " mapped reads" << std::endl;
   std::cout << "Found " << unmapped << " unmapped reads" << std::endl;
   std::string hdr_text(header->text);
-  if (hdr_text.find(std::string("SO:coordinate"))) {
+  if (hdr_text.find(std::string("SO:coordinate")) != std::string::npos) {
     std::cout << "Sorted By Coordinate" << std::endl; // Sort by coordinate
-  } if(hdr_text.find(std::string("SO:queryname"))) {
+  } else if(hdr_text.find(std::string("SO:queryname")) != std::string::npos) {
     std::cout << "Sorted By Query Name" << std::endl; // Sort by name
   } else {
     std::cout << "Not sorted" << std::endl;
@@ -416,7 +416,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       aln->core.pos += t.start_pos;
       replace_cigar(aln, t.nlength, t.cigar);
     } else {
-      // Write unmapped reads to final BAM
+      // Write unmapped reads from region to final BAM
       if(bam_write1(out, aln) < 0){
 	std::cout << "Not able to write to BAM" << std::endl;
 	hts_itr_destroy(iter);
