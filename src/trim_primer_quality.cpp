@@ -379,7 +379,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << "Not sorted" << std::endl;
   }
   std::cout << "-------" << std::endl;
-  log_skip = (mapped + unmapped)/10;
+  log_skip = (mapped + unmapped > 10) ? (mapped + unmapped)/10 : 2;
   //Initialize iterator
   hts_itr_t *iter = NULL;
   //Move the iterator to the region we are interested in
