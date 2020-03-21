@@ -416,17 +416,6 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       aln->core.pos += t.start_pos;
       replace_cigar(aln, t.nlength, t.cigar);
     } else {
-      // Write unmapped reads from region to final BAM
-      if(bam_write1(out, aln) < 0){
-	std::cout << "Not able to write to BAM" << std::endl;
-	hts_itr_destroy(iter);
-	hts_idx_destroy(idx);
-	bam_destroy1(aln);
-	bam_hdr_destroy(header);
-	sam_close(in);
-	bgzf_close(out);
-	return -1;
-      }
       unmapped_counter++;
       continue;
     }
@@ -464,10 +453,10 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     }
     ctr++;
     if(ctr % log_skip == 0){
-      std::cout << "Processed " << (ctr/log_skip) * 10 << "% reads ... " << std::endl;
+      std::cout << "\rProcessed " << (ctr/log_skip) * 10 << "% reads ... ";
     }
   }
-  std::cout << "-------" << std::endl;
+  std::cout << std::endl << "-------" << std::endl;
   std::cout << "Results: " << std::endl;
   std::cout << "Trimmed primers from " << primer_trim_count << " reads." << std::endl;
   std::cout << low_quality << " reads were shortened below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
@@ -477,7 +466,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << no_primer_counter << " reads that started outside of primer regions were not written to file." << std::endl;
   }
   if(unmapped_counter > 0){
-    std::cout << unmapped_counter << " unmapped reads were written to file" << std::endl;
+    std::cout << unmapped_counter << " unmapped reads were not written to file" << std::endl;
   }
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
