@@ -153,10 +153,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   int del_len, cig, temp;
   if (bam_is_rev(r)){
     del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
-    // print_cigar(cigar, r->core.n_cigar);
     reverse_cigar(cigar, r->core.n_cigar);
-    // print_cigar(cigar, r->core.n_cigar);
-    // std::cout << "Del Length " << del_len << std::endl;
   } else {
     del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
   }
@@ -223,7 +220,8 @@ uint8_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
   }
   uint8_t i;
   for(i = 0; i < primers.size();i++){
-    if(query_pos >= primers[i].get_start() && query_pos <= primers[i].get_end() && start_pos >= primers[i].get_start() && start_pos <= primers[i].get_end()) // Change int to int32_t in primer_bed.cpp
+    // query_pos >= primers[i].get_start() && query_pos <= primers[i].get_end()
+    if(start_pos >= primers[i].get_start() && start_pos <= primers[i].get_end()) // Change int to int32_t in primer_bed.cpp
       return i;
   }
   return i;
@@ -395,8 +393,10 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   cigar_ t;
   uint8_t p;
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
+  bool unmapped_flag = false;
   uint32_t unmapped_counter = 0;
   while(sam_itr_next(in, iter, aln) >= 0) {
+    unmapped_flag = false;
     if((aln->core.flag&BAM_FUNMAP) == 0){
       p = get_overlapping_primer_indice(aln, primers);
       if(p < primers.size()){
@@ -416,6 +416,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       aln->core.pos += t.start_pos;
       replace_cigar(aln, t.nlength, t.cigar);
     } else {
+      unmapped_flag = true;
       unmapped_counter++;
       continue;
     }
@@ -433,8 +434,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  return -1;
 	}
       } else {
-	if(write_no_primer_reads){
-	  // bam_aux_append(aln, "XA", 'C', 1, NULL);
+	if(write_no_primer_reads && !unmapped_flag){ // Write mapped reads to BAM if -e flag given
 	  if(bam_write1(out, aln) < 0){
 	    std::cout << "Not able to write to BAM" << std::endl;
 	    hts_itr_destroy(iter);
@@ -453,7 +453,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     }
     ctr++;
     if(ctr % log_skip == 0){
-      std::cout << "\rProcessed " << (ctr/log_skip) * 10 << "% reads ... ";
+      std::cout << "Processed " << (ctr/log_skip) * 10 << "% reads ... " << std::endl;
     }
   }
   std::cout << std::endl << "-------" << std::endl;
