@@ -60,6 +60,10 @@ void primer::set_pair_indice(int i){
   pair_indice = i;
 }
 
+void print_bed_format(){
+  std::cout << "iVar uses the standard 6 column BED format as defined here - https://genome.ucsc.edu/FAQ/FAQformat.html#format1." << std::endl;
+  std::cout << "It requires the following columns delimited by a tab: chrom, chromStart, chromEnd, name, score, strand" << std::endl;
+}
 
 std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path.c_str());
@@ -76,16 +80,34 @@ std::vector<primer> populate_from_file(std::string path){
 	p.set_region(cell);
 	break;
       case 1:
-	p.set_start(std::stoul(cell));
+	if(std::all_of(cell.begin(), cell.end(), ::isdigit)) {
+	  p.set_start(std::stoul(cell));
+	} else {
+	  print_bed_format();
+	  primers.clear();
+	  return primers;
+	}
 	break;
       case 2:
-	p.set_end(std::stoul(cell)-1); // Bed format - End is not 0 based
+	if(std::all_of(cell.begin(), cell.end(), ::isdigit)) {
+	  p.set_end(std::stoul(cell)-1); // Bed format - End is not 0 based
+	} else {
+	  print_bed_format();
+	  primers.clear();
+	  return primers;
+	}
 	break;
       case 3:
 	p.set_name(cell);
 	break;
       case 4:
-	p.set_score(stoi(cell));
+	if(std::all_of(cell.begin(), cell.end(), ::isdigit)) {
+	  p.set_score(stoi(cell));
+	} else {
+	  print_bed_format();
+	  primers.clear();
+	  return primers;
+	}
 	break;
       case 5:
 	p.set_strand(cell[0]);
@@ -95,6 +117,11 @@ std::vector<primer> populate_from_file(std::string path){
     p.set_pair_indice(-1);
     primers.push_back(p);
   }
+  if(primers.size() == 0){
+    print_bed_format();
+    std::cout << "Found 0 primers in BED file" << std::endl;
+  }
+  std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
   return primers;
 }
 
