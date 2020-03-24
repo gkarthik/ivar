@@ -1,5 +1,7 @@
 #include "trim_primer_quality.h"
 
+#define round_int(x,total) ((int) (0.5 + ((float)x / float(total)) * 10000))/(float)100
+
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start){
   int cig;
   int32_t n;
@@ -458,15 +460,15 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   }
   std::cout << std::endl << "-------" << std::endl;
   std::cout << "Results: " << std::endl;
-  std::cout << "Trimmed primers from " << primer_trim_count << " reads." << std::endl;
-  std::cout << low_quality << " reads were shortened below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
+  std::cout << "Trimmed primers from " << round_int(primer_trim_count, mapped) << "% (" << primer_trim_count <<  ") of reads." << std::endl;
+  std::cout << round_int( low_quality, mapped) << "% (" << low_quality << ") of reads were quality trimmed below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
   if(write_no_primer_reads){
-    std::cout << no_primer_counter << " reads started outside of primer regions. Since the -e flag was given, these reads were written to file" << std::endl;
+    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since the -e flag was given, these reads were written to file." << std::endl;
   } else {
-    std::cout << no_primer_counter << " reads that started outside of primer regions were not written to file." << std::endl;
+    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads that started outside of primer regions were not written to file." << std::endl;
   }
   if(unmapped_counter > 0){
-    std::cout << unmapped_counter << " unmapped reads were not written to file" << std::endl;
+    std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
   }
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
