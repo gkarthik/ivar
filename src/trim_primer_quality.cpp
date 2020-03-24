@@ -317,6 +317,9 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
 
 int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, int min_length = 30){
   std::vector<primer> primers = populate_from_file(bed);
+  if(primers.size() == 0){
+    return 0;
+  }
   if(bam.empty()){
     std::cout << "Bam file in empty." << std::endl;
     return -1;
@@ -353,10 +356,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   // Get relevant region
   int region_id;
   uint64_t unmapped, mapped, log_skip;
-  std::cout << "Number of references: " << header->n_targets << std::endl;
+  std::cout << std::endl << "Number of references in file: " << header->n_targets << std::endl;
   for (int i = 0; i < header->n_targets; ++i){
-    std::cout << "Reference Name: " << header->target_name[i] << std::endl;
-    std::cout << "Reference Length: " << header->target_len[i] << std::endl;
+    std::cout << header->target_name[i] << std::endl;
     if(region_.compare(std::string(header->target_name[i])) == 0){
       region_id = i;
     }
@@ -365,7 +367,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       region_id = i;
     }
   }
-  std::cout << "Using Region: " << region_ << std::endl;
+  std::cout << "Using Region: " << region_ << std::endl << std::endl;
   // Get index stats
   hts_idx_get_stat(idx, region_id, &mapped, &unmapped);
   std::cout << "Found " << mapped << " mapped reads" << std::endl;
