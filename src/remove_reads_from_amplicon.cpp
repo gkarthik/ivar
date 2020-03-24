@@ -2,6 +2,9 @@
 
 int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, std::vector<std::string> amp, std::string bed, std::string cmd){
   std::vector<primer> primers = populate_from_file(bed);
+  if(primers.size() == 0){
+    return 0;
+  }
   bam_out += ".bam";
   std::cout << "Writing to " << bam_out << std::endl;
   if(bam.empty()){

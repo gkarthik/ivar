@@ -2,6 +2,9 @@
 
 int get_primers_with_mismatches(std::string bed, std::string vpath, std::string out, std::string primer_pair_file){
   std::vector<primer> primers = populate_from_file(bed);
+  if(primers.size() == 0){
+    return 0;
+  }
   populate_pair_indices(primers, primer_pair_file);
   std::vector<unsigned int> indices;
   std::string line, cell;
