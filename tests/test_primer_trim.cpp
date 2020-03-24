@@ -37,7 +37,6 @@ int main(){
       } else {
 	t = primer_trim(aln, primers[primer_indice].get_end() + 1);
       }
-      std::cout << bam_get_qname(aln) << std::endl;
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
       for (int i = 0; i < t.nlength; ++i){
