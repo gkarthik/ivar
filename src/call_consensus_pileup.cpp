@@ -1,14 +1,3 @@
-#include<stdint.h>
-#include<iostream>
-#include<fstream>
-#include<sstream>
-#include<vector>
-#include<algorithm>
-#include<string>
-#include<regex>
-#include<libgen.h>
-
-#include "allele_functions.h"
 #include "call_consensus_pileup.h"
 
 void format_alleles(std::vector<allele> &ad){
@@ -145,7 +134,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
   return t;
 }
 
-int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, int min_depth, char gap, bool min_coverage_flag){
+int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, uint8_t min_depth, char gap, bool min_coverage_flag){
   std::string line, cell;
   std::ofstream fout((out_file+".fa").c_str());
   std::ofstream tmp_qout((out_file+".qual.txt").c_str());

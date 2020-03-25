@@ -1,16 +1,4 @@
-#include<stdint.h>
-#include<iostream>
-#include<fstream>
-#include<sstream>
-#include<vector>
-#include<algorithm>
-#include<string>
-#include<regex>
-#include<cmath>
-#include<htslib/kfunc.h>
-#include "htslib/kfunc.h"
-
-#include "allele_functions.h"
+#include "call_variants.h"
 
 const char gap='N';
 const float sig_level = 0.01;
@@ -24,8 +12,23 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
   return ad.end();
 }
 
-int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold){
+double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){ // pos_depth is ungapped depth after passing quality. total_depth is depth without quality filtering for indels.
+  double *val = new double[2];
+  if(a.nuc[0] == '+'){	// For insertions use depth discarding quality
+    val[0] = a.depth/(double)total_depth;
+    val[1] = total_depth;
+    return val;
+  }
+  val[0] = a.depth/(double)pos_depth;
+  val[1] = pos_depth;
+  return val;
+}
+
+int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double min_threshold, uint8_t min_depth, std::string ref_path, std::string gff_path){
   std::string line, cell, bases, qualities, region;
+  ref_antd refantd(ref_path, gff_path);
+  char *ref_codon = new char[3], *alt_codon = new char[3];
+  std::ostringstream out_str;
   std::ofstream fout((out_file+".tsv").c_str());
   fout << "REGION"
     "\tPOS"
@@ -41,17 +44,24 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tTOTAL_DP"
     "\tPVAL"
     "\tPASS"
+    "\tGFF_FEATURE"
+    "\tREF_CODON"
+    "\tREF_AA"
+    "\tALT_CODON"
+    "\tALT_AA"
        << std::endl;
-  int ctr = 0, pos = 0, mdepth = 0;
-  double pval_left, pval_right, pval_twotailed, freq, err;
-  std::stringstream lineStream;
+  int ctr = 0, tmp;
+  int64_t start_pos = 0, pos = 0;
+  uint32_t mdepth = 0, pdepth = 0; // mpdepth for mpileup depth and pdeth for ungapped depth at position
+  double pval_left, pval_right, pval_twotailed, *freq_depth, err;
+  std::stringstream line_stream;
   char ref;
   std::vector<allele> ad;
   std::vector<allele>::iterator ref_it;
   while (std::getline(cin, line)){
-    lineStream << line;
+    line_stream << line;
     ctr = 0;
-    while(std::getline(lineStream,cell,'\t')){
+    while(std::getline(line_stream,cell,'\t')){
       switch(ctr){
       case 0:
 	region = cell;
@@ -60,7 +70,8 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	pos = stoi(cell);
 	break;
       case 2:
-	ref = cell[0];
+	ref = refantd.get_base(pos, region);
+	ref = (ref == 0) ? cell[0] : ref; // If ref does not exist then use from mpileup
 	break;
       case 3:
 	mdepth = stoi(cell);
@@ -76,9 +87,13 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       }
       ctr++;
     }
+    if(mdepth < min_depth) {	// Check for minimum depth
+      line_stream.clear();
+      continue;
+    }
     ad = update_allele_depth(ref, bases, qualities, min_qual);
     if(ad.size() == 0){
-      lineStream.clear();
+      line_stream.clear();
       continue;
     }
     ref_it = get_ref_allele(ad, ref);
@@ -92,30 +107,30 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       ref_it = ad.end() - 1;
     }
     // Get ungapped coverage
-    mdepth = 0;
+    pdepth = 0;
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
 	continue;
-      mdepth += it->depth;
+      pdepth += it->depth;
     }
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((*it == *ref_it) || it->nuc[0]=='*')
 	continue;
-      freq = it->depth/(double)mdepth;
-      if(freq < min_threshold)
+      freq_depth = get_frequency_depth(*it, pdepth, mdepth);
+      if(freq_depth[0] < min_threshold)
 	continue;
-      fout << region << "\t";
-      fout << pos << "\t";
-      fout << ref << "\t";
-      fout << it->nuc << "\t";
-      fout << ref_it->depth << "\t";
-      fout << ref_it->reverse << "\t";
-      fout << (uint16_t)ref_it->mean_qual << "\t";
-      fout << it->depth << "\t";
-      fout << it->reverse << "\t";
-      fout << (uint16_t) it->mean_qual << "\t";
-      fout << freq << "\t";
-      fout << mdepth << "\t";
+      out_str << region << "\t";
+      out_str << pos << "\t";
+      out_str << ref << "\t";
+      out_str << it->nuc << "\t";
+      out_str << ref_it->depth << "\t";
+      out_str << ref_it->reverse << "\t";
+      out_str << (uint16_t)ref_it->mean_qual << "\t";
+      out_str << it->depth << "\t";
+      out_str << it->reverse << "\t";
+      out_str << (uint16_t) it->mean_qual << "\t";
+      out_str << freq_depth[0] << "\t";
+      out_str << freq_depth[1] << "\t";
       /*
 	    | Var   | Ref      |
 	Exp | Error | Err free |
@@ -123,15 +138,21 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
        */
       err = pow(10, ( -1 * (it->mean_qual)/10));
       kt_fisher_exact((err * mdepth), (1-err) * mdepth, it->depth, ref_it->depth, &pval_left, &pval_right, &pval_twotailed);
-      fout << pval_left << "\t";
+      out_str << pval_left << "\t";
       if(pval_left <= sig_level){
-	fout << "TRUE";
+	out_str << "TRUE" << "\t";
       } else {
-	fout << "FALSE";
+	out_str << "FALSE" << "\t";
       }
-      fout << std::endl;
+      if(it->nuc[0] != '+' && it->nuc[0] != '-'){
+	refantd.codon_aa_stream(region, out_str, fout, pos, it->nuc[0]);
+      } else {
+	fout << out_str.str() << "NA\tNA\tNA\tNA\tNA" << std::endl;
+      }
+      out_str.str("");
+      out_str.clear();
     }
-    lineStream.clear();
+    line_stream.clear();
   }
   fout.close();
   return 0;

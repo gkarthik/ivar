@@ -294,7 +294,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
 # ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src scripts tests
+SUBDIRS = src tests
 EXTRA_DIST = autogen.sh
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

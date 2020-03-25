@@ -3,29 +3,59 @@
 iVar
 ===========
 
-[![DOI](https://zenodo.org/badge/143471288.svg)](https://zenodo.org/badge/latestdoi/143471288)
+[![DOI](https://zenodo.org/badge/143471288.svg)](https://zenodo.org/badge/latestdoi/143471288) [![install with conda](https://anaconda.org/bioconda/ivar/badges/version.svg)](https://anaconda.org/bioconda/ivar) [![install with conda](https://anaconda.org/bioconda/ivar/badges/platforms.svg)](https://anaconda.org/bioconda/ivar)
+
 
 iVar is a computational package that contains functions broadly useful for viral amplicon-based sequencing. Additional tools for metagenomic sequencing are actively being incorporated into iVar. While each of these functions can be accomplished using existing tools, iVar contains an intersection of functionality from multiple tools that are required to call iSNVs and consensus sequences from viral sequencing data across multiple replicates. We implemented the following functions in iVar: (1) trimming of primers and low-quality bases, (2) consensus calling, (3) variant calling - both iSNVs and insertions/deletions, and (4) identifying mismatches to primer sequences and excluding the corresponding reads from alignment files.
 
-[An amplicon-based sequencing framework for accurately measuring intrahost virus diversity using PrimalSeq and iVar](https://doi.org/10.1101/383513)
+[An amplicon-based sequencing framework for accurately measuring intrahost virus diversity using PrimalSeq and iVar](https://doi.org/10.1186/s13059-018-1618-7)
+
+*Genome Biology* 2019 **20**:8
 
 Nathan D Grubaugh, Karthik Gangavarapu, Joshua Quick, Nathaniel L Matteson, Jaqueline Goes De Jesus, Bradley J Main, Amanda L Tan, Lauren M Paul, Doug E Brackney, Saran Grewal, Nikos Gurfield, Koen KA Van Rompay, Sharon Isern, Scott F Michael, Lark L Coffey, Nicholas J Loman, Kristian G Andersen
 
-bioRxiv 383513; doi: [https://doi.org/10.1101/383513](https://doi.org/10.1101/383513)
+bioRxiv doi: [https://doi.org/10.1101/383513](https://doi.org/10.1101/383513)
 
+## Manual
 
-## [Manual](https://andersen-lab.github.io/ivar/html/)
+Manual for iVar is available [here](https://andersen-lab.github.io/ivar/html/).
 
 ## Insallation
 
 ### Dependencies
 
 * [HTSlib](http://www.htslib.org/download/)
-* [Awk](https://www.cs.princeton.edu/~bwk/btl.mirror/) - Pre-installed on most UNIX systems.
 * [GCC](https://gcc.gnu.org/) any version after v5.0. Support for C++11 standard required.
 
 Note:
 * It is highly recommended that [samtools](https://github.com/samtools/samtools) also be installed alongside iVar. iVar uses the output of samtools mpileup to call variants and generate consensus sequences. In addition, samtools `sort` and `index` commands are very useful to setup a pipeline using iVar.
+
+Installing via conda
+====================
+
+iVar is available on bioconda. To install conda, please use the [miniconda](https://conda.io/miniconda.html) package. After intalling conda please add the following channels,
+
+```
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+```
+
+To install iVar,
+
+```
+conda install ivar
+```
+
+
+Installing via homebrew
+=======================
+
+iVar can be installed using [Homebrew](https://brew.sh/).
+
+```
+brew install brewsci/bio/ivar
+```
 
 
 Installing on Mac

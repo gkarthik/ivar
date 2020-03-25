@@ -4,6 +4,7 @@
 #include <fstream>
 #include <unistd.h>
 #include <stdint.h>
+#include <string.h>
 #include <sstream>
 #include <vector>
 
@@ -13,8 +14,9 @@
 #include "trim_primer_quality.h"
 #include "get_masked_amplicons.h"
 #include "suffix_tree.h"
+#include "get_common_variants.h"
 
-const std::string VERSION = "1.0";
+const std::string VERSION = "1.1";
 
 struct args_t {
   std::string bam;		// -i
@@ -30,20 +32,23 @@ struct args_t {
   std::string f1;		// -1
   std::string f2;		// -2
   std::string adp_path;	// -a
-  int min_depth;		// -m
+  uint8_t min_depth;		// -m
   char gap;			// -n
   bool keep_min_coverage;	// -k
   std::string primer_pair_file;	// -f
+  std::string file_list;		// -f
+  bool write_no_primers_flag;	// -e
+  std::string gff;		// -g
 } g_args;
 
 void print_usage(){
   std::cout <<
-    "Usage:	ivar [command <trim|callvariants|filtervariants|consensus|getmasked|removereads|version|help>]\n"
+    "Usage:	ivar [command <trim|variants|filtervariants|consensus|getmasked|removereads|version|help>]\n"
     "\n"
     "        Command       Description\n"
     "           trim       Trim reads in aligned BAM file\n"
     "       variants       Call variants from aligned BAM file\n"
-    " filtervariants       Filter variants across replicates\n"
+    " filtervariants       Filter variants across replicates or samples\n"
     "      consensus       Call consensus from aligned BAM file\n"
     "      getmasked       Detect primer mismatches and get primer indices for the amplicon to be masked\n"
     "    removereads       Remove reads from trimmed BAM file\n"
@@ -60,26 +65,33 @@ void print_trim_usage(){
     "           -b    (Required) BED file with primer sequences and positions\n"
     "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
-    "           -s    Width of sliding window (Default: 4)\n\n"
+    "           -s    Width of sliding window (Default: 4)\n"
+    "           -e    Include reads with no primers. By default, reads with no primers are excluded\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output BAM file\n";
 }
 
 void print_variants_usage(){
   std::cout <<
-      "Usage: samtools mpileup -A -d 0 --reference <reference-fasta> -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>]\n\n"
+      "Usage: samtools mpileup -A -d 0 -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
-    "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n\n"
+    "           -t    Minimum frequency threshold(0 - 1) to call variants (Default: 0.03)\n"
+    "           -m    Minimum read depth to call variants (Default: 0)\n"
+    "           -r    Reference file used for alignment. This is used to translate the nucleotide sequences and identify intra host single nucleotide variants\n"
+    "           -g    A GFF file in the GFF3 format can be supplied to specify coordinates of open reading frames (ORFs). In absence of GFF file, amino acid translation will not be done.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output tsv variant file\n\n";
 }
 
 void print_filtervariants_usage(){
   std::cout <<
-    "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... \n\n"
-    "Input: Variant tsv files for each replicate\n\n"
+    "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... OR ivar filtervariants -p <prefix> -f <text file with one variant file per line> \n"
+    "Input: Variant tsv files for each replicate/sample\n\n"
+    "Input Options    Description\n"
+    "           -t    Minimum fration of files required to contain the same variant. Specify value within [0,1]. (Default: 1)\n"
+    "           -f    A text file with one variant file per line.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered tsv file\n";
 }
@@ -146,11 +158,11 @@ void print_version_info(){
     "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
-static const char *trim_opt_str = "i:b:p:m:q:s:h?";
-static const char *variants_opt_str = "p:t:q:h?";
+static const char *trim_opt_str = "i:b:p:m:q:s:eh?";
+static const char *variants_opt_str = "p:t:q:m:r:g:h?";
 static const char *consensus_opt_str = "p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
-static const char *filtervariants_opt_str = "p:h?";
+static const char *filtervariants_opt_str = "p:t:f:h?";
 static const char *getmasked_opt_str = "i:b:f:p:h?";
 static const char *trimadapter_opt_str = "1:2:p:a:h?";
 
@@ -197,6 +209,7 @@ int main(int argc, char* argv[]){
     g_args.min_qual = 20;
     g_args.sliding_window = 4;
     g_args.min_length = 30;
+    g_args.write_no_primers_flag = false;
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -219,6 +232,9 @@ int main(int argc, char* argv[]){
 	g_args.sliding_window = std::stoi(optarg);
 	break;
       case 'h':
+      case 'e':
+	g_args.write_no_primers_flag = true;
+	break;
       case '?':
 	print_trim_usage();
 	return -1;
@@ -231,10 +247,13 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.min_length);
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.min_length);
   } else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;
+    g_args.min_depth = 0;
+    g_args.ref = "";
+    g_args.gff = "";
     opt = getopt( argc, argv, variants_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -246,6 +265,15 @@ int main(int argc, char* argv[]){
 	break;
       case 'q':
 	g_args.min_qual = std::stoi(optarg);
+	break;
+      case 'm':
+	g_args.min_depth = std::stoi(optarg);
+	break;
+      case 'r':
+	g_args.ref = optarg;
+	break;
+      case 'g':
+	g_args.gff = optarg;
 	break;
       case 'h':
       case '?':
@@ -259,9 +287,23 @@ int main(int argc, char* argv[]){
       print_variants_usage();
       return -1;
     }
+    if(g_args.gff.empty())
+      std::cout << "A GFF file containing the open reading frames (ORFs) has not been provided. Amino acid translation will not be done." << std::endl;
+    if(g_args.ref.empty())
+      std::cout << "A reference sequence has not been supplied. Amino acid translation will not be done." << std::endl;
+    if(!g_args.gff.empty() && g_args.ref.empty()){ // GFF specified but no reference then exit
+      std::cout << "Please specify reference (using -r) based on which the GFF file was computed." << std::endl;
+      print_variants_usage();
+      return -1;
+    }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
     g_args.min_threshold = (g_args.min_threshold < 0 || g_args.min_threshold > 1) ? 0.03: g_args.min_threshold;
-    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold);
+    if(isatty(STDIN_FILENO)){
+      std::cout << "Please pipe mpileup into `ivar variants` command.\n\n";
+      print_variants_usage();
+      return -1;
+    }
+    res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.ref, g_args.gff);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.min_threshold = 0;
@@ -302,12 +344,17 @@ int main(int argc, char* argv[]){
       print_consensus_usage();
       return -1;
     }
+    if(isatty(STDIN_FILENO)){
+      std::cout << "Please pipe mpileup into `ivar consensus` command.\n\n";
+      print_consensus_usage();
+      return -1;
+    }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fa");
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fasta");
     g_args.gap = (g_args.gap != 'N' && g_args.gap != '-') ? '-' : g_args.gap; // Accept only N or -
     std::cout <<"Minimum Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
-    std::cout << "Minimum depth: " << g_args.min_depth << std::endl;
+    std::cout << "Minimum depth: " << (unsigned) g_args.min_depth << std::endl;
     if(!g_args.keep_min_coverage)
       std::cout << "Regions with depth less than minimum depth will not added to consensus" << std::endl;
     else
@@ -352,10 +399,17 @@ int main(int argc, char* argv[]){
     res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, g_args.bed, cl_cmd.str());
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
+    g_args.min_threshold = 1;
     while( opt != -1 ) {
       switch( opt ) {
       case 'p':
 	g_args.prefix = optarg;
+	break;
+      case 't':
+	g_args.min_threshold = atof(optarg);
+	break;
+      case 'f':
+	g_args.file_list = optarg;
 	break;
       case 'h':
       case '?':
@@ -365,7 +419,11 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, filtervariants_opt_str);
     }
-    if(optind >= argc){
+    if(g_args.min_threshold < 0 || g_args.min_threshold > 1){
+      print_filtervariants_usage();
+      return -1;
+    }
+    if(optind >= argc && g_args.file_list.empty()){
       print_filtervariants_usage();
       return -1;
     }
@@ -374,13 +432,31 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".tsv");
-    std::string rep = "get_common_variants.sh ";
-    for(int i = optind; i<argc;i++){
-      rep += argv[i];
-      rep += " ";
+    // Read files from list
+    char **files = new char*[100];
+    int nfiles = 100, ctr = 0;
+    std::string line;
+    if (!g_args.file_list.empty()){	// File list supplied
+      std::ifstream file_fin = std::ifstream(g_args.file_list);
+      while (std::getline(file_fin, line)){
+	files[ctr] = strdup(line.c_str());
+	if(ctr == nfiles - 1){
+	  nfiles += 100;
+	  *files = (char*) realloc(*files, nfiles * (sizeof(char*)));
+	}
+	ctr++;
+      }
+      file_fin.close();
+      nfiles = (nfiles > ctr) ? ctr : nfiles;
+      res = common_variants(g_args.prefix, g_args.min_threshold, files, nfiles);
+      // Free files, nfiles
+      for (int i = 0; i < nfiles; ++i) {
+	free(files[i]);
+      }
+      free(files);
+    } else {
+      res = common_variants(g_args.prefix, g_args.min_threshold, argv + optind, argc - optind);
     }
-    rep += " | sort -s -n -k 2 > "+g_args.prefix+".tsv";
-    system(rep.c_str());
   } else if(cmd.compare("getmasked") == 0){
     opt = getopt( argc, argv, getmasked_opt_str);
     while( opt != -1 ) {
@@ -443,6 +519,7 @@ int main(int argc, char* argv[]){
   } else if(cmd.compare("version") == 0){
     print_version_info();
   } else {
+    std::cout << "Unknown command: \"" << cmd  << "\"" << std::endl << std::endl;
     print_usage();
   }
   return res;

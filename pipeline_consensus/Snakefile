@@ -1,0 +1,84 @@
+import os
+from datetime import datetime
+import time
+import re
+from shutil import copyfile
+
+import pandas as pd
+import re
+
+configfile: "config.json"
+
+reference = config["reference"]
+bed_file = config["bed_file"]
+out_dir = config["out_dir"]
+samples_path = config["samples_path"]
+
+df = pd.read_table(samples_path, sep="\t")
+_ = df.groupby("sample").sum()
+lib_delim = config["library_delimiter"]
+
+_["sample_library"] = _["sample_library"].apply(lambda x: x.split(lib_delim)[0] +"_" + "_".join(re.findall("L[0-9]+", x)))
+
+rule all:
+    input:
+        expand("{out_dir}/consensus_sequences/{sample}.fa", out_dir = out_dir, sample = _["sample_library"])
+
+rule call_consensus:
+    input:
+        "{out_dir}/trimmed_bams/{sample}.trimmed.sorted.bam"
+    output:
+        "{out_dir}/consensus_sequences/{sample}.fa"
+    shell:
+        """
+        samtools mpileup -A -Q 0 -d 0 {input} | ivar consensus -p {output} -m 10 -n N
+        """
+
+rule trim_reads:
+    input:
+        "{out_dir}/merged_aligned_bams/{sample}.sorted.bam"
+    output:
+        "{out_dir}/trimmed_bams/{sample}.trimmed.sorted.bam"
+    params:
+        bed="{bed}".format(bed = bed_file),
+        tmp="{out_dir}/trimmed_bams/{sample}.trimmed.bam"
+    shell:
+        """
+        ivar trim -e -i {input} -b {params.bed} -p {params.tmp}
+        samtools sort -T {wildcards.sample}.trim -o {output} {params.tmp}
+        rm {params.tmp}
+        """
+
+rule merge_multiple_libraries:
+    input:
+        bams=lambda wildcards: df[df["sample"] == _[_["sample_library"] == wildcards.sample].index.values[0]]["sample_library"].apply(lambda x: os.path.join(out_dir, "aligned_bams", x +".sorted.bam")).tolist(),
+        forward=lambda wildcards: df[df["sample"] == _[_["sample_library"] == wildcards.sample].index.values[0]]["forward"].sort_values().tolist(),
+        reverse=lambda wildcards: df[df["sample"] == _[_["sample_library"] == wildcards.sample].index.values[0]]["reverse"].sort_values().tolist()
+    output:
+        bam="{out_dir}/merged_aligned_bams/{sample}.sorted.bam",
+        fastq=expand("{{out_dir}}/merged_fastq/{{sample}}_R{readno}.fastq.gz", readno=[1,2])
+    params:
+        tmp="{out_dir}/merged_aligned_bams/{sample}.bam"
+    shell:
+        """
+        samtools merge {params.tmp} {input.bams}
+        samtools sort -T {wildcards.sample}.merge -o {output.bam} {params.tmp}
+        rm {params.tmp}
+        cat {input.forward} > {output.fastq[0]}
+        cat {input.reverse} > {output.fastq[1]}
+        """
+
+rule align_reads:
+    input:
+        lambda wildcards: df[df["sample_library"]==wildcards.sample][["forward", "reverse"]].values[0].tolist()
+    output:
+        temp("{out_dir}/aligned_bams/{sample}.sorted.bam")
+    params:
+        ref= "{ref}".format(ref = reference),
+        tmp="{out_dir}/aligned_bams/{sample}.sorted.tmp.bam"
+    shell:
+        """
+        bwa mem {params.ref} {input[0]} {input[1]} | samtools view -F 4 -Sb | samtools sort -T {wildcards.sample}.align -o {params.tmp}
+        samtools addreplacerg -r "ID:{wildcards.sample}" -o {output} {params.tmp}
+        rm {params.tmp}
+        """

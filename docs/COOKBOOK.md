@@ -14,7 +14,11 @@ bed = "<bed-file-with-primer-positions>"
 ref="<path to reference fasta>"
 ```
 
+<img src="https://raw.githubusercontent.com/andersen-lab/ivar/master/pipeline/pipeline.png" width="500" />
+
 ### Call iSNVs from samples with known reference sequence
+
+[Link to Jupyter Notebook](https://github.com/andersen-lab/paper_2018_primalseq-ivar/blob/master/cookbook/CookBook.ipynb)
 
 [Link to pipeline](https://github.com/andersen-lab/ivar/tree/master/pipeline)
 
@@ -23,9 +27,7 @@ ref="<path to reference fasta>"
 * [iVar](https://github.com/andersen-lab/ivar)
 * [samtools](https://htslib.org/)
 * [bwa](https://github.com/lh3/bwa)
-
-
-<img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline/pipeline.png" width="500" />
+* [bedtools](https://bedtools.readthedocs.io/en/latest/)
 
 ### Call iSNVs from samples with unknown reference sequence
 
@@ -37,5 +39,3 @@ ref="<path to reference fasta>"
 * [samtools](https://htslib.org/)
 * [bwa](https://github.com/lh3/bwa)
 * [bedtools](https://bedtools.readthedocs.io/en/latest/)
-
-<img src="https://raw.githubusercontent.com/gkarthik/IVAR/master/pipeline_field/pipeline_field.png" width="500" />

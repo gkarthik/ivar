@@ -1,0 +1,7 @@
+{
+  "reference": "/path/to/bwa/ref",
+  "bed_file": "/path/to/primer/bed/file",
+  "out_dir": "/path/to/outdir",
+  "samples_path": "example_samples.tsv",
+  "library_delimiter": "_"
+}
