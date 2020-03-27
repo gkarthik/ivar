@@ -2,6 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <algorithm>
 
 #ifndef primer_bed
 #define primer_bed
