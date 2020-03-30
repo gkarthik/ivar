@@ -14,7 +14,7 @@ std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){
 
 double* get_frequency_depth(allele a, uint32_t pos_depth, uint32_t total_depth){ // pos_depth is ungapped depth after passing quality. total_depth is depth without quality filtering for indels.
   double *val = new double[2];
-  if(a.nuc[0] == '+'){	// For insertions use depth discarding quality
+  if(a.nuc[0] == '+' || a.nuc[0] == '-'){	// For insertions and deletions use depth discarding quality
     val[0] = a.depth/(double)total_depth;
     val[1] = total_depth;
     return val;
