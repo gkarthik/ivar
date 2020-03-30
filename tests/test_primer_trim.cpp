@@ -10,6 +10,18 @@ int main(){
   std::string region_;
   samFile *in = hts_open(bam.c_str(), "r");
   hts_idx_t *idx = sam_index_load(in, bam.c_str());
+  if (idx == NULL) {
+    if (sam_index_build2(bam.c_str(), 0, 0) < 0) {
+      std::cerr << ("Unable to open BAM/SAM index.") << std::endl;
+      return -1;
+    } else {
+      idx = sam_index_load(in, bam.c_str());
+      if (idx == NULL) {
+        std::cerr << "Unable to create BAM/SAM index." << std::endl;
+        return -1;
+      }
+    }
+  }
   bam_hdr_t *header = sam_hdr_read(in);
   region_.assign(header->target_name[0]);
   std::string temp(header->text);
