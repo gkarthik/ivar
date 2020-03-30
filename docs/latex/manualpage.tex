@@ -79,7 +79,9 @@ Puerto  1054    1076    400\_3\_out\_R*    60  -
 .
 \end{DoxyCode}
 \hypertarget{manualpage_autotoc_md17}{}\subsection{Call variants with i\+Var}\label{manualpage_autotoc_md17}
-i\+Var uses the output of the {\ttfamily samtools mpileup} command to call variants -\/ single nucleotide variants(\+S\+N\+Vs) and indels. In order to call variants correctly, the reference file used for alignment must be passed to i\+Var using the {\ttfamily -\/r} flag. The output of {\ttfamily samtools pileup} is piped into {\ttfamily ivar variants} to generate a .tsv file with the variants. There are two parameters that can be set for variant calling using i\+Var -\/ minimum quality(\+Default\+: 20) and minimum frequency(Default\+: 0.\+03). Minimum quality is the minimum quality for a base to be counted towards the ungapped depth to canculate i\+S\+NV frequency at a given position. For insertions, the quality metric is discarded and the mpileup depth is used directly. Minimum frequency is the minimum frequency required for a S\+NV or indel to be reported. \paragraph*{Amino acid translation of i\+S\+N\+Vs}
+i\+Var uses the output of the {\ttfamily samtools mpileup} command to call variants -\/ single nucleotide variants(\+S\+N\+Vs) and indels. In order to call variants correctly, the reference file used for alignment must be passed to i\+Var using the {\ttfamily -\/r} flag. The output of {\ttfamily samtools pileup} is piped into {\ttfamily ivar variants} to generate a .tsv file with the variants. There are two parameters that can be set for variant calling using i\+Var -\/ minimum quality(\+Default\+: 20) and minimum frequency(Default\+: 0.\+03). Minimum quality is the minimum quality for a base to be counted towards the ungapped depth to canculate i\+S\+NV frequency at a given position. For insertions, the quality metric is discarded and the mpileup depth is used directly. Minimum frequency is the minimum frequency required for a S\+NV or indel to be reported.
+
+\paragraph*{Amino acid translation of i\+S\+N\+Vs}
 
 i\+Var can identify codons and translate variants into amino acids using a G\+FF file in the https\+://github.com/\+The-\/\+Sequence-\/\+Ontology/\+Specifications/blob/master/gff3.\+md \char`\"{}\+G\+F\+F3\char`\"{} format containing the required coding regions (C\+DS). In absence of a G\+FF file, i\+Var will not perform the translation and \char`\"{}\+N\+A\char`\"{} will be added to the output file in place of the reference and alternate codons and amino acids. The G\+FF file in the G\+F\+F3 format can be downloaded via ftp from N\+C\+BI Ref\+Seq/\+Genbank. They are usually the files with the extension \char`\"{}.\+gff.\+gz\char`\"{}. For example, the G\+FF file for Zaire Ebolavirus can be found \href{ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/viral/Zaire_ebolavirus/all_assembly_versions/GCF_000848505.1_ViralProj14703}{\tt here}. More details on G\+F\+F3 files hosted by N\+C\+BI can be found in their ftp \href{https://www.ncbi.nlm.nih.gov/genome/doc/ftpfaq/}{\tt F\+A\+Qs}.
 
@@ -99,8 +101,9 @@ If a certain base is present in multiple C\+D\+Ss, i\+Var will add a new row for
 
 Command\+: 
 \begin{DoxyCode}
-Usage: samtools mpileup -A -d 0 -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t
-       <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]
+Usage: samtools mpileup -aa -A -d 0 -B -Q 0 --reference [<reference-fasta] <input.bam> | ivar variants -p
+       <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g
+       GFF file]
 
 Note : samtools mpileup output must be piped into ivar variants
 
@@ -327,7 +330,7 @@ Command\+:
 \begin{DoxyCode}
 ivar consensus
 
-Usage: samtools mpileup -A -d 300000 -Q 0 <input.bam> | ivar consensus -p <prefix>
+Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix>
 
 Note : samtools mpileup output must be piped into ivar consensus
 
