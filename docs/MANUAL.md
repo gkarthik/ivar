@@ -80,6 +80,7 @@ Call variants with iVar
 ----
 
 iVar uses the output of the `samtools mpileup` command to call variants - single nucleotide variants(SNVs) and indels. In order to call variants correctly, the reference file used for alignment must be passed to iVar using the `-r` flag. The output of `samtools pileup` is piped into `ivar variants` to generate a .tsv file with the variants. There are two parameters that can be set for variant calling using iVar - minimum quality(Default: 20) and minimum frequency(Default: 0.03). Minimum quality is the minimum quality for a base to be counted towards the ungapped depth to canculate iSNV frequency at a given position. For insertions, the quality metric is discarded and the mpileup depth is used directly. Minimum frequency is the minimum frequency required for a SNV or indel to be reported. 
+
 #### Amino acid translation of iSNVs
 
 iVar can identify codons and translate variants into amino acids using a GFF file in the [GFF3](https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md) format containing the required coding regions (CDS). In absence of a GFF file, iVar will not perform the translation and "NA" will be added to the output file in place of the reference and alternate codons and amino acids. The GFF file in the GFF3 format can be downloaded via ftp from NCBI RefSeq/Genbank. They are usually the files with the extension ".gff.gz". For example, the GFF file for Zaire Ebolavirus can be found [here](ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/viral/Zaire_ebolavirus/all_assembly_versions/GCF_000848505.1_ViralProj14703). More details on GFF3 files hosted by NCBI can be found in their ftp [FAQs](https://www.ncbi.nlm.nih.gov/genome/doc/ftpfaq/).
@@ -97,7 +98,7 @@ If a certain base is present in multiple CDSs, iVar will add a new row for each 
 
 Command:
 ```
-Usage: samtools mpileup -A -d 0 -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]
+Usage: samtools mpileup -aa -A -d 0 -B -Q 0 --reference [<reference-fasta] <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]
 
 Note : samtools mpileup output must be piped into ivar variants
 
@@ -264,7 +265,7 @@ Command:
 ```
 ivar consensus
 
-Usage: samtools mpileup -A -d 300000 -Q 0 <input.bam> | ivar consensus -p <prefix>
+Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix>
 
 Note : samtools mpileup output must be piped into ivar consensus
 
