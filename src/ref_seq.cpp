@@ -2,8 +2,8 @@
 
 char ref_antd::get_base(int64_t pos, std::string region){ // 1-based position
   int len;
-  if(!region.empty() && fai != NULL){
-    seq = fai_fetch(fai, region.c_str(), &len);
+  if(!region.empty() && this->fai != NULL){
+    seq = fai_fetch(this->fai, region.c_str(), &len);
   }
   if(seq == NULL)
     return 0;
@@ -12,7 +12,7 @@ char ref_antd::get_base(int64_t pos, std::string region){ // 1-based position
 
 char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature){
   int len;
-  seq = fai_fetch(fai, region.c_str(), &len);
+  seq = fai_fetch(this->fai, region.c_str(), &len);
   int64_t edit_pos = feature.get_edit_position(), codon_start_pos;
   std::string edit_sequence = feature.get_edit_sequence();
   char *codon = new char[3];
@@ -39,7 +39,7 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature)
 
 char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature, char alt){
   int len;
-  seq = fai_fetch(fai, region.c_str(), &len);
+  seq = fai_fetch(this->fai, region.c_str(), &len);
   int64_t edit_pos = feature.get_edit_position(), codon_start_pos;
   std::string edit_sequence = feature.get_edit_sequence();
   char *codon = new char[3];
@@ -77,15 +77,20 @@ int ref_antd::add_gff(std::string path){
 }
 
 int ref_antd::add_seq(std::string path){
-  fai = NULL;
+  this->fai = NULL;
   // Read reference file
   if(!path.empty())
-    fai = fai_load(path.c_str());
-  if(!fai && !path.empty()){
+    this->fai = fai_load(path.c_str());
+  if(!this->fai && !path.empty()){
     std::cout << "Reference file does not exist at " << path << std::endl;
     return -1;
   }
   return 0;
+}
+
+ref_antd::ref_antd(std::string ref_path){
+  this->seq = NULL;
+  this->add_seq(ref_path);
 }
 
 ref_antd::ref_antd(std::string ref_path, std::string gff_path){
