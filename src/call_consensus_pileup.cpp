@@ -5,13 +5,9 @@ void format_alleles(std::vector<allele> &ad){
   while(it < ad.end()){
     if(it->nuc[0] == '-'){	// Remove deletions
       it = ad.erase(it);
-    } // else if (it->nuc[0] == '+'){
-    //   it->nuc[0] = it->prev_base;
-    //   prev_ind = find_ref_in_allele(ad, it->prev_base);
-    //   if(prev_ind!=-1)
-    // 	ad.at(prev_ind).depth -= it->depth;
-    // }
-    ++it;
+    } else {
+      ++it;
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 #include "ref_seq.h"
 
-char ref_antd::get_base(int64_t pos, std::string region){
+char ref_antd::get_base(int64_t pos, std::string region){ // 1-based position
   int len;
   if(!region.empty() && fai != NULL){
     seq = fai_fetch(fai, region.c_str(), &len);
