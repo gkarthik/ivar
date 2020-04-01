@@ -211,7 +211,7 @@ void replace_cigar(bam1_t *b, int n, uint32_t *cigar){
   } else memcpy(b->data + b->core.l_qname, cigar, n * 4);
 }
 
-uint8_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
+std::vector<primer*> get_overlapping_primers(bam1_t* r, std::vector<primer> primers){
   uint32_t query_pos, start_pos, *cigar = bam_get_cigar(r);
   if(bam_is_rev(r)){
     start_pos = bam_endpos(r)-1;
@@ -220,13 +220,13 @@ uint8_t get_overlapping_primer_indice(bam1_t* r, std::vector<primer> primers){
     start_pos = r->core.pos;
     query_pos = start_pos - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos);
   }
-  uint8_t i;
-  for(i = 0; i < primers.size();i++){
-    // query_pos >= primers[i].get_start() && query_pos <= primers[i].get_end()
-    if(start_pos >= primers[i].get_start() && start_pos <= primers[i].get_end()) // Change int to int32_t in primer_bed.cpp
-      return i;
+  std::vector<primer*> overlapped_primers;
+  for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
+    // query_pos >= it->get_start() && query_pos <= it->get_end()
+    if(start_pos >= it->get_start() && start_pos <= it->get_end()) // Change int to int32_t in primer_bed.cpp
+      overlapped_primers.push_back(&(*it));
   }
-  return i;
+  return overlapped_primers;
 }
 
 cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
@@ -395,21 +395,25 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   bam1_t *aln = bam_init1();
   int ctr = 0;
   cigar_ t;
-  uint8_t p;
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
   bool unmapped_flag = false;
   uint32_t unmapped_counter = 0;
+  primer *cand_primer;
+  std::vector<primer*> overlapping_primers;
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
     if((aln->core.flag&BAM_FUNMAP) == 0){
-      p = get_overlapping_primer_indice(aln, primers);
-      if(p < primers.size()){
+      overlapping_primers.clear();
+      overlapping_primers = get_overlapping_primers(aln, primers);
+      if(overlapping_primers.size() > 0){
 	primer_trim_count++;
 	if(bam_is_rev(aln)){
-	  t = primer_trim(aln, primers[p].get_start() - 1);
+	  cand_primer = get_min_start(overlapping_primers);
+	  t = primer_trim(aln, cand_primer->get_start() - 1);
 	} else {
-	  t = primer_trim(aln, primers[p].get_end() + 1);
-	  aln->core.pos = primers[p].get_end() + 1;
+	  cand_primer = get_max_end(overlapping_primers);
+	  t = primer_trim(aln, cand_primer->get_end() + 1);
+	  aln->core.pos = cand_primer->get_end() + 1;
 	}
 	replace_cigar(aln, t.nlength, t.cigar);
       }
@@ -425,8 +429,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       continue;
     }
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-      if(p < primers.size()){	// Write to BAM only if primer found.
-	bam_aux_append(aln, "XA", 'C', 1, (uint8_t*) &p);
+      if(overlapping_primers.size() > 0){	// Write to BAM only if primer found.
+	int16_t cand_ind = cand_primer->get_indice();
+	bam_aux_append(aln, "XA", 's', 1, (uint8_t*) &cand_ind);
 	if(bam_write1(out, aln) < 0){
 	  std::cout << "Not able to write to BAM" << std::endl;
 	  hts_itr_destroy(iter);
