@@ -77,6 +77,7 @@ std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path.c_str());
   std::string line;
   std::vector<primer> primers;
+  int16_t indice = 0;
   while(std::getline(data,line)){ // Remove extra lineStream
     std::stringstream lineStream(line);
     std::string cell;
@@ -122,8 +123,10 @@ std::vector<primer> populate_from_file(std::string path){
       }
       ctr++;
     }
+    p.set_indice(indice);
     p.set_pair_indice(-1);
     primers.push_back(p);
+    indice++;
   }
   if(primers.size() == 0){
     print_bed_format();
