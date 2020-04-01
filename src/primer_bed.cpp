@@ -12,11 +12,11 @@ int primer::get_score(){
   return score;
 }
 
-uint32_t primer::get_start(){
+uint32_t primer::get_start() const {
   return start;
 }
 
-uint32_t primer::get_end(){
+uint32_t primer::get_end() const{
   return end;
 }
 
@@ -28,8 +28,12 @@ int primer::get_length(){
   return end - start + 1;
 }
 
-int primer::get_pair_indice(){
+int16_t primer::get_pair_indice(){
   return pair_indice;
+}
+
+int16_t primer::get_indice(){
+  return indice;
 }
 
 void primer::set_start(uint32_t  s){
@@ -56,8 +60,12 @@ void primer::set_score(int s){
   score = s;
 }
 
-void primer::set_pair_indice(int i){
+void primer::set_pair_indice(int16_t i){
   pair_indice = i;
+}
+
+void primer::set_indice(int16_t i){
+  indice = i;
 }
 
 void print_bed_format(){
@@ -148,7 +156,7 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
   std::string line, cell, p1,p2;
   std::stringstream line_stream;
   std::vector<primer>::iterator it;
-  int indice = -1;
+  int32_t indice;
   while (std::getline(fin, line)){
     line_stream << line;
     std::getline(line_stream, cell, '\t');
@@ -178,15 +186,15 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
   return 0;
 }
 
-primer* get_min_start(std::vector<primer> primers){
+primer* get_min_start(std::vector<primer*> primers){
   std::vector<primer>::iterator it;
   auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer const& lhs, primer const& rhs) {return lhs.get_start() < rhs.get_start();});
-  return &(*minmax_start.first);
+  return *minmax_start.first;
 }
 
 
-primer* get_max_end(std::vector<primer> primers){
+primer* get_max_end(std::vector<primer*> primers){
   std::vector<primer>::iterator it;
   auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer const& lhs, primer const& rhs) {return lhs.get_end() < rhs.get_end();});
-  return &(*minmax_start.second);
+  return *minmax_start.second;
 }
