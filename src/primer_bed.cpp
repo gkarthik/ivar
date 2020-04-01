@@ -191,13 +191,12 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
 
 primer* get_min_start(std::vector<primer*> primers){
   std::vector<primer>::iterator it;
-  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer const& lhs, primer const& rhs) {return lhs.get_start() < rhs.get_start();});
+  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer *lhs, primer *rhs) {return lhs->get_start() < rhs->get_start();});
   return *minmax_start.first;
 }
 
 
 primer* get_max_end(std::vector<primer*> primers){
-  std::vector<primer>::iterator it;
-  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer const& lhs, primer const& rhs) {return lhs.get_end() < rhs.get_end();});
+  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer *lhs, primer *rhs) {return lhs->get_end() < rhs->get_end();});
   return *minmax_start.second;
 }
