@@ -79,7 +79,7 @@ int vcf_writer::write_record(uint32_t pos, allele aalt, allele aref, uint32_t de
   float tmpf = (float)aref.depth/(float)depth;
   bcf_update_info_float(this->hdr, rec, "AF", &tmpf, bcf_hdr_nsamples(this->hdr));
   // Set genotype to ref since it crossed threshold.
-  tmp[0] = bcf_gt_phased(1);
+  tmp[0] = bcf_gt_unphased(1);
   bcf_update_genotypes(this->hdr, rec, tmp, 1);
   // FORMAT
   tmpi = aalt.depth - aalt.reverse;
@@ -93,12 +93,13 @@ int vcf_writer::write_record(uint32_t pos, allele aalt, allele aref, uint32_t de
   if(res != 0)
     std::cout << "Unable to write to VCF/BCF file!" << std::endl;
   delete tmp;
+  bcf_clear1(rec);
  return res;
 }
 
 int main(int argc, char *argv[])
 {
-  vcf_writer *vw = new vcf_writer(0, "./test.vcf", "test", "test_sample", "../data/db/test_ref.fa");
+  vcf_writer *vw = new vcf_writer('b', "./test.vcf", "test", "test_sample", "../data/db/test_ref.fa");
   allele r = {
   depth: 5,
   reverse: 2,
@@ -108,10 +109,10 @@ int main(int argc, char *argv[])
   allele a = {
   depth: 10,
   reverse: 6,
-  nuc: "-TA",
+  nuc: "T",
   mean_qual:25
   };
-  int res = vw->write_record(5, a, r, 15);
+  vw->write_record(5, a, r, 15);
   delete vw;
   return 0;
 }
