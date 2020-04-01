@@ -10,8 +10,8 @@
 class primer {
  private:
   std::string region;
-  unsigned int start;
-  unsigned int end;
+  uint32_t start;		// 0 based
+  uint32_t end;			// 0 based
   std::string name;
   int score;
   char strand;
@@ -21,8 +21,8 @@ class primer {
   std::string get_name();
   std::string get_region();
   int get_score();
-  unsigned int get_start();
-  unsigned int get_end();
+  uint32_t get_start() const;
+  uint32_t get_end() const;
   char get_strand();
   int get_length();
   int get_pair_indice();
@@ -39,5 +39,7 @@ std::vector<primer> populate_from_file(std::string path);
 int get_primer_indice(std::vector<primer> p, unsigned int pos);
 int get_primer_indice(std::vector<primer> p, std::string name);
 int populate_pair_indices(std::vector<primer> &primers, std::string path);
+uint32_t get_min_start(std::vector<primer> primers);
+uint32_t get_max_end(std::vector<primer> primers);
 
 #endif

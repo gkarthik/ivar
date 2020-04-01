@@ -12,11 +12,11 @@ int primer::get_score(){
   return score;
 }
 
-unsigned int primer::get_start(){
+uint32_t primer::get_start(){
   return start;
 }
 
-unsigned int primer::get_end(){
+uint32_t primer::get_end(){
   return end;
 }
 
@@ -32,11 +32,11 @@ int primer::get_pair_indice(){
   return pair_indice;
 }
 
-void primer::set_start(unsigned int s){
+void primer::set_start(uint32_t  s){
   start = s;
 }
 
-void primer::set_end(unsigned int e){
+void primer::set_end(uint32_t e){
   end = e;
 }
 
@@ -176,4 +176,17 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
     }
   }
   return 0;
+}
+
+uint32_t get_min_start(std::vector<primer> primers){
+  std::vector<primer>::iterator it;
+  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer const& lhs, primer const& rhs) {return lhs.get_start() < rhs.get_start();});
+  return minmax_start.first->get_start();
+}
+
+
+uint32_t get_max_end(std::vector<primer> primers){
+  std::vector<primer>::iterator it;
+  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer const& lhs, primer const& rhs) {return lhs.get_end() < rhs.get_end();});
+  return minmax_start.second->get_end();
 }
