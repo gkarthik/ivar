@@ -36,8 +36,8 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
     pos--;			// 1 based to 0 based
     tmp = get_primers(primers, pos);
     for(std::vector<primer>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
-      std::vector<primer>::iterator tmp_it = std::find_if(mismatches_primers.begin(), mismatches_primers.end(), *it);
-      if(tmp_it != tmp.end())
+      std::vector<primer>::iterator tmp_it = std::find(mismatches_primers.begin(), mismatches_primers.end(), *it);
+      if(tmp_it == tmp.end())
 	mismatches_primers.push_back(*it);
     }
     mismatches_primers.insert(mismatches_primers.end(), tmp.begin(), tmp.end());
