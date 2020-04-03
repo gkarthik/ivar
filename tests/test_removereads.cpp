@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
     uint8_t* a = bam_aux_get(aln, "XA");
     w = true;
     if(a != 0){
-      if(bam_aux2i(a) == 0 || bam_aux2i(a) == 2 || bam_aux2i(a) == 4){
+      if(bam_aux2i(a) == 2 || bam_aux2i(a) == 4 || bam_aux2i(a) == 6 || bam_aux2i(a) == 1 || bam_aux2i(a) == 3 || bam_aux2i(a) == 5){
 	w = false;
       }
     }
