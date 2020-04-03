@@ -145,6 +145,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
   std::string bases;
   std::string qualities;
   std::vector<allele> ad;
+  uint32_t bases_zero_depth = 0, bases_min_depth = 0, total_bases = 0;
   while (std::getline(cin, line)){
     lineStream << line;
     ctr = 0;
@@ -172,6 +173,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       }
       ctr++;
     }
+    total_bases++;
     if(prev_pos == 0)		// No -/N before alignment starts
       prev_pos = pos;
     if((pos > prev_pos && min_coverage_flag)){
@@ -184,9 +186,14 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
       t = get_consensus_allele(ad, min_qual, threshold, gap);
       fout << t.nuc;
       tmp_qout << t.q;
-    } else if(min_coverage_flag){
-      fout << gap;
-      tmp_qout << '!';
+    } else{
+      bases_min_depth += 1;
+      if (mdepth == 0)
+	bases_zero_depth += 1;
+      if(min_coverage_flag){
+	fout << gap;
+	tmp_qout << '!';
+      }
     }
     lineStream.clear();
     ad.clear();
@@ -196,5 +203,8 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
   tmp_qout << "\n";
   tmp_qout.close();
   fout.close();
+  std::cout << "Reference length: " << total_bases << std::endl;
+  std::cout << "Positions with 0 depth: " << bases_zero_depth << std::endl;
+  std::cout << "Positions with depth below " <<(unsigned) min_depth << ":" << bases_min_depth << std::endl;
   return 0;
 }
