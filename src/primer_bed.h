@@ -27,7 +27,7 @@ class primer {
   char get_strand();
   int get_length();
   int16_t get_pair_indice();
-  int16_t get_indice();
+  int16_t get_indice() const;
   void set_start(uint32_t s);
   void set_end(uint32_t e);
   void set_strand(char s);
@@ -36,10 +36,14 @@ class primer {
   void set_score(int s);
   void set_pair_indice(int16_t i);
   void set_indice(int16_t i);
+  bool operator == (const primer& p) const{
+    return (indice == p.get_indice()) ? true : false;
+  }
+
 };
 
 std::vector<primer> populate_from_file(std::string path);
-int get_primer_indice(std::vector<primer> p, unsigned int pos);
+std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos);
 int get_primer_indice(std::vector<primer> p, std::string name);
 int populate_pair_indices(std::vector<primer> &primers, std::string path);
 primer get_min_start(std::vector<primer> primers);

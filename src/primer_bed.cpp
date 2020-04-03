@@ -32,7 +32,7 @@ int16_t primer::get_pair_indice(){
   return pair_indice;
 }
 
-int16_t primer::get_indice(){
+int16_t primer::get_indice() const{
   return indice;
 }
 
@@ -136,15 +136,17 @@ std::vector<primer> populate_from_file(std::string path){
   return primers;
 }
 
-int get_primer_indice(std::vector<primer> p, unsigned int pos){
+std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos){
+  std::vector<primer> primers_with_mismatches;
   for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
     if(it->get_start() <= pos && it->get_end() >= pos){
-      return it - p.begin();
+      primers_with_mismatches.push_back(*it);
     }
   }
-  return -1;
+  return primers_with_mismatches;
 }
 
+// Assumes unique primer names in BED file
 int get_primer_indice(std::vector<primer> p, std::string name){
   for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
     if(it->get_name().compare(name) == 0){
