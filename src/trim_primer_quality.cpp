@@ -399,6 +399,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   uint32_t unmapped_counter = 0;
   primer cand_primer;
   std::vector<primer> overlapping_primers;
+  std::vector<primer>::iterator cit;
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
     if((aln->core.flag&BAM_FUNMAP) == 0){
@@ -414,6 +415,10 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  aln->core.pos = cand_primer.get_end() + 1;
 	}
 	replace_cigar(aln, t.nlength, t.cigar);
+	// Add count to primer
+	cit = std::find(primers.begin(), primers.end(), cand_primer);
+	if(cit != primers.end())
+	  cit->add_read_count(1);
       }
       t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
       if(bam_is_rev(aln))
@@ -465,7 +470,11 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   }
   std::cout << std::endl << "-------" << std::endl;
   std::cout << "Results: " << std::endl;
-  std::cout << "Trimmed primers from " << round_int(primer_trim_count, mapped) << "% (" << primer_trim_count <<  ") of reads." << std::endl;
+  std::cout << "Primer Name" << "\t" << "Read Count" << std::endl;
+  for(cit = primers.begin(); cit != primers.end(); ++cit) {
+    std::cout << cit->get_name() << "\t" << cit->get_read_count() << std::endl;
+  }
+  std::cout << std::endl << "Trimmed primers from " << round_int(primer_trim_count, mapped) << "% (" << primer_trim_count <<  ") of reads." << std::endl;
   std::cout << round_int( low_quality, mapped) << "% (" << low_quality << ") of reads were quality trimmed below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
   if(write_no_primer_reads){
     std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since the -e flag was given, these reads were written to file." << std::endl;
