@@ -235,7 +235,7 @@ Description of fields
 Generate a consensus sequences from an aligned BAM file
 ----
 
-To generate a consensus sequence iVar uses the output of `samtools mpileup` command. The mpileup output must be piped into `ivar consensus`. There are five parameters that can be set -  minimum quality(Default: 20), minimum frequency threshold(Default: 0), minimum depth to call a consensus(Default: 1), a flag to exclude nucleotides from regions with depth less than the minimum depth and a character to call in regions with coverage lower than the speicifed minimum depth(Default: '-'). Minimum quality is the minimum quality of a base to be considered in calculations of variant frequencies at a given position. Minimum frequency threshold is the minimum frequency that a base must match to be called as the consensus base at a position. If one base is not enough to match a given frequency, then an ambigious nucleotide is called at that position. Minimum depth is the minimum required depth to call a consensus. If '-k' flag is set then these regions are not included in the consensus sequence. If '-k' is not set then by default, a '-' is called in these regions. You can also specfy which character you want to add to the consensus to cover regions with depth less than the minimum depth. This can be done using -n options. It takes onr of two values: '-' or 'N'.
+To generate a consensus sequence iVar uses the output of `samtools mpileup` command. The mpileup output must be piped into `ivar consensus`. There are five parameters that can be set -  minimum quality(Default: 20), minimum frequency threshold(Default: 0), minimum depth to call a consensus(Default: 10), a flag to exclude nucleotides from regions with depth less than the minimum depth and a character to call in regions with coverage lower than the speicifed minimum depth(Default: 'N'). Minimum quality is the minimum quality of a base to be considered in calculations of variant frequencies at a given position. Minimum frequency threshold is the minimum frequency that a base must match to be called as the consensus base at a position. If one base is not enough to match a given frequency, then an ambigious nucleotide is called at that position. Minimum depth is the minimum required depth to call a consensus. If '-k' flag is set then these regions are not included in the consensus sequence. If '-k' is not set then by default, a 'N' is called in these regions. You can also specfy which character you want to add to the consensus to cover regions with depth less than the minimum depth. This can be done using -n option. It takes one of two values: '-' or 'N'.
 
 As an example, consider a position with 6As, 3Ts and 1C. The table below shows the consensus nucleotide called at different frequencies.
 
@@ -265,9 +265,9 @@ Command:
 ```
 ivar consensus
 
-Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix>
+Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix> 
 
-Note : samtools mpileup output must be piped into ivar consensus
+Note : samtools mpileup output must be piped into `ivar consensus`
 
 Input Options    Description
            -q    Minimum quality score threshold to count base (Default: 20)
@@ -279,13 +279,12 @@ Input Options    Description
                                         0.5 | Strict or bases that make up atleast 50% of the depth at a position
                                         0.9 | Strict or bases that make up atleast 90% of the depth at a position
                                           1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities
-           -m    Minimum depth to call consensus(Default: 1)
-           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n
-           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)
+           -m    Minimum depth to call consensus(Default: 10)
+           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n 
+           -n    (N/-) Character to print in regions with less than minimum coverage(Default: N)
 
 Output Options   Description
            -p    (Required) Prefix for the output fasta file and quality file
-
 ```
 
 Example Usage:
