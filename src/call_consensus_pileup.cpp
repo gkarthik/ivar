@@ -205,6 +205,6 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
   fout.close();
   std::cout << "Reference length: " << total_bases << std::endl;
   std::cout << "Positions with 0 depth: " << bases_zero_depth << std::endl;
-  std::cout << "Positions with depth below " <<(unsigned) min_depth << ":" << bases_min_depth << std::endl;
+  std::cout << "Positions with depth below " <<(unsigned) min_depth << ": " << bases_min_depth << std::endl;
   return 0;
 }
