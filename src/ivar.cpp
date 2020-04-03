@@ -110,9 +110,9 @@ void print_consensus_usage(){
     "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
-    "           -m    Minimum depth to call consensus(Default: 1)\n"
+    "           -m    Minimum depth to call consensus(Default: 10)\n"
     "           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n \n"
-    "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)\n\n"
+    "           -n    Character to print in regions with less than minimum coverage(Default: N)\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output fasta file and quality file\n";
 }
@@ -307,8 +307,8 @@ int main(int argc, char* argv[]){
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.min_threshold = 0;
-    g_args.min_depth = 0;
-    g_args.gap = '-';
+    g_args.min_depth = 10;
+    g_args.gap = 'N';
     g_args.min_qual = 20;
     g_args.keep_min_coverage = true;
     while( opt != -1 ) {
