@@ -10,8 +10,8 @@ int main(){
   std::vector<primer> primers = populate_from_file("../data/test.bed");
   std::string primer_names[] = {"WNV_400_1_LEFT", "WNV_400_1_LEFT_alt", "WNV_400_2_LEFT", "WNV_400_1_RIGHT", "WNV_400_2_RIGHT", "WNV_400_3_LEFT", "WNV_400_2_LEFT_alt", "WNV_400_2_RIGHT_alt"};
   int primer_indices[] = {0,1,2,3,4,5,6,7,8};
-  unsigned int primer_start[] = {8,7, 249, 359,658,569,251,352};
-  unsigned int primer_end[] = {29,27, 270, 380,679,590,273,378};
+  unsigned int primer_start[] = {8,7, 230, 359,658,569,251,352};
+  unsigned int primer_end[] = {29,27, 249, 380,679,590,273,378};
   int flag = 1;
   for(it = primers.begin(); it != primers.end(); ++it) {
     if(it->get_name() != primer_names[it-primers.begin()] || it->get_start() != primer_start[it-primers.begin()] || it->get_end() != primer_end[it-primers.begin()]){
