@@ -36,6 +36,10 @@ int16_t primer::get_indice() const{
   return indice;
 }
 
+uint32_t primer::get_read_count() const{
+  return read_count;
+}
+
 void primer::set_start(uint32_t  s){
   start = s;
 }
@@ -67,6 +71,15 @@ void primer::set_pair_indice(int16_t i){
 void primer::set_indice(int16_t i){
   indice = i;
 }
+
+void primer::set_read_count(uint32_t rc){
+  read_count = rc;
+}
+
+void primer::add_read_count(uint32_t rc){
+  read_count += rc;
+}
+
 
 void print_bed_format(){
   std::cout << "iVar uses the standard 6 column BED format as defined here - https://genome.ucsc.edu/FAQ/FAQformat.html#format1." << std::endl;
@@ -125,6 +138,7 @@ std::vector<primer> populate_from_file(std::string path){
     }
     p.set_indice(indice);
     p.set_pair_indice(-1);
+    p.set_read_count(0);
     primers.push_back(p);
     indice++;
   }

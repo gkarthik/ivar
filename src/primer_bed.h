@@ -17,6 +17,7 @@ class primer {
   char strand;
   int16_t pair_indice;
   int16_t indice;
+  uint32_t read_count;
 
  public:
   std::string get_name();
@@ -28,6 +29,7 @@ class primer {
   int get_length();
   int16_t get_pair_indice();
   int16_t get_indice() const;
+  uint32_t get_read_count() const;
   void set_start(uint32_t s);
   void set_end(uint32_t e);
   void set_strand(char s);
@@ -36,6 +38,8 @@ class primer {
   void set_score(int s);
   void set_pair_indice(int16_t i);
   void set_indice(int16_t i);
+  void set_read_count(uint32_t rc);
+  void add_read_count(uint32_t rc);
   bool operator == (const primer& p) const{
     return (indice == p.get_indice()) ? true : false;
   }
