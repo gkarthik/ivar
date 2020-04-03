@@ -37,5 +37,6 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos);
 void replace_cigar(bam1_t *b, int n, uint32_t *cigar);
 cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n);
 cigar_ condense_cigar(uint32_t* cigar, uint32_t n);
+void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapping_primers);
 
 #endif
