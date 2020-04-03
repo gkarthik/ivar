@@ -36,7 +36,7 @@ int main(){
   int cigar_len[5][3] = {{11, 139}, {24, 11, 115}, {121, 23, 6}, {103, 23, 24}, {23, 127}};
   int condense_cigar_flag[5][3] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
   int condense_cigar_len[5][3] = {{11, 139}, {35, 115}, {121, 29}, {103, 47}, {23, 127}};
-  int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 2};
+  int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
   primer cand_primer;
