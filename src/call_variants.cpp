@@ -1,6 +1,5 @@
 #include "call_variants.h"
 
-const char gap='N';
 const float sig_level = 0.01;
 
 std::vector<allele>::iterator get_ref_allele(std::vector<allele> &ad, char ref){

@@ -48,7 +48,7 @@ int get_sub_score(char a, char b){
     j = 3;
     break;
   case 'N':
-    i = 4;
+    j = 4;
     break;
   }
   return substitution[i][j];

@@ -27,7 +27,6 @@ private:
   char *seq;
   gff3 gff;
   faidx_t *fai;
-  int ref_len;
   std::string region;
 };
 
