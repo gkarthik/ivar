@@ -41,10 +41,9 @@ int find_ref_in_allele(std::vector<allele> ad, char ref){
 std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities, uint8_t min_qual){
   std::vector<allele> ad;
   std::string indel;
-  int i = 0, n =0, j = 0, q_ind = 0;
+  uint32_t i = 0, n =0, j = 0, q_ind = 0;
   bool beg, end;
   uint8_t q;
-  float num = 0, den = 0;
   while (i < bases.length()){
     beg = false;
     end = false;

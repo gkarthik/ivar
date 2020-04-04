@@ -15,22 +15,23 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature)
   seq = fai_fetch(this->fai, region.c_str(), &len);
   int64_t edit_pos = feature.get_edit_position(), codon_start_pos;
   std::string edit_sequence = feature.get_edit_sequence();
+  int64_t edit_sequence_size = edit_sequence.size();
   char *codon = new char[3];
   int i;
   int64_t edit_offset = 0;
-  if(pos > edit_pos + edit_sequence.size() && edit_pos != -1){
-    edit_offset = (pos - edit_pos) > edit_sequence.size() ? edit_sequence.size() : (pos - edit_pos); // Account for edits in position of insertion
+  if(pos > edit_pos + edit_sequence_size && edit_pos != -1){
+    edit_offset = (pos - edit_pos) > edit_sequence_size ? edit_sequence_size : (pos - edit_pos); // Account for edits in position of insertion
   }
   codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_offset - (feature.get_start() + feature.get_phase())))/3)*3;
   for (i = 0; i < 3; ++i) {
-    if(codon_start_pos +i < feature.get_start() - 1 || codon_start_pos +i > feature.get_end() - 1){ // If before or after CDS region return 'N'.
+    if(codon_start_pos +i < (int32_t)feature.get_start() - 1 || codon_start_pos +i > (int32_t)feature.get_end() - 1){ // If before or after CDS region return 'N'.
       codon[i] = 'N';
     } else if(codon_start_pos + i < edit_pos - 1 || edit_pos == -1){ // If before edit or with no edit
       codon[i] = *(seq + codon_start_pos + i);
-    } else if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos + i <= edit_pos - 1 + edit_sequence.size() - 1){ // size() - 1 since edit_pos include one base already
+    } else if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos + i <= edit_pos - 1 + edit_sequence_size - 1){ // size() - 1 since edit_pos include one base already
       codon[i] = edit_sequence[codon_start_pos + i - (edit_pos - 1)];
-    } else if(codon_start_pos + i > edit_pos - 1 + edit_sequence.size() - 1) {
-      edit_offset = (codon_start_pos + i) - (edit_pos - 1) > edit_sequence.size() ? edit_sequence.size() : (codon_start_pos + i) - (edit_pos - 1);
+    } else if(codon_start_pos + i > edit_pos - 1 + edit_sequence_size - 1) {
+      edit_offset = (codon_start_pos + i) - (edit_pos - 1) > edit_sequence_size ? edit_sequence_size : (codon_start_pos + i) - (edit_pos - 1);
       codon[i] = *(seq + codon_start_pos + i - edit_offset);
     }
   }
@@ -42,27 +43,28 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature,
   seq = fai_fetch(this->fai, region.c_str(), &len);
   int64_t edit_pos = feature.get_edit_position(), codon_start_pos;
   std::string edit_sequence = feature.get_edit_sequence();
+  int64_t edit_sequence_size = edit_sequence.size();
   char *codon = new char[3];
   int i;
   int64_t edit_offset = 0, alt_pos = pos;
-  if(pos > edit_pos + edit_sequence.size() && edit_pos != -1){
-    edit_offset = (pos - edit_pos) > edit_sequence.size() ? edit_sequence.size() : (pos - edit_pos); // Account for edits in position of insertion
+  if(pos > edit_pos + edit_sequence_size && edit_pos != -1){
+    edit_offset = (pos - edit_pos) > edit_sequence_size ? edit_sequence_size : (pos - edit_pos); // Account for edits in position of insertion
   }
   codon_start_pos = (feature.get_start() - 1) + feature.get_phase() + (((pos + edit_offset - (feature.get_start() + feature.get_phase())))/3)*3;
   for (i = 0; i < 3; ++i) {
     if(codon_start_pos + i < edit_pos - 1 || edit_pos == -1){ // If before edit or with no edit
       codon[i] = *(seq + codon_start_pos + i);
-    } else if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos + i <= edit_pos - 1 + edit_sequence.size() - 1){ // size() - 1 since edit_pos include one base already
+    } else if(codon_start_pos + i >= edit_pos - 1 && codon_start_pos + i <= edit_pos - 1 + edit_sequence_size - 1){ // size() - 1 since edit_pos include one base already
       codon[i] = edit_sequence[codon_start_pos + i - (edit_pos - 1)];
-    } else if(codon_start_pos + i > edit_pos - 1 + edit_sequence.size() - 1) {
-      edit_offset = (codon_start_pos + i) - (edit_pos - 1) > edit_sequence.size() ? edit_sequence.size() : (codon_start_pos + i) - (edit_pos - 1);
+    } else if(codon_start_pos + i > edit_pos - 1 + edit_sequence_size - 1) {
+      edit_offset = (codon_start_pos + i) - (edit_pos - 1) > edit_sequence_size ? edit_sequence_size : (codon_start_pos + i) - (edit_pos - 1);
       codon[i] = *(seq + codon_start_pos + i - edit_offset);
     }
   }
   // Recompute alt position
   edit_offset = 0;
-  if(alt_pos > edit_pos + edit_sequence.size() && edit_pos != -1){
-    edit_offset = (pos - edit_pos) > edit_sequence.size() ? edit_sequence.size() : (pos - edit_pos); // Account for edits in position of insertion
+  if(alt_pos > edit_pos + edit_sequence_size && edit_pos != -1){
+    edit_offset = (pos - edit_pos) > edit_sequence_size ? edit_sequence_size : (pos - edit_pos); // Account for edits in position of insertion
   }
   alt_pos += edit_offset;
   codon[alt_pos - 1 - codon_start_pos] = alt;

@@ -24,7 +24,7 @@ const std::string fields[NUM_FIELDS] = {"REGION",
 const std::string na_tab_delimited_str = "NA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA";
 
 int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std::string, unsigned int> &counts, std::map<std::string, std::string> &file_tab_delimited_str){
-  unsigned int ctr, pos;
+  unsigned int ctr;
   std::string line, cell, tab_delimited_key, tab_delimited_val;
   std::stringstream line_stream;
   std::string region, ref, alt;
@@ -32,7 +32,6 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
   std::getline(fin, line);
   line_stream << line;
   ctr = 0;
-  pos = 0;
   while(std::getline(line_stream,cell,'\t')){
     if(cell.compare(fields[ctr]) != 0){
       return -1;
@@ -43,7 +42,6 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
   while (std::getline(fin, line)){
     line_stream << line;
     ctr = 0;
-    pos = 0;
     tab_delimited_key = "";
     tab_delimited_val = "";
     while(std::getline(line_stream,cell,'\t')){
@@ -89,7 +87,7 @@ int read_variant_file(std::ifstream &fin, unsigned int file_number, std::map<std
   return 0;
 }
 
-int common_variants(std::string out, double min_threshold, char* files[], int nfiles){
+int common_variants(std::string out, double min_threshold, char* files[], unsigned int nfiles){
   out += ".tsv";
   std::ofstream fout(out.c_str());
   unsigned int i, j;

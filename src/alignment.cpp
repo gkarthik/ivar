@@ -69,7 +69,7 @@ void print_matrix(int h[][max_adapter_size], int r, int c, std::string read, std
     }
     for(int j = 0; j < c;j++){
       if(j == 0 && i > 0){
-	if(i -1 < read.length())
+	if(i -1 < (int)read.length())
 	  std::cout << read[i-1] << " ";
       }
       if(i == 0 && j == 0)
