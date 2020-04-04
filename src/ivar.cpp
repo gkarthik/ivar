@@ -16,7 +16,7 @@
 #include "suffix_tree.h"
 #include "get_common_variants.h"
 
-const std::string VERSION = "1.1";
+const std::string VERSION = "1.2";
 
 struct args_t {
   std::string bam;		// -i
@@ -73,7 +73,7 @@ void print_trim_usage(){
 
 void print_variants_usage(){
   std::cout <<
-      "Usage: samtools mpileup -A -d 0 -B -Q 0 <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]\n\n"
+      "Usage: samtools mpileup -aa -A -d 0 -B -Q 0 --reference [<reference-fasta] <input.bam> | ivar variants -p <prefix> [-q <min-quality>] [-t <min-frequency-threshold>] [-m <minimum depth>] [-r <reference-fasta>] [-g GFF file]\n\n"
     "Note : samtools mpileup output must be piped into ivar variants\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
@@ -98,7 +98,7 @@ void print_filtervariants_usage(){
 
 void print_consensus_usage(){
   std::cout <<
-    "Usage: samtools mpileup -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix> \n\n"
+    "Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix> \n\n"
     "Note : samtools mpileup output must be piped into `ivar consensus`\n\n"
     "Input Options    Description\n"
     "           -q    Minimum quality score threshold to count base (Default: 20)\n"
@@ -110,9 +110,9 @@ void print_consensus_usage(){
     "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
-    "           -m    Minimum depth to call consensus(Default: 1)\n"
+    "           -m    Minimum depth to call consensus(Default: 10)\n"
     "           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n \n"
-    "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: -)\n\n"
+    "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: N)\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output fasta file and quality file\n";
 }
@@ -307,8 +307,8 @@ int main(int argc, char* argv[]){
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.min_threshold = 0;
-    g_args.min_depth = 0;
-    g_args.gap = '-';
+    g_args.min_depth = 10;
+    g_args.gap = 'N';
     g_args.min_qual = 20;
     g_args.keep_min_coverage = true;
     while( opt != -1 ) {
@@ -351,7 +351,7 @@ int main(int argc, char* argv[]){
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fa");
     g_args.prefix = get_filename_without_extension(g_args.prefix,".fasta");
-    g_args.gap = (g_args.gap != 'N' && g_args.gap != '-') ? '-' : g_args.gap; // Accept only N or -
+    g_args.gap = (g_args.gap != 'N' && g_args.gap != '-') ? 'N' : g_args.gap; // Accept only N or -
     std::cout <<"Minimum Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
     std::cout << "Minimum depth: " << (unsigned) g_args.min_depth << std::endl;

@@ -18,7 +18,7 @@ int main(){
   int lengths[6] = {150,100,100,25,146,144}, ctr = 0;
   while(sam_itr_next(in, iter, aln) >= 0) {
     t = quality_trim(aln, 20, 4);
-    for (int i = 0; i < t.nlength; ++i){
+    for (uint i = 0; i < t.nlength; ++i){
       if(bam_cigar2rlen(t.nlength, t.cigar) != lengths[ctr]){
 	return -1;
       }

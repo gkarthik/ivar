@@ -1,5 +1,8 @@
-gb:NC_009942|Organism:West	8	30	WNV_400_1_LEFT	1
-gb:NC_009942|Organism:West	249	271	WNV_400_2_LEFT	2
-gb:NC_009942|Organism:West	359	381	WNV_400_1_RIGHT	1
-gb:NC_009942|Organism:West	658	680	WNV_400_2_RIGHT	2
-gb:NC_009942|Organism:West	569	591	WNV_400_3_LEFT	1
+gb:NC_009942|Organism:West	8	30	WNV_400_1_LEFT	1	+
+gb:NC_009942|Organism:West	7	28	WNV_400_1_LEFT_alt	1	+
+gb:NC_009942|Organism:West	230	250	WNV_400_2_LEFT	1	+
+gb:NC_009942|Organism:West	359	381	WNV_400_1_RIGHT	1	-
+gb:NC_009942|Organism:West	658	680	WNV_400_2_RIGHT	1	-
+gb:NC_009942|Organism:West	569	591	WNV_400_3_LEFT	1	+
+gb:NC_009942|Organism:West	251	274	WNV_400_2_LEFT_alt	1	-
+gb:NC_009942|Organism:West	352	379	WNV_400_2_RIGHT_alt	1	-

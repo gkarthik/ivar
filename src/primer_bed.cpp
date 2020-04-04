@@ -12,11 +12,11 @@ int primer::get_score(){
   return score;
 }
 
-unsigned int primer::get_start(){
+uint32_t primer::get_start() const {
   return start;
 }
 
-unsigned int primer::get_end(){
+uint32_t primer::get_end() const{
   return end;
 }
 
@@ -28,15 +28,23 @@ int primer::get_length(){
   return end - start + 1;
 }
 
-int primer::get_pair_indice(){
+int16_t primer::get_pair_indice(){
   return pair_indice;
 }
 
-void primer::set_start(unsigned int s){
+int16_t primer::get_indice() const{
+  return indice;
+}
+
+uint32_t primer::get_read_count() const{
+  return read_count;
+}
+
+void primer::set_start(uint32_t  s){
   start = s;
 }
 
-void primer::set_end(unsigned int e){
+void primer::set_end(uint32_t e){
   end = e;
 }
 
@@ -56,9 +64,22 @@ void primer::set_score(int s){
   score = s;
 }
 
-void primer::set_pair_indice(int i){
+void primer::set_pair_indice(int16_t i){
   pair_indice = i;
 }
+
+void primer::set_indice(int16_t i){
+  indice = i;
+}
+
+void primer::set_read_count(uint32_t rc){
+  read_count = rc;
+}
+
+void primer::add_read_count(uint32_t rc){
+  read_count += rc;
+}
+
 
 void print_bed_format(){
   std::cout << "iVar uses the standard 6 column BED format as defined here - https://genome.ucsc.edu/FAQ/FAQformat.html#format1." << std::endl;
@@ -69,6 +90,7 @@ std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path.c_str());
   std::string line;
   std::vector<primer> primers;
+  int16_t indice = 0;
   while(std::getline(data,line)){ // Remove extra lineStream
     std::stringstream lineStream(line);
     std::string cell;
@@ -114,8 +136,11 @@ std::vector<primer> populate_from_file(std::string path){
       }
       ctr++;
     }
+    p.set_indice(indice);
     p.set_pair_indice(-1);
+    p.set_read_count(0);
     primers.push_back(p);
+    indice++;
   }
   if(primers.size() == 0){
     print_bed_format();
@@ -125,15 +150,17 @@ std::vector<primer> populate_from_file(std::string path){
   return primers;
 }
 
-int get_primer_indice(std::vector<primer> p, unsigned int pos){
+std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos){
+  std::vector<primer> primers_with_mismatches;
   for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
     if(it->get_start() <= pos && it->get_end() >= pos){
-      return it - p.begin();
+      primers_with_mismatches.push_back(*it);
     }
   }
-  return -1;
+  return primers_with_mismatches;
 }
 
+// Assumes unique primer names in BED file
 int get_primer_indice(std::vector<primer> p, std::string name){
   for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
     if(it->get_name().compare(name) == 0){
@@ -148,7 +175,7 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
   std::string line, cell, p1,p2;
   std::stringstream line_stream;
   std::vector<primer>::iterator it;
-  int indice = -1;
+  int32_t indice;
   while (std::getline(fin, line)){
     line_stream << line;
     std::getline(line_stream, cell, '\t');
@@ -176,4 +203,16 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
     }
   }
   return 0;
+}
+
+primer get_min_start(std::vector<primer> primers){
+  std::vector<primer>::iterator it;
+  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer lhs, primer rhs) {return lhs.get_start() < rhs.get_start();});
+  return *(minmax_start.first);
+}
+
+
+primer get_max_end(std::vector<primer> primers){
+  auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer lhs, primer rhs) {return lhs.get_end() < rhs.get_end();});
+  return *(minmax_start.second);
 }

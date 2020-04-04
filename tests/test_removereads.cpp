@@ -5,7 +5,7 @@
 
 #include "htslib/sam.h"
 
-int main(int argc, char *argv[]){
+int main(){
   int num_success = 0, num_tests = 1;
   std::vector<std::string> amp;
   std::ifstream fin("../data/test.masked_primer_indices.txt");
@@ -18,7 +18,10 @@ int main(int argc, char *argv[]){
   samFile *in = hts_open(out_file.c_str(), "r");
   bam_hdr_t *header = sam_hdr_read(in);
   hts_itr_t *iter = NULL;
-  sam_index_build2(out_file.c_str(), 0, 0);
+  if (sam_index_build2(out_file.c_str(), 0, 0) < 0) {
+    std::cerr << "Failed to build index" << std::endl;
+    return 1;
+  }
   hts_idx_t *idx = sam_index_load(in, out_file.c_str());
   iter  = sam_itr_querys(idx, header, region.c_str());
   bam1_t *aln = bam_init1();
@@ -27,7 +30,7 @@ int main(int argc, char *argv[]){
     uint8_t* a = bam_aux_get(aln, "XA");
     w = true;
     if(a != 0){
-      if(bam_aux2i(a) == 0 || bam_aux2i(a) == 2 || bam_aux2i(a) == 4){
+      if(bam_aux2i(a) == 2 || bam_aux2i(a) == 4 || bam_aux2i(a) == 6 || bam_aux2i(a) == 1 || bam_aux2i(a) == 3 || bam_aux2i(a) == 5){
 	w = false;
       }
     }

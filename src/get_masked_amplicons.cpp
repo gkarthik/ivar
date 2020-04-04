@@ -2,17 +2,17 @@
 
 int get_primers_with_mismatches(std::string bed, std::string vpath, std::string out, std::string primer_pair_file){
   std::vector<primer> primers = populate_from_file(bed);
+  std::vector<primer> mismatches_primers;
+  std::vector<primer> tmp;
   if(primers.size() == 0){
     return 0;
   }
   populate_pair_indices(primers, primer_pair_file);
-  std::vector<unsigned int> indices;
   std::string line, cell;
   std::ifstream fin(vpath.c_str());
   out += ".txt";
   std::ofstream fout(out.c_str());
   unsigned int ctr, pos;
-  int ind;
   std::stringstream line_stream;
   while (std::getline(fin, line)){
     line_stream << line;
@@ -34,18 +34,20 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
       continue;
     }
     pos--;			// 1 based to 0 based
-    ind = get_primer_indice(primers, pos);
-    if(std::find(indices.begin(), indices.end(), ind) == indices.end() && ind != -1){
-      indices.push_back(ind);
-      if(primers.at(ind).get_pair_indice() != -1)
-	indices.push_back(primers.at(ind).get_pair_indice());
+    tmp = get_primers(primers, pos);
+    for(std::vector<primer>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
+      std::vector<primer>::iterator tmp_it = std::find(mismatches_primers.begin(), mismatches_primers.end(), *it);
+      if(tmp_it == tmp.end())
+	mismatches_primers.push_back(*it);
     }
+    mismatches_primers.insert(mismatches_primers.end(), tmp.begin(), tmp.end());
     line_stream.clear();
+    tmp.clear();
   }
-  for(std::vector<unsigned int>::iterator it = indices.begin(); it != indices.end(); ++it) {
-    fout << primers.at(*it).get_name();
-    std::cout << primers.at(*it).get_name();
-    if(it != indices.end() - 1){
+  for(std::vector<primer>::iterator it = mismatches_primers.begin(); it != mismatches_primers.end(); ++it) {
+    fout << it->get_name();
+    std::cout << it->get_name();
+    if(it != mismatches_primers.end() - 1){
       fout << "\t";
       std::cout << "\t";
     }

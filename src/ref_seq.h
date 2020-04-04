@@ -13,6 +13,7 @@ const char UNKNOWN_BASE = 'N';
 
 class ref_antd{
 public:
+  ref_antd(std::string ref_path);
   ref_antd(std::string ref_path, std::string gff_path);
   char get_base(int64_t pos, std::string region);
   int add_gff(std::string path);
@@ -26,7 +27,6 @@ private:
   char *seq;
   gff3 gff;
   faidx_t *fai;
-  int ref_len;
   std::string region;
 };
 

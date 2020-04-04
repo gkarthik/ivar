@@ -153,7 +153,7 @@ int gff3::read_file(std::string path){
   }
   std::string line;
   while (std::getline(fin, line)){
-    if(line[0] == '#' && line[1] == '#') // Avoid comments in GFF file
+    if(line[0] == '#') // Avoid comments in GFF file
       continue;
     features.push_back(gff3_feature(line));
   }
