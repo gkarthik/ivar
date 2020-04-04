@@ -47,7 +47,7 @@ int main() {
   // Test counts
   std::map<std::string, unsigned int>::iterator count_it = counts.begin();
   std::string count_keys[] = {"test\t42\tG\tT\tid-test3\tAGG\tR\tATG\tM\t", "test\t320\tA\tT\tNA\tNA\tNA\tNA\tNA\t", "test\t365\tA\tT\tNA\tNA\tNA\tNA\tNA\t", "test\t42\tG\tT\tid-test4\tCAG\tQ\tCAT\tH\t"};
-  int count_values[] = {1, 2, 3, 1};
+  unsigned int count_values[] = {1, 2, 3, 1};
   ctr = 0;
   while(count_it!=counts.end() && ctr < 3){
     if(counts.find(count_keys[ctr]) == counts.end()){

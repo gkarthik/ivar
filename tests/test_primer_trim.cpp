@@ -32,11 +32,11 @@ int main(){
   uint32_t *cigar;
   int primer_ctr = 0;
   int primer_indices[] = {0, 0, 7, 7, 6};
-  int cigar_flag[5][3] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
-  int cigar_len[5][3] = {{11, 139}, {24, 11, 115}, {121, 23, 6}, {103, 23, 24}, {23, 127}};
-  int condense_cigar_flag[5][3] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
-  int condense_cigar_len[5][3] = {{11, 139}, {35, 115}, {121, 29}, {103, 47}, {23, 127}};
-  int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
+  uint8_t cigar_flag[5][3] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
+  uint32_t cigar_len[5][3] = {{11, 139}, {24, 11, 115}, {121, 23, 6}, {103, 23, 24}, {23, 127}};
+  uint8_t condense_cigar_flag[5][3] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
+  uint32_t condense_cigar_len[5][3] = {{11, 139}, {35, 115}, {121, 29}, {103, 47}, {23, 127}};
+  unsigned int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
   primer cand_primer;
@@ -65,7 +65,7 @@ int main(){
       }
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
-      for (int i = 0; i < t.nlength; ++i){
+      for (uint i = 0; i < t.nlength; ++i){
 	if(((cigar[i]) & BAM_CIGAR_MASK) != cigar_flag[primer_ctr][i]){
 	  success = -1;
 	  std::cout << "Cigar flag didn't match for " << cand_primer.get_indice()  <<  " ! Expected " << cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;
@@ -80,7 +80,7 @@ int main(){
       t = condense_cigar(t.cigar, t.nlength);
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
-      for (int i = 0; i < t.nlength; ++i){
+      for (uint i = 0; i < t.nlength; ++i){
 	if(((cigar[i]) & BAM_CIGAR_MASK) != condense_cigar_flag[primer_ctr][i]){
 	  success = -1;
 	  std::cout << "Cigar flag didn't match! Expected " << condense_cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;

@@ -81,10 +81,10 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   int del_len, cig, temp;
   uint32_t i = 0, j = 0;
   cigar_ t;
-  while(m >= qual_threshold && (i < r->core.l_qseq)){
+  while(m >= qual_threshold && (i < (uint32_t)r->core.l_qseq)){
     m = mean_quality(qual, i, i+sliding_window);
     i++;
-    if(i > r->core.l_qseq - sliding_window)
+    if(i > (uint32_t)r->core.l_qseq - sliding_window)
       sliding_window--;
   }
   // Reverse qual back.
@@ -191,12 +191,13 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   }
   cigar_ t = {
     ncigar,
-    j
+    j,
+    0
   };
   return t;
 }
 
-void replace_cigar(bam1_t *b, int n, uint32_t *cigar){
+void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
   if (n != b->core.n_cigar) {
     int o = b->core.l_qname + b->core.n_cigar * 4;
     if (b->l_data + (n - b->core.n_cigar) * 4 > b->m_data) {
@@ -213,22 +214,19 @@ void replace_cigar(bam1_t *b, int n, uint32_t *cigar){
 
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers){
   overlapped_primers.clear();
-  uint32_t query_pos, start_pos, *cigar = bam_get_cigar(r);
+  uint32_t start_pos;
   if(bam_is_rev(r)){
     start_pos = bam_endpos(r)-1;
-    query_pos = start_pos + (bam_cigar2qlen(r->core.n_cigar, cigar) - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos)) - 1;
   } else {
     start_pos = r->core.pos;
-    query_pos = start_pos - get_pos_on_query(cigar, r->core.n_cigar, start_pos, r->core.pos);
   }
   for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-    // query_pos >= it->get_start() && query_pos <= it->get_end()
     if(start_pos >= it->get_start() && start_pos <= it->get_end())
       overlapped_primers.push_back(*it);
   }
 }
 
-cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
+cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, int32_t n){
   int i = 0, len = 0, cig, start_pos = 0;
   cigar_ t;
   while(i < n){
@@ -277,7 +275,7 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, uint32_t n){
 }
 
 cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
-  int i = 0, len = 0, cig, next_cig, start_pos = 0;
+  uint32_t i = 0, len = 0, cig, next_cig, start_pos = 0;
   cigar_ t = remove_trailing_query_ref_consumption(cigar, n);
   cigar = t.cigar;
   n = t.nlength;
@@ -288,7 +286,7 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
     if(cig == next_cig){
       len = bam_cigar_oplen(cigar[i])+bam_cigar_oplen(cigar[i+1]);
       cigar[i] = bam_cigar_gen(len, bam_cigar_op(cigar[i]));
-      for(int j = i+1; j < n - 1; j++){
+      for(uint32_t j = i+1; j < n - 1; j++){
 	cigar[j] = cigar[j+1];
       }
       n--;
