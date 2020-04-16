@@ -149,6 +149,7 @@ int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t mi
   while (std::getline(cin, line)){
     lineStream << line;
     ctr = 0;
+    ref = 'N';
     while(std::getline(lineStream,cell,'\t')){
       switch(ctr){
       case 0:
