@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v2
@@ -18,6 +18,8 @@ jobs:
         wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
         tar xf 1.10.2.tar.gz
         cd htslib-1.10.2
+        autoheader
+        autoconf
         ./configure
         make
         make install
