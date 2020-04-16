@@ -59,6 +59,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
   while (std::getline(cin, line)){
     line_stream << line;
     ctr = 0;
+    ref = 'N';
     while(std::getline(line_stream,cell,'\t')){
       switch(ctr){
       case 0:
