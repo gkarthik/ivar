@@ -62,7 +62,7 @@ void print_trim_usage(){
     "Usage: ivar trim -i <input.bam> -b <primers.bed> -p <prefix> [-m <min-length>] [-q <min-quality>] [-s <sliding-window-width>]\n\n"
     "Input Options    Description\n"
     "           -i    (Required) Sorted bam file, with aligned reads, to trim primers and quality\n"
-    "           -b    (Required) BED file with primer sequences and positions\n"
+    "           -b    BED file with primer sequences and positions. If no BED file is specified, only quality trimming will be done.\n"
     "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n"
@@ -210,6 +210,7 @@ int main(int argc, char* argv[]){
     g_args.sliding_window = 4;
     g_args.min_length = 30;
     g_args.write_no_primers_flag = false;
+    g_args.bed = "";
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -242,7 +243,7 @@ int main(int argc, char* argv[]){
       }
       opt = getopt( argc, argv, trim_opt_str);
     }
-    if(g_args.bam.empty() || g_args.bed.empty() || g_args.prefix.empty()){
+    if(g_args.bam.empty() || g_args.prefix.empty()){
       print_trim_usage();
       return -1;
     }

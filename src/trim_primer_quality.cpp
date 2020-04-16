@@ -23,6 +23,7 @@ int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t 
   return ql;
 }
 
+// Number of bases from 3' end for reverse reads
 int32_t get_pos_on_reference(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_t ref_start){
   int cig;
   int32_t n;
@@ -92,7 +93,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
     reverse_qual(qual, r->core.l_qseq);
   }
   del_len = r->core.l_qseq - i;
-  start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos
+  start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos.
   if(bam_is_rev(r) && start_pos <= r->core.pos) {
     t.cigar = cigar;
     t.nlength = r->core.n_cigar;
@@ -317,10 +318,13 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
 }
 
 int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, int min_length = 30){
-  std::vector<primer> primers = populate_from_file(bed);
-  if(primers.size() == 0){
-    return 0;
+  std::vector<primer> primers;
+  if(!bed.empty()){
+    primers = populate_from_file(bed);
   }
+  // if(primers.size() == 0){
+  //   return 0;
+  // }
   if(bam.empty()){
     std::cout << "Bam file in empty." << std::endl;
     return -1;
@@ -448,7 +452,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  return -1;
 	}
       } else {
-	if(write_no_primer_reads && !unmapped_flag){ // Write mapped reads to BAM if -e flag given
+	if((primers.size() == 0 || write_no_primer_reads) && !unmapped_flag){ // Write mapped reads to BAM if -e flag given
 	  if(bam_write1(out, aln) < 0){
 	    std::cout << "Not able to write to BAM" << std::endl;
 	    hts_itr_destroy(iter);
@@ -480,6 +484,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   std::cout << round_int( low_quality, mapped) << "% (" << low_quality << ") of reads were quality trimmed below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
   if(write_no_primer_reads){
     std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since the -e flag was given, these reads were written to file." << std::endl;
+  } else if (primers.size() == 0) {
+    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since there were no primers found in BED file, these reads were written to file." << std::endl;
   } else {
     std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads that started outside of primer regions were not written to file." << std::endl;
   }
