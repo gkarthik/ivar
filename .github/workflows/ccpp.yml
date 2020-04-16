@@ -13,6 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: download htslib
+      run: wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
+    - name: untar
+      run: tar xf 1.10.2.tar.gz
+    - name: install htslib
+      run: cd htslib-1.10.2 && ./configure && make && make install
     - name: autoconf
       run: ./autogen.sh 
     - name: configure
