@@ -18,6 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: htslib
+      working-directory: htslib
       run: |
         wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
         tar xf 1.10.2.tar.gz
@@ -26,7 +27,7 @@ jobs:
         autoconf
         ./configure
         make
-        make install
+        sudo make install
     - name: autoconf
       run: ./autogen.sh
     - name: configure
@@ -36,4 +37,4 @@ jobs:
     - name: make check
       run: make check
     - name: make install
-      run: make install
+      run: sudo make install
