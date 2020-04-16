@@ -146,6 +146,7 @@ void print_cigar(uint32_t *cigar, int nlength){
     std::cout << ((cigar[i]) & BAM_CIGAR_MASK);
     std::cout << "-" << ((cigar[i]) >> BAM_CIGAR_SHIFT) << " ";
   }
+  std::cout << std::endl;
 }
 
 cigar_ primer_trim(bam1_t *r, int32_t new_pos){
@@ -161,7 +162,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
   }
   int32_t n;
   while(i < r->core.n_cigar){
-    if (del_len == 0){
+    if (del_len == 0){ // del_len ==0 or consumes only reference
       ncigar[j] = cigar[i];
       i++;
       j++;
@@ -183,6 +184,9 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
 	ncigar[j] = bam_cigar_gen(n, cig);
 	j++;
       }
+    } else if(bam_cigar_type(cig) & 2){ // Only consumes reference
+      ncigar[j] = cigar[i];
+      j++;
     }
     i++;
   }
@@ -263,7 +267,7 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, int32_t n){
       }
       n--;
       i--;
-      // start_pos += len;
+      start_pos += len;
     }
     i++;
   }
@@ -422,7 +426,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       if(bam_is_rev(aln))
 	aln->core.pos = t.start_pos;
       t = condense_cigar(t.cigar, t.nlength);
-      aln->core.pos += t.start_pos;
+      // aln->core.pos += t.start_pos;
       replace_cigar(aln, t.nlength, t.cigar);
     } else {
       unmapped_flag = true;
