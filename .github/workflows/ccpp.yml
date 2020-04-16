@@ -22,6 +22,8 @@ jobs:
     - name: untar
       run: tar xf 1.10.2.tar.gz
     - name: install htslib
+      env:
+        CC: gcc-7
       run: |
         cd htslib-1.10.2/
         autoheader
@@ -30,14 +32,24 @@ jobs:
         make
         sudo make install
     - name: autotools
+      env:
+        CC: gcc-7
       run: ./autogen.sh
     - name: configure
+      env:
+        CC: gcc-7
       run: ./configure
     - name: make
+      env:
+        CC: gcc-7
       run: make
     - name: make check
+      env:
+        CC: gcc-7
       run: make check || cat tests/check*log
     - name: make install
+      env:
+        CC: gcc-7
       run: sudo make install
 
   build-macos:
