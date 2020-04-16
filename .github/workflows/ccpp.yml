@@ -47,7 +47,7 @@ jobs:
     - name: make check
       env:
         CC: gcc-7
-      run: make check || cat tests/check*log
+      run: make check
     - name: make install
       env:
         CC: gcc-7
