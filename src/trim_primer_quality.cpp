@@ -185,7 +185,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
 	ncigar[j] = bam_cigar_gen(n, cig);
 	j++;
       }
-    } else if(bam_cigar_type(cig) & 2){ // Only consumes reference
+    } else { // Only consumes reference: deletion or consumes nothing
       ncigar[j] = cigar[i];
       j++;
     }
@@ -241,8 +241,7 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, int32_t n){
       break;
     if(bam_cigar_type(cig) & 1){	// Consumes only query - insertion
       cigar[i] = bam_cigar_gen(len, BAM_CSOFT_CLIP);
-    }
-    if(bam_cigar_type(cig) & 2){	// Consumes only reference - deletion
+    } else {	// Consumes only reference - deletion or consumes nothing like padding
       for (int j = i; j < n-1; ++j){
 	cigar[j] = cigar[j+1];
       }
@@ -254,15 +253,14 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, int32_t n){
   }
   reverse_cigar(cigar, n);
   i = 0, len = 0;
-  while(i < n){
+  while(i < n){			// TODO: This repeats loop from above. Restructure!
     cig = bam_cigar_op(cigar[i]);
     len = bam_cigar_oplen(cigar[i]);
     if((bam_cigar_type(cig) & 2) && (bam_cigar_type(cig) & 1))
       break;
     if(bam_cigar_type(cig) & 1){	// Consumes only query - insertion
       cigar[i] = bam_cigar_gen(len, BAM_CSOFT_CLIP);
-    }
-    if(bam_cigar_type(cig) & 2){	// Consumes only reference - deletion
+    } else {	// Consumes only reference - deletion or consumes nothing like padding
       for (int j = i; j < n-1; ++j){
 	cigar[j] = cigar[j+1];
       }
@@ -275,7 +273,7 @@ cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, int32_t n){
   reverse_cigar(cigar, n);
   t.cigar = cigar;
   t.nlength = n;
-  t.start_pos = start_pos;
+  t.start_pos = start_pos;	// Here start_pos is number of softclipped bases that don't consume query
   return t;
 }
 

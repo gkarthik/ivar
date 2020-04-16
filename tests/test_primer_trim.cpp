@@ -32,10 +32,28 @@ int main(){
   uint32_t *cigar;
   int primer_ctr = 0;
   int primer_indices[] = {0, 0, 7, 7, 6};
-  uint8_t cigar_flag[5][6] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CMATCH}, {BAM_CMATCH, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
-  uint32_t cigar_len[5][6] = {{11, 139}, {24, 3, 2, 5, 1, 115}, {121, 4, 4, 1, 14, 6}, {103, 23, 24}, {23, 127}};
-  uint8_t condense_cigar_flag[5][6] = {{BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CSOFT_CLIP, BAM_CMATCH}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CMATCH, BAM_CSOFT_CLIP}, {BAM_CSOFT_CLIP, BAM_CMATCH}};
-  uint32_t condense_cigar_len[5][3] = {{11, 139}, {32, 115}, {121, 24}, {103, 47}, {23, 127}};
+  uint8_t cigar_flag[5][10] = {
+    {BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CMATCH},
+    {BAM_CMATCH, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
+  };
+  uint32_t cigar_len[5][10] = {
+    {6, 1, 5, 139},
+    {24, 3, 2, 1, 1, 4, 1, 115},
+    {121, 4, 4, 1, 1,1, 1, 1, 11, 6},
+    {103, 10,1,13, 24},
+    {23, 88, 1, 39}
+  };
+  uint8_t condense_cigar_flag[5][6] = {
+    {BAM_CSOFT_CLIP, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CMATCH},
+    {BAM_CMATCH, BAM_CSOFT_CLIP},
+    {BAM_CMATCH, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
+  };
+  uint32_t condense_cigar_len[5][4] = {{11, 139}, {33, 115}, {121, 23}, {103, 48}, {23, 88, 1, 39}};
   unsigned int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
@@ -62,6 +80,7 @@ int main(){
 	success = -1;
 	std::cout << "Primer indice wrong. Expected: " << primer_indices[primer_ctr] << ". Got: " << cand_primer.get_indice() << std::endl;
       }
+      print_cigar(t.cigar, t.nlength);
       // Replace cigar
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
@@ -75,9 +94,12 @@ int main(){
 	  std::cout << "Cigar length didn't match for " << bam_get_qname(aln)  <<  " ! Expected " << (uint) cigar_len[primer_ctr][i]  << " " << "Got " << ((cigar[i]) >> BAM_CIGAR_SHIFT) << std::endl;
 	}
       }
+      // Condense cigar
+      std::cout << std::endl << "Condensing cigar ... " << std::endl;
       t = condense_cigar(t.cigar, t.nlength);
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
+      print_cigar(cigar, t.nlength);
       for (uint i = 0; i < t.nlength; ++i){
 	if(((cigar[i]) & BAM_CIGAR_MASK) != condense_cigar_flag[primer_ctr][i]){
 	  success = -1;
