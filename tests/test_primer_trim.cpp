@@ -53,7 +53,6 @@ int main(){
     if(overlapping_primers.size() > 0){
       if(bam_is_rev(aln)){
 	cand_primer = get_min_start(overlapping_primers);
-	std::cout << primer_ctr << ": " << cand_primer.get_start() << std::endl;
 	t = primer_trim(aln, cand_primer.get_start() - 1);
       } else {
 	cand_primer = get_max_end(overlapping_primers);
@@ -76,7 +75,6 @@ int main(){
 	  std::cout << "Cigar length didn't match for " << bam_get_qname(aln)  <<  " ! Expected " << (uint) cigar_len[primer_ctr][i]  << " " << "Got " << ((cigar[i]) >> BAM_CIGAR_SHIFT) << std::endl;
 	}
       }
-      // Check condense
       t = condense_cigar(t.cigar, t.nlength);
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
