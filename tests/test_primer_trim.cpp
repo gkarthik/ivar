@@ -32,28 +32,28 @@ int main(){
   uint32_t *cigar;
   int primer_ctr = 0;
   int primer_indices[] = {0, 0, 7, 7, 6};
-  uint8_t cigar_flag[5][10] = {
-    {BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CMATCH},
-    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CMATCH},
-    {BAM_CMATCH, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
-    {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
-    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
+  uint8_t cigar_flag[5][11] = {
+    {BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CINS, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CPAD, BAM_CMATCH},
+    {BAM_CMATCH, BAM_CPAD, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
   };
-  uint32_t cigar_len[5][10] = {
-    {6, 1, 5, 139},
-    {24, 3, 2, 1, 1, 4, 1, 115},
-    {121, 4, 4, 1, 1,1, 1, 1, 11, 6},
-    {103, 10,1,13, 24},
-    {23, 88, 1, 39}
+  uint32_t cigar_len[5][11] = {
+    {6, 1, 5, 1, 139},
+    {24, 3, 2, 1, 1, 4, 1, 1, 115},
+    {121, 1, 4, 4, 1, 1,1, 1, 1, 11, 6},
+    {103, 1, 10,1,13, 24},
+    {23, 78, 1, 10, 1, 39}
   };
   uint8_t condense_cigar_flag[5][6] = {
     {BAM_CSOFT_CLIP, BAM_CMATCH},
     {BAM_CSOFT_CLIP, BAM_CMATCH},
     {BAM_CMATCH, BAM_CSOFT_CLIP},
     {BAM_CMATCH, BAM_CSOFT_CLIP},
-    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
   };
-  uint32_t condense_cigar_len[5][4] = {{11, 139}, {33, 115}, {121, 23}, {103, 48}, {23, 88, 1, 39}};
+  uint32_t condense_cigar_len[5][6] = {{12, 139}, {33, 115}, {121, 23}, {103, 49}, {23, 78, 1, 10, 1, 39}};
   unsigned int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
