@@ -16,7 +16,7 @@
 #include "suffix_tree.h"
 #include "get_common_variants.h"
 
-const std::string VERSION = "1.2";
+const std::string VERSION = "1.2.1";
 
 struct args_t {
   std::string bam;		// -i
