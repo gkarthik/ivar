@@ -16,13 +16,14 @@ jobs:
         os: [ubuntu-16.04, ubuntu-18.04, macos-latest]
 
     steps:
-    - uses: actions/checkout@v2
-    - name: htslib
-      working-directory: htslib
+    - uses: actions/checkout@master
+    - name: download htslib
+      run: wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
+    - name: untar
+      run: tar xf 1.10.2.tar.gz
+    - name: install htslib
       run: |
-        wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
-        tar xf 1.10.2.tar.gz
-        cd htslib-1.10.2
+        cd htslib-1.10.2/
         autoheader
         autoconf
         ./configure
