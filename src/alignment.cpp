@@ -16,7 +16,7 @@ N  0  0  0  0 0
 */
 
 int get_sub_score(char a, char b){
-  int i,j;
+  int i = 4, j = 4;
   switch(a){
   case 'A':
     i = 0;

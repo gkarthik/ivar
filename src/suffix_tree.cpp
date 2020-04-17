@@ -209,7 +209,7 @@ suffix_node* build_suffix_tree(std::string s){
 }
 
 std::string get_reverse_complement(std::string rev_read){
-  char t;
+  char t = 'N';
   for(unsigned int i = 0;i< rev_read.length();i++){
     switch(rev_read[i]){
     case 'A':
