@@ -357,7 +357,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     return -1;
   }
   // Get relevant region
-  int region_id;
+  int region_id = -1;
   uint64_t unmapped, mapped, log_skip;
   std::cout << std::endl << "Number of references in file: " << header->n_targets << std::endl;
   for (int i = 0; i < header->n_targets; ++i){
