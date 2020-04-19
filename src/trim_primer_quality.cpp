@@ -9,15 +9,15 @@ int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t 
   for (uint32_t i = 0; i < ncigar; ++i){
     cig  = bam_cigar_op(cigar[i]);
     n = bam_cigar_oplen(cigar[i]);
-    if (bam_cigar_type(cig) & 2) { // Only reference consuming
+    if (bam_cigar_type(cig) & 2) { // Reference consuming
       if (pos <= rl + n) {
-	if (bam_cigar_type(cig) & 1) // Only query consuming
+	if (bam_cigar_type(cig) & 1) // Query consuming
 	  ql += (pos - rl);	   // n consumed reference, check if it consumes query too.
 	return ql;
       }
       rl += n;
     }
-    if (bam_cigar_type(cig) & 1) // Only query consuming
+    if (bam_cigar_type(cig) & 1) // Query consuming
       ql += n;
   }
   return ql;
@@ -71,11 +71,13 @@ double mean_quality(uint8_t *a, int s, int e){
 }
 
 cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
+  bool reverse = false;
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
   uint8_t *qual = bam_get_qual(r);
   int32_t start_pos;
-  if(bam_is_rev(r)){
+  if(((r->core.flag&BAM_FPAIRED) != 0) && bam_is_rev(r)){
+    reverse = true;
     reverse_qual(qual, r->core.l_qseq);
   }
   double m = 60;
@@ -89,12 +91,12 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
       sliding_window--;
   }
   // Reverse qual back.
-  if(bam_is_rev(r)){
+  if(reverse){
     reverse_qual(qual, r->core.l_qseq);
   }
   del_len = r->core.l_qseq - i;
   start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos.
-  if(bam_is_rev(r) && start_pos <= r->core.pos) {
+  if(reverse && start_pos <= r->core.pos) {
     t.cigar = cigar;
     t.nlength = r->core.n_cigar;
     t.start_pos = r->core.pos;
@@ -102,7 +104,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   }
   int32_t n;
   i = 0;
-  if(bam_is_rev(r)){
+  if(reverse){
     reverse_cigar(cigar, r->core.n_cigar);
   }
   reverse_cigar(cigar, r->core.n_cigar); // Reverse cigar and trim the beginning of read.
@@ -133,7 +135,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
     i++;
   }
   reverse_cigar(ncigar, j);	// Reverse Back
-  if(bam_is_rev(r)){
+  if(reverse){
     reverse_cigar(ncigar, j);
   }
   t.cigar = ncigar;
@@ -150,20 +152,34 @@ void print_cigar(uint32_t *cigar, int nlength){
   std::cout << std::endl;
 }
 
-cigar_ primer_trim(bam1_t *r, int32_t new_pos){
+cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool paired_rev = false){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
   uint32_t i = 0, j = 0;
-  int del_len, cig, temp;
-  if (bam_is_rev(r)){
-    del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
-    reverse_cigar(cigar, r->core.n_cigar);
-  } else {
-    del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
+  int max_del_len = 0, cig, temp, del_len = 0;
+  bool reverse = false;
+  if((r->core.flag&BAM_FPAIRED) != 0){ // If paired
+    if (bam_is_rev(r)){
+      max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
+      reverse_cigar(cigar, r->core.n_cigar);
+      reverse = true;
+    } else {
+      max_del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
+    }
+  } else {			// Unpaired
+    if(paired_rev){
+      max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
+      reverse_cigar(cigar, r->core.n_cigar);
+      reverse = true;
+    } else {
+      max_del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
+    }
   }
-  int32_t n;
+  int32_t n, start_pos = 0, ref_add = 0;
+  bool pos_start = false;
+  del_len = max_del_len;
   while(i < r->core.n_cigar){
-    if (del_len == 0){ // del_len ==0 or consumes only reference
+    if (del_len == 0 && pos_start){ // No more bases on query to soft clip
       ncigar[j] = cigar[i];
       i++;
       j++;
@@ -171,13 +187,19 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
     }
     cig  = bam_cigar_op(cigar[i]);
     n = bam_cigar_oplen(cigar[i]);
+    if(del_len ==0 && (bam_cigar_type(cig) & 1) && (bam_cigar_type(cig) & 2)){ // After soft clipping of query complete, keep incrementing start_pos until first base that consumes both query and ref
+      pos_start = true;
+      continue;
+    }
+    ref_add = n;
     if ((bam_cigar_type(cig) & 1)){ // Consumes Query
       if(del_len >= n ){
 	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
-      } else if (del_len < n){
+      } else if (del_len < n && del_len > 0){
 	ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
       }
       j++;
+      ref_add = std::min(del_len, n);
       temp = n;
       n = std::max(n - del_len, 0);
       del_len = std::max(del_len - temp, 0);
@@ -185,21 +207,23 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos){
 	ncigar[j] = bam_cigar_gen(n, cig);
 	j++;
       }
-    } else { // Only consumes reference: deletion or consumes nothing
-      ncigar[j] = cigar[i];
-      j++;
+      if(del_len ==0 && (bam_cigar_type(ncigar[j-1]) & 1) && (bam_cigar_type(ncigar[j-1]) & 2)){ // After soft clipping of query complete, keep incrementing start_pos until first base that consumes both query and ref
+	pos_start = true;
+      }
+    }
+    if((bam_cigar_type(cig) & 2)) { // Consumes reference but not query
+      start_pos += ref_add;
     }
     i++;
   }
-  if(bam_is_rev(r)){
+  if(reverse){
     reverse_cigar(ncigar, j);
   }
-  cigar_ t = {
+  return {
     ncigar,
-    j,
-    0
+      j,
+      start_pos
   };
-  return t;
 }
 
 void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
@@ -217,9 +241,10 @@ void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
   } else memcpy(b->data + b->core.l_qname, cigar, n * 4);
 }
 
+// For paired reads
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers){
   overlapped_primers.clear();
-  uint32_t start_pos;
+  uint32_t start_pos = -1;
   if(bam_is_rev(r)){
     start_pos = bam_endpos(r)-1;
   } else {
@@ -231,58 +256,24 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
   }
 }
 
-cigar_ remove_trailing_query_ref_consumption(uint32_t* cigar, int32_t n){
-  int i = 0, len = 0, cig, start_pos = 0;
-  cigar_ t;
-  while(i < n){
-    cig = bam_cigar_op(cigar[i]);
-    len = bam_cigar_oplen(cigar[i]);
-    if((bam_cigar_type(cig) & 2) && (bam_cigar_type(cig) & 1))
-      break;
-    if(bam_cigar_type(cig) & 1){	// Consumes only query - insertion
-      cigar[i] = bam_cigar_gen(len, BAM_CSOFT_CLIP);
-    } else {	// Consumes only reference - deletion or consumes nothing like padding
-      for (int j = i; j < n-1; ++j){
-	cigar[j] = cigar[j+1];
-      }
-      n--;
-      i--;
-      start_pos += len;
-    }
-    i++;
+// For unpaired reads
+void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers, bool unpaired_rev){
+  overlapped_primers.clear();
+  uint32_t start_pos = -1;
+  if(unpaired_rev){
+    start_pos = bam_endpos(r) - 1;
+  } else {
+    start_pos = r->core.pos;
   }
-  reverse_cigar(cigar, n);
-  i = 0, len = 0;
-  while(i < n){			// TODO: This repeats loop from above. Restructure!
-    cig = bam_cigar_op(cigar[i]);
-    len = bam_cigar_oplen(cigar[i]);
-    if((bam_cigar_type(cig) & 2) && (bam_cigar_type(cig) & 1))
-      break;
-    if(bam_cigar_type(cig) & 1){	// Consumes only query - insertion
-      cigar[i] = bam_cigar_gen(len, BAM_CSOFT_CLIP);
-    } else {	// Consumes only reference - deletion or consumes nothing like padding
-      for (int j = i; j < n-1; ++j){
-	cigar[j] = cigar[j+1];
-      }
-      n--;
-      i--;
-      start_pos += len;
-    }
-    i++;
+  for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
+    if(start_pos >= it->get_start() && start_pos <= it->get_end())
+      overlapped_primers.push_back(*it);
   }
-  reverse_cigar(cigar, n);
-  t.cigar = cigar;
-  t.nlength = n;
-  t.start_pos = start_pos;	// Here start_pos is number of softclipped bases that don't consume query
-  return t;
 }
 
 cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
-  uint32_t i = 0, len = 0, cig, next_cig, start_pos = 0;
-  cigar_ t = remove_trailing_query_ref_consumption(cigar, n);
-  cigar = t.cigar;
-  n = t.nlength;
-  start_pos = t.start_pos;
+  uint32_t i = 0, len = 0, cig, next_cig;
+  cigar_ t;
   while(i< n -1){
     cig = bam_cigar_op(cigar[i]);
     next_cig = bam_cigar_op(cigar[i+1]);
@@ -299,7 +290,6 @@ cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
   }
   t.cigar = cigar;
   t.nlength = n;
-  t.start_pos = start_pos;
   return t;
 }
 
@@ -404,39 +394,76 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   primer cand_primer;
   std::vector<primer> overlapping_primers;
   std::vector<primer>::iterator cit;
+  bool primer_trimmed = false;
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
+    primer_trimmed = false;
     if((aln->core.flag&BAM_FUNMAP) == 0){
-      get_overlapping_primers(aln, primers, overlapping_primers);
-      if(overlapping_primers.size() > 0){
-	primer_trim_count++;
-	if(bam_is_rev(aln)){
-	  cand_primer = get_min_start(overlapping_primers);
-	  t = primer_trim(aln, cand_primer.get_start() - 1);
-	} else {
-	  cand_primer = get_max_end(overlapping_primers);
-	  t = primer_trim(aln, cand_primer.get_end() + 1);
-	  aln->core.pos = cand_primer.get_end() + 1;
+      if((aln->core.flag&BAM_FPAIRED) != 0){ // If paired
+	get_overlapping_primers(aln, primers, overlapping_primers);
+	if(overlapping_primers.size() > 0){
+	  primer_trimmed = true;
+	  if(bam_is_rev(aln)){	// Reverse
+	    cand_primer = get_min_start(overlapping_primers);
+	    t = primer_trim(aln, cand_primer.get_start() - 1, false);
+	  } else {		// Forward
+	    cand_primer = get_max_end(overlapping_primers);
+	    t = primer_trim(aln, cand_primer.get_end() + 1, false);
+	    aln->core.pos += t.start_pos;
+	  }
+	  print_cigar(t.cigar, t.nlength);
+	  replace_cigar(aln, t.nlength, t.cigar);
+	  // Add count to primer
+	  cit = std::find(primers.begin(), primers.end(), cand_primer);
+	  if(cit != primers.end())
+	    cit->add_read_count(1);
 	}
+	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
+	if(bam_is_rev(aln))
+	  aln->core.pos = t.start_pos;
+	t = condense_cigar(t.cigar, t.nlength);
+	// aln->core.pos += t.start_pos;
 	replace_cigar(aln, t.nlength, t.cigar);
-	// Add count to primer
-	cit = std::find(primers.begin(), primers.end(), cand_primer);
-	if(cit != primers.end())
-	  cit->add_read_count(1);
+      } else {			// Unpaired reads: Might be stitched reads
+	// Forward primer
+	get_overlapping_primers(aln, primers, overlapping_primers, false);
+	if(overlapping_primers.size() > 0){
+	  primer_trimmed = true;
+	  cand_primer = get_max_end(overlapping_primers);
+	  t = primer_trim(aln, cand_primer.get_end() + 1, false);
+	  aln->core.pos += t.start_pos;
+	  replace_cigar(aln, t.nlength, t.cigar);
+	  // Add count to primer
+	  cit = std::find(primers.begin(), primers.end(), cand_primer);
+	  if(cit != primers.end())
+	    cit->add_read_count(1);
+	}
+	// Reverse primer
+	get_overlapping_primers(aln, primers, overlapping_primers, true);
+	if(overlapping_primers.size() > 0){
+	  primer_trimmed = true;
+	  cand_primer = get_min_start(overlapping_primers);
+	  t = primer_trim(aln, cand_primer.get_start() - 1, true);
+	  replace_cigar(aln, t.nlength, t.cigar);
+	  // Add count to primer
+	  cit = std::find(primers.begin(), primers.end(), cand_primer);
+	  if(cit != primers.end())
+	    cit->add_read_count(1);
+	}
+	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
+	t = condense_cigar(t.cigar, t.nlength);
+	replace_cigar(aln, t.nlength, t.cigar);
       }
-      t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-      if(bam_is_rev(aln))
-	aln->core.pos = t.start_pos;
-      t = condense_cigar(t.cigar, t.nlength);
-      // aln->core.pos += t.start_pos;
-      replace_cigar(aln, t.nlength, t.cigar);
+      if(primer_trimmed){
+	primer_trim_count++;
+      }
     } else {
       unmapped_flag = true;
       unmapped_counter++;
       continue;
     }
     if(bam_cigar2rlen(aln->core.n_cigar, bam_get_cigar(aln)) >= min_length){
-      if(overlapping_primers.size() > 0){	// Write to BAM only if primer found.
+      if(primer_trimmed){	// Write to BAM only if primer found.
 	int16_t cand_ind = cand_primer.get_indice();
 	bam_aux_append(aln, "XA", 's', sizeof(cand_ind), (uint8_t*) &cand_ind);
 	if(bam_write1(out, aln) < 0){
