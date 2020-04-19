@@ -22,6 +22,7 @@ int main(){
       }
     }
   }
+  // int start_pos = 0;
   bam_hdr_t *header = sam_hdr_read(in);
   region_.assign(header->target_name[0]);
   std::string temp(header->text);
@@ -33,27 +34,30 @@ int main(){
   int primer_ctr = 0;
   int primer_indices[] = {0, 0, 7, 7, 6};
   uint8_t cigar_flag[5][11] = {
-    {BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CINS, BAM_CMATCH},
-    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CPAD, BAM_CMATCH},
-    {BAM_CMATCH, BAM_CPAD, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CPAD, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH},
     {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
-    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
+    {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
   };
   uint32_t cigar_len[5][11] = {
-    {6, 1, 5, 1, 139},
-    {24, 3, 2, 1, 1, 4, 1, 1, 115},
-    {121, 1, 4, 4, 1, 1,1, 1, 1, 11, 6},
+    {6, 5, 1, 139},
+    {24, 3, 1, 1, 4, 114},
+    {121, 4, 1, 1, 11, 6},
     {103, 1, 10,1,13, 24},
-    {23, 78, 1, 10, 1, 39}
+    {23, 18, 3, 57, 1, 10, 1, 39}
   };
-  uint8_t condense_cigar_flag[5][6] = {
+  // uint32_t read_start_pos[5] = {
+    
+  // };
+  uint8_t condense_cigar_flag[5][8] = {
     {BAM_CSOFT_CLIP, BAM_CMATCH},
     {BAM_CSOFT_CLIP, BAM_CMATCH},
     {BAM_CMATCH, BAM_CSOFT_CLIP},
     {BAM_CMATCH, BAM_CSOFT_CLIP},
-    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
   };
-  uint32_t condense_cigar_len[5][6] = {{12, 139}, {33, 115}, {121, 23}, {103, 49}, {23, 78, 1, 10, 1, 39}};
+  uint32_t condense_cigar_len[5][8] = {{12, 139}, {33, 114}, {121, 23}, {103, 49}, {23, 18,3, 57, 1, 10, 1, 39}};
   unsigned int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
@@ -66,15 +70,16 @@ int main(){
     get_overlapping_primers(aln, primers, overlapping_primers);
     if(overlapping_primers.size() != overlapping_primer_sizes[ctr]){
       success = -1;
-      std::cout << "Overlappingprimer sizes for " << bam_get_qname(aln)  <<". Expected: " << overlapping_primer_sizes[ctr] << ". Got: " << overlapping_primers.size() << std::endl;
+      std::cout << "Overlapping primer sizes for " << bam_get_qname(aln)  <<". Expected: " << overlapping_primer_sizes[ctr] << ". Got: " << overlapping_primers.size() << std::endl;
     }
     if(overlapping_primers.size() > 0){
+      print_cigar(bam_get_cigar(aln), aln->core.n_cigar);
       if(bam_is_rev(aln)){
 	cand_primer = get_min_start(overlapping_primers);
-	t = primer_trim(aln, cand_primer.get_start() - 1);
+	t = primer_trim(aln, cand_primer.get_start() - 1, false);
       } else {
 	cand_primer = get_max_end(overlapping_primers);
-	t = primer_trim(aln, cand_primer.get_end() + 1);
+	t = primer_trim(aln, cand_primer.get_end() + 1, false);
       }
       if(cand_primer.get_indice() != primer_indices[primer_ctr]){
 	success = -1;
