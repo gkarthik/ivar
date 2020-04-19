@@ -22,7 +22,6 @@ int main(){
       }
     }
   }
-  // int start_pos = 0;
   bam_hdr_t *header = sam_hdr_read(in);
   region_.assign(header->target_name[0]);
   std::string temp(header->text);
@@ -47,9 +46,9 @@ int main(){
     {103, 1, 10,1,13, 24},
     {23, 18, 3, 57, 1, 10, 1, 39}
   };
-  // uint32_t read_start_pos[5] = {
-    
-  // };
+  uint32_t read_start_pos[5] = {
+    30, 31, 231, 249, 274
+  };
   uint8_t condense_cigar_flag[5][8] = {
     {BAM_CSOFT_CLIP, BAM_CMATCH},
     {BAM_CSOFT_CLIP, BAM_CMATCH},
@@ -80,12 +79,17 @@ int main(){
       } else {
 	cand_primer = get_max_end(overlapping_primers);
 	t = primer_trim(aln, cand_primer.get_end() + 1, false);
+	aln->core.pos += t.start_pos;
       }
       if(cand_primer.get_indice() != primer_indices[primer_ctr]){
 	success = -1;
 	std::cout << "Primer indice wrong. Expected: " << primer_indices[primer_ctr] << ". Got: " << cand_primer.get_indice() << std::endl;
       }
-      print_cigar(t.cigar, t.nlength);
+      // Check start pos
+      if(aln->core.pos != read_start_pos[primer_ctr]){
+	success = -1;
+	std::cout << "Incorrect start position" << std::endl;
+      }
       // Replace cigar
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
