@@ -326,14 +326,15 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   samFile *in = hts_open(bam.c_str(), "r");
   BGZF *out = bgzf_open(bam_out.c_str(), "w");
   if(in == NULL) {
-    std::cout << ("Unable to open BAM/SAM file.") << std::endl;
+    std::cout << ("Unable to open BAM file.") << std::endl;
     return -1;
   }
   //Load the index
   hts_idx_t *idx = sam_index_load(in, bam.c_str());
   if(idx == NULL) {
+    std::cout << "Building BAM index" << std::endl;
     if(sam_index_build2(bam.c_str(), 0, 0)< 0){
-      std::cout << ("Unable to open BAM/SAM index.") << std::endl;
+      std::cout << ("Unable to open or build BAM index.") << std::endl;
       return -1;
     } else {
       idx = sam_index_load(in, bam.c_str());
@@ -343,7 +344,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   bam_hdr_t *header = sam_hdr_read(in);
   if(header == NULL) {
     sam_close(in);
-    std::cout << "Unable to open BAM/SAM header." << std::endl;
+    std::cout << "Unable to open BAM header." << std::endl;
   }
   add_pg_line_to_header(&header, const_cast<char *>(cmd.c_str()));
   if(bam_hdr_write(out, header) < 0){
