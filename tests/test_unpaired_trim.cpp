@@ -1,0 +1,145 @@
+#include<iostream>
+#include "../src/trim_primer_quality.h"
+#include "../src/primer_bed.h"
+#include "htslib/sam.h"
+
+int main(){
+  int success = 0;
+  std::string bam = "../data/test.sim.merged.sorted.bam";
+  std::vector<primer> primers = populate_from_file("../data/test_merged.bed");
+  std::string region_;
+  samFile *in = hts_open(bam.c_str(), "r");
+  hts_idx_t *idx = sam_index_load(in, bam.c_str());
+  if (idx == NULL) {
+    if (sam_index_build2(bam.c_str(), 0, 0) < 0) {
+      std::cerr << ("Unable to open BAM/SAM index.") << std::endl;
+      return -1;
+    } else {
+      idx = sam_index_load(in, bam.c_str());
+      if (idx == NULL) {
+        std::cerr << "Unable to create BAM/SAM index." << std::endl;
+        return -1;
+      }
+    }
+  }
+  bam_hdr_t *header = sam_hdr_read(in);
+  region_.assign(header->target_name[0]);
+  std::string temp(header->text);
+  hts_itr_t *iter = NULL;
+  iter  = sam_itr_querys(idx, header, region_.c_str());
+  bam1_t *aln = bam_init1();
+  cigar_ t;
+  uint32_t *cigar;
+  int primer_ctr = 0;
+  int forward_primer_indices[] = {1, 1, 5, 5, 6};
+  int rev_primer_indices[] = {3, -1, -1, -1, 4};
+  uint8_t cigar_flag[5][16] = {
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CINS, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP}, // 3S15M5D2M1D14M1I56M1P6M3P93M2D4M2I8M
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CSOFT_CLIP}
+  };
+  uint32_t cigar_len[5][16] = {
+    {3, 15, 2, 1, 14, 1, 56, 1, 6, 3, 93, 2, 1, 3, 2, 8},
+    {1, 19, 1, 56, 1, 6, 3, 99, 2, 65},
+    {8, 13, 1, 6, 3, 99, 2, 62, 3},
+    {9, 10, 3, 97, 2, 26},
+    {18, 71, 2, 89, 18}
+  };
+  uint32_t read_start_pos[5] = {
+    94, 92, 173, 175, 201
+  };
+  uint8_t condense_cigar_flag[5][14] = {
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CINS, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH},
+    {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CSOFT_CLIP}
+  };
+  uint32_t condense_cigar_len[5][13] = {
+    {18, 2, 1, 14,1, 56, 1, 6, 3, 93, 2, 1, 13},
+    {1, 19, 1, 56, 1, 6, 3, 99, 2, 65},
+    {31, 99, 2, 62, 3},
+    {22, 97, 2, 26},
+    {18, 71, 2, 89, 18}
+  };
+  unsigned int fwd_overlapping_primer_sizes[] = {2, 1, 1, 1, 1};
+  unsigned int rev_overlapping_primer_sizes[] = {2, 0, 0, 0, 1}; 
+  std::vector<primer> overlapping_primers;
+  primer cand_primer;
+  while(sam_itr_next(in, iter, aln) >= 0) {
+    if((aln->core.flag&BAM_FUNMAP) != 0){
+      continue;
+    }
+    std::cout << bam_get_qname(aln) << std::endl;
+    std::cout << std::endl << "Forward" << std::endl;
+    get_overlapping_primers(aln, primers, overlapping_primers, false);
+    // Forward primer
+    if(overlapping_primers.size() > 0){
+      cand_primer = get_max_end(overlapping_primers);
+      t = primer_trim(aln, cand_primer.get_end() + 1, false);
+      aln->core.pos += t.start_pos;
+      replace_cigar(aln, t.nlength, t.cigar);
+      if(overlapping_primers.size() != fwd_overlapping_primer_sizes[primer_ctr]){
+	success = -1;
+	std::cout << "Overlapping primer sizes for " << bam_get_qname(aln)  <<". Expected: " << fwd_overlapping_primer_sizes[primer_ctr] << ". Got: " << overlapping_primers.size() << std::endl;
+      }
+      if(cand_primer.get_indice() != forward_primer_indices[primer_ctr]){
+	success = -1;
+	std::cout << "Primer indice wrong. Expected: " << forward_primer_indices[primer_ctr] << ". Got: " << cand_primer.get_indice() << std::endl;
+      }
+    }
+    // Reverse primer
+    std::cout << std::endl << "Reverse" << std::endl;
+    get_overlapping_primers(aln, primers, overlapping_primers, true);
+    if(overlapping_primers.size() > 0){
+      cand_primer = get_min_start(overlapping_primers);
+      t = primer_trim(aln, cand_primer.get_start() - 1, true);
+      replace_cigar(aln, t.nlength, t.cigar);
+      if(overlapping_primers.size() != rev_overlapping_primer_sizes[primer_ctr]){
+	success = -1;
+	std::cout << "Overlapping primer sizes for " << bam_get_qname(aln)  <<". Expected: " << rev_overlapping_primer_sizes[primer_ctr] << ". Got: " << overlapping_primers.size() << std::endl;
+      }
+      if(cand_primer.get_indice() != rev_primer_indices[primer_ctr]){
+	success = -1;
+	std::cout << "Primer indice wrong. Expected: " << rev_primer_indices[primer_ctr] << ". Got: " << cand_primer.get_indice() << std::endl;
+      }
+    }
+    if(aln->core.pos != read_start_pos[primer_ctr]){
+      success = -1;
+      std::cout << "Start pos didn't match" << std::endl;
+    }
+    replace_cigar(aln, t.nlength, t.cigar);
+    cigar = bam_get_cigar(aln);
+    for (uint i = 0; i < t.nlength; ++i){
+      if(((cigar[i]) & BAM_CIGAR_MASK) != cigar_flag[primer_ctr][i]){
+	success = -1;
+	std::cout << "Cigar flag didn't match for " << bam_get_qname(aln)  <<  " ! Expected " <<  (uint) cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;
+      }
+      if((((cigar[i]) >> BAM_CIGAR_SHIFT)) != cigar_len[primer_ctr][i]){
+	success = -1;
+	std::cout << "Cigar length didn't match for " << bam_get_qname(aln)  <<  " ! Expected " << (uint) cigar_len[primer_ctr][i]  << " " << "Got " << ((cigar[i]) >> BAM_CIGAR_SHIFT) << std::endl;
+      }
+    }
+    // Condense cigar
+    std::cout << std::endl << "Condensing cigar ... " << std::endl;
+    t = condense_cigar(t.cigar, t.nlength);
+    replace_cigar(aln, t.nlength, t.cigar);
+    cigar = bam_get_cigar(aln);
+    for (uint i = 0; i < t.nlength; ++i){
+      if(((cigar[i]) & BAM_CIGAR_MASK) != condense_cigar_flag[primer_ctr][i]){
+	success = -1;
+	std::cout << "Cigar flag didn't match! Expected " << condense_cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;
+      }
+      if((((cigar[i]) >> BAM_CIGAR_SHIFT)) != condense_cigar_len[primer_ctr][i]){
+	success = -1;
+	std::cout << "Cigar length didn't match after condense! Expected " << condense_cigar_len[primer_ctr][i]  << " " << "Got " << ((cigar[i]) >> BAM_CIGAR_SHIFT) << std::endl;
+      }
+    }
+    primer_ctr++;
+  }
+  // Check if primers found at all
+  success = (primer_ctr > 0) ? success : -1;
+  return success;
+}
