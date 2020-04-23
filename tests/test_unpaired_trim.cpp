@@ -110,7 +110,7 @@ int main(){
 	std::cout << "Primer indice wrong. Expected: " << rev_primer_indices[primer_ctr] << ". Got: " << cand_primer.get_indice() << std::endl;
       }
     }
-    if(aln->core.pos != read_start_pos[primer_ctr]){
+    if(aln->core.pos != (int) read_start_pos[primer_ctr]){
       success = -1;
       std::cout << "Start pos didn't match" << std::endl;
     }
