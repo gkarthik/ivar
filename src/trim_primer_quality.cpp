@@ -152,7 +152,7 @@ void print_cigar(uint32_t *cigar, int nlength){
   std::cout << std::endl;
 }
 
-cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool paired_rev = false){
+cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool unpaired_rev = false){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
   uint32_t i = 0, j = 0;
@@ -167,7 +167,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool paired_rev = false){
       max_del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
     }
   } else {			// Unpaired
-    if(paired_rev){
+    if(unpaired_rev){
       max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
       reverse_cigar(cigar, r->core.n_cigar);
       reverse = true;
@@ -175,6 +175,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool paired_rev = false){
       max_del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
     }
   }
+  max_del_len = (max_del_len > 0) ? max_del_len : 0; // For cases where reads spans only primer region
   int32_t n, start_pos = 0, ref_add = 0;
   bool pos_start = false;
   del_len = max_del_len;
@@ -250,13 +251,15 @@ void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers){
   overlapped_primers.clear();
   uint32_t start_pos = -1;
+  char strand = '+';
   if(bam_is_rev(r)){
     start_pos = bam_endpos(r)-1;
+    strand = '-';
   } else {
     start_pos = r->core.pos;
   }
   for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-    if(start_pos >= it->get_start() && start_pos <= it->get_end())
+    if(start_pos >= it->get_start() && start_pos <= it->get_end() && strand == it->get_strand())
       overlapped_primers.push_back(*it);
   }
 }
@@ -265,13 +268,15 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers, bool unpaired_rev){
   overlapped_primers.clear();
   uint32_t start_pos = -1;
+  char strand = '+';
   if(unpaired_rev){
     start_pos = bam_endpos(r) - 1;
+    strand = '-';
   } else {
     start_pos = r->core.pos;
   }
   for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-    if(start_pos >= it->get_start() && start_pos <= it->get_end())
+    if(start_pos >= it->get_start() && start_pos <= it->get_end() && strand == it->get_strand())
       overlapped_primers.push_back(*it);
   }
 }
