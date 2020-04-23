@@ -132,7 +132,13 @@ std::vector<primer> populate_from_file(std::string path){
 	}
 	break;
       case 5:
-	p.set_strand(cell[0]);
+	if(cell[0] == '+' || cell[0] == '-')
+	  p.set_strand(cell[0]);
+	else {
+	  print_bed_format();
+	  primers.clear();
+	  return primers;
+	}
       }
       ctr++;
     }
