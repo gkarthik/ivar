@@ -28,7 +28,10 @@ int main(){
   hts_itr_t *iter = NULL;
   iter  = sam_itr_querys(idx, header, region_.c_str());
   bam1_t *aln = bam_init1();
-  cigar_ t;
+  cigar_ t = {
+    NULL,
+    0
+  };
   uint32_t *cigar;
   int primer_ctr = 0;
   int forward_primer_indices[] = {1, 1, 5, 5, 6};
