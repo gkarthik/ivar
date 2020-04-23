@@ -86,7 +86,7 @@ int main(){
 	std::cout << "Primer indice wrong. Expected: " << primer_indices[primer_ctr] << ". Got: " << cand_primer.get_indice() << std::endl;
       }
       // Check start pos
-      if(aln->core.pos != read_start_pos[primer_ctr]){
+      if((uint) aln->core.pos != read_start_pos[primer_ctr]){
 	success = -1;
 	std::cout << "Incorrect start position" << std::endl;
       }
