@@ -422,7 +422,6 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    t = primer_trim(aln, cand_primer.get_end() + 1, false);
 	    aln->core.pos += t.start_pos;
 	  }
-	  print_cigar(t.cigar, t.nlength);
 	  replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);
