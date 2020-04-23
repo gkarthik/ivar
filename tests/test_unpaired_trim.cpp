@@ -30,6 +30,7 @@ int main(){
   bam1_t *aln = bam_init1();
   cigar_ t = {
     NULL,
+    0,
     0
   };
   uint32_t *cigar;
