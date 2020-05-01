@@ -96,6 +96,7 @@ std::vector<primer> populate_from_file(std::string path){
     std::string cell;
     int ctr = 0;
     primer p;
+    p.set_strand(0);		// Set strand to NULL
     while(std::getline(lineStream,cell,'\t')){
       switch(ctr){
       case 0:
@@ -142,17 +143,18 @@ std::vector<primer> populate_from_file(std::string path){
       }
       ctr++;
     }
+    if(indice == 0 && ctr < 6)
+      std::cout << "Strand not found in primer BED file so strand will not be considered for trimming" << std::endl;
     p.set_indice(indice);
     p.set_pair_indice(-1);
     p.set_read_count(0);
     primers.push_back(p);
     indice++;
   }
+  std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
   if(primers.size() == 0){
     print_bed_format();
-    std::cout << "Found 0 primers in BED file" << std::endl;
   }
-  std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
   return primers;
 }
 
