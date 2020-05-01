@@ -259,7 +259,7 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
     start_pos = r->core.pos;
   }
   for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-    if(start_pos >= it->get_start() && start_pos <= it->get_end() && strand == it->get_strand())
+    if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() || it->get_strand() == 0))
       overlapped_primers.push_back(*it);
   }
 }
@@ -276,7 +276,7 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
     start_pos = r->core.pos;
   }
   for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-    if(start_pos >= it->get_start() && start_pos <= it->get_end() && strand == it->get_strand())
+    if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() ||it->get_strand() == 0))
       overlapped_primers.push_back(*it);
   }
 }
