@@ -35,12 +35,22 @@ int get_primers_with_mismatches(std::string bed, std::string vpath, std::string 
     }
     pos--;			// 1 based to 0 based
     tmp = get_primers(primers, pos);
+    // mismatches_primers.insert(mismatches_primers.end(), tmp.begin(), tmp.end());
+    std::vector<primer>::iterator tmp_it;
     for(std::vector<primer>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
-      std::vector<primer>::iterator tmp_it = std::find(mismatches_primers.begin(), mismatches_primers.end(), *it);
-      if(tmp_it == tmp.end())
+      tmp_it = std::find(mismatches_primers.begin(), mismatches_primers.end(), *it);
+      if(tmp_it == mismatches_primers.end()){
+	std::cout << it->get_name() << std::endl;
 	mismatches_primers.push_back(*it);
+      }
+      // Look for primer pair
+      if(it->get_pair_indice() != -1){
+	tmp_it = std::find(mismatches_primers.begin(), mismatches_primers.end(), primers.at(it->get_pair_indice()));
+	if(tmp_it == mismatches_primers.end()){
+	  mismatches_primers.push_back(primers.at(it->get_pair_indice()));
+	}
+      }
     }
-    mismatches_primers.insert(mismatches_primers.end(), tmp.begin(), tmp.end());
     line_stream.clear();
     tmp.clear();
   }
