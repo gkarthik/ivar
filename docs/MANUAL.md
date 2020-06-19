@@ -27,7 +27,9 @@ Trim primer sequences with iVar
 
 iVar uses primer positions supplied in a BED file to soft clip primer sequences from an aligned and sorted BAM file. Following this, the reads are trimmed based on a quality threshold(Default: 20). To do the quality trimming, iVar uses a sliding window approach(Default: 4). The windows slides from the 5' end to the 3' end and if at any point the average base quality in the window falls below the threshold, the remaining read is soft clipped. If after trimming, the length of the read is greater than the minimum length specified(Default: 30), the read is written to the new trimmed BAM file.
 
-To sort and index an aligned BAM file, the following command can be used,
+Please note that the strand is taken into account while doing the trimming so forward primers are trimmed only from forward strand and reverse primers are trimmed from reverse strand.
+
+To sort and index an aligned BAM file (OPTIONAL, if index is not present iVar will create one), the following command can be used,
 
 ```
 # Input file - test.bam
@@ -262,6 +264,7 @@ If there are two nucleotides at the same frequency, both nucleotides are used to
 The output of the command is a fasta file with the consensus sequence and a .txt file with the average quality of every base used to generate the consensus at each position. *For insertions, the quality is set to be the minimum quality threshold since mpileup doesn't give the quality of bases in insertions.*
 
 Command:
+
 ```
 ivar consensus
 
