@@ -266,11 +266,12 @@ The output of the command is a fasta file with the consensus sequence and a .txt
 Command:
 
 ```
+
 ivar consensus
 
 Usage: samtools mpileup -aa -A -d 0 -Q 0 <input.bam> | ivar consensus -p <prefix> 
 
-Note : samtools mpileup output must be piped into `ivar consensus`
+Note : samtools mpileup output must be piped into ivar consensus
 
 Input Options    Description
            -q    Minimum quality score threshold to count base (Default: 20)
