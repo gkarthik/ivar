@@ -115,7 +115,7 @@ Output Options   Description
 
 Example Usage:
 ```
-samtools mpileup -A -d 600000 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03 -r test_reference.fa -g test.gff
+samtools mpileup -aa -A -d 600000 -B -Q 0 test.trimmed.bam | ivar variants -p test -q 20 -t 0.03 -r test_reference.fa -g test.gff
 ```
 
 The command above will generate a test.tsv file.
