@@ -1,5 +1,3 @@
-## iVar is being developed at [andersen-lab/ivar](https://github.com/andersen-lab/ivar). Please go to [andersen-lab/ivar](https://github.com/andersen-lab/ivar) for current releases.
-
 iVar
 ===========
 
