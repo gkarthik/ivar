@@ -150,6 +150,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       }
       out_str.str("");
       out_str.clear();
+      delete[] freq_depth;
     }
     line_stream.clear();
   }
