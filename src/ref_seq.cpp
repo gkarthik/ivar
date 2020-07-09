@@ -2,12 +2,13 @@
 
 char ref_antd::get_base(int64_t pos, std::string region){ // 1-based position
   int len;
+  char base = 0;
   if(!region.empty() && this->fai != NULL){
     seq = fai_fetch(this->fai, region.c_str(), &len);
   }
-  if(seq == NULL)
-    return 0;
-  return *(seq + (pos - 1));
+  if (seq) base = *(seq + (pos - 1));
+  free(seq);
+  return base;
 }
 
 char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature){
@@ -35,6 +36,7 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature)
       codon[i] = *(seq + codon_start_pos + i - edit_offset);
     }
   }
+  free(seq);
   return codon;
 }
 
@@ -68,6 +70,7 @@ char* ref_antd::get_codon(int64_t pos, std::string region, gff3_feature feature,
   }
   alt_pos += edit_offset;
   codon[alt_pos - 1 - codon_start_pos] = alt;
+  free(seq);
   return codon;
 }
 
@@ -101,6 +104,11 @@ ref_antd::ref_antd(std::string ref_path, std::string gff_path){
   this->add_gff(gff_path);
 }
 
+ref_antd::~ref_antd()
+{
+  if (this->fai) fai_destroy(this->fai);
+}
+
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
   if(features.size() == 0){	// No matching CDS
@@ -119,6 +127,9 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
     fout << alt_codon[0] << alt_codon[1] << alt_codon[2] << "\t";
     fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]);
     fout << std::endl;
+
+    delete[] ref_codon;
+    delete[] alt_codon;
   }
   return 0;
 }

@@ -30,6 +30,7 @@ int main(){
   bam1_t *aln = bam_init1();
   cigar_ t = {
     NULL,
+    false,
     0,
     0
   };
@@ -99,6 +100,7 @@ int main(){
     get_overlapping_primers(aln, primers, overlapping_primers, true);
     if(overlapping_primers.size() > 0){
       cand_primer = get_min_start(overlapping_primers);
+      free_cigar(t);
       t = primer_trim(aln, cand_primer.get_start() - 1, true);
       replace_cigar(aln, t.nlength, t.cigar);
       if(overlapping_primers.size() != rev_overlapping_primer_sizes[primer_ctr]){
@@ -128,7 +130,7 @@ int main(){
     }
     // Condense cigar
     std::cout << std::endl << "Condensing cigar ... " << std::endl;
-    t = condense_cigar(t.cigar, t.nlength);
+    condense_cigar(&t);
     replace_cigar(aln, t.nlength, t.cigar);
     cigar = bam_get_cigar(aln);
     for (uint i = 0; i < t.nlength; ++i){
@@ -142,8 +144,16 @@ int main(){
       }
     }
     primer_ctr++;
+    free_cigar(t);
   }
   // Check if primers found at all
   success = (primer_ctr > 0) ? success : -1;
+
+  bam_destroy1(aln);
+  bam_itr_destroy(iter);
+  sam_hdr_destroy(header);
+  hts_idx_destroy(idx);
+  hts_close(in);
+
   return success;
 }

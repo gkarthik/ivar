@@ -84,6 +84,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   int del_len, cig, temp;
   uint32_t i = 0, j = 0;
   cigar_ t;
+  init_cigar(&t);
   while(i < (uint32_t)r->core.l_qseq){
     m = mean_quality(qual, i, i+sliding_window);
   if (m < qual_threshold) break;
@@ -98,7 +99,9 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   del_len = r->core.l_qseq - i;
   start_pos = get_pos_on_reference(cigar, r->core.n_cigar, del_len, r->core.pos); // For reverse reads need to set core->pos.
   if(reverse && start_pos <= r->core.pos) {
+    free(ncigar);
     t.cigar = cigar;
+    t.free_cig = false;
     t.nlength = r->core.n_cigar;
     t.start_pos = r->core.pos;
     return t;
@@ -141,6 +144,7 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   }
   t.cigar = ncigar;
   t.nlength = j;
+  t.free_cig = true;
   t.start_pos = start_pos;
   return t;
 }
@@ -228,6 +232,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool unpaired_rev = false){
   }
   return {
     ncigar,
+      true,
       j,
       start_pos
   };
@@ -282,26 +287,22 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
   }
 }
 
-cigar_ condense_cigar(uint32_t* cigar, uint32_t n){
+void condense_cigar(cigar_ *t){
   uint32_t i = 0, len = 0, cig, next_cig;
-  cigar_ t;
-  while(i< n -1){
-    cig = bam_cigar_op(cigar[i]);
-    next_cig = bam_cigar_op(cigar[i+1]);
+  while(i< t->nlength -1){
+    cig = bam_cigar_op(t->cigar[i]);
+    next_cig = bam_cigar_op(t->cigar[i+1]);
     if(cig == next_cig){
-      len = bam_cigar_oplen(cigar[i])+bam_cigar_oplen(cigar[i+1]);
-      cigar[i] = bam_cigar_gen(len, bam_cigar_op(cigar[i]));
-      for(uint32_t j = i+1; j < n - 1; j++){
-	cigar[j] = cigar[j+1];
+      len = bam_cigar_oplen(t->cigar[i])+bam_cigar_oplen(t->cigar[i+1]);
+      t->cigar[i] = bam_cigar_gen(len, bam_cigar_op(t->cigar[i]));
+      for(uint32_t j = i+1; j < t->nlength - 1; j++){
+	t->cigar[j] = t->cigar[j+1];
       }
-      n--;
+      t->nlength--;
     } else {
       i++;
     }
   }
-  t.cigar = cigar;
-  t.nlength = n;
-  return t;
 }
 
 void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
@@ -400,6 +401,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   bam1_t *aln = bam_init1();
   int ctr = 0;
   cigar_ t;
+  init_cigar(&t);
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
   bool unmapped_flag = false;
   uint32_t unmapped_counter = 0;
@@ -424,6 +426,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    aln->core.pos += t.start_pos;
 	  }
 	  replace_cigar(aln, t.nlength, t.cigar);
+      free(t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);
 	  if(cit != primers.end())
@@ -432,7 +435,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
 	if(bam_is_rev(aln))
 	  aln->core.pos = t.start_pos;
-	t = condense_cigar(t.cigar, t.nlength);
+	condense_cigar(&t);
 	// aln->core.pos += t.start_pos;
 	replace_cigar(aln, t.nlength, t.cigar);
       } else {			// Unpaired reads: Might be stitched reads
@@ -462,7 +465,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    cit->add_read_count(1);
 	}
 	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-	t = condense_cigar(t.cigar, t.nlength);
+	condense_cigar(&t);
 	replace_cigar(aln, t.nlength, t.cigar);
       }
       if(primer_trimmed){

@@ -1,4 +1,4 @@
-.TH "manualpage" 3 "Fri Apr 3 2020" "iVar" \" -*- nroff -*-
+.TH "manualpage" 3 "Fri Jun 19 2020" "iVar" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -14,7 +14,9 @@ To view detailed usage for each command type \fCivar <command>\fP Note : Command
 .SS "Trim primer sequences with iVar"
 iVar uses primer positions supplied in a BED file to soft clip primer sequences from an aligned and sorted BAM file\&. Following this, the reads are trimmed based on a quality threshold(Default: 20)\&. To do the quality trimming, iVar uses a sliding window approach(Default: 4)\&. The windows slides from the 5' end to the 3' end and if at any point the average base quality in the window falls below the threshold, the remaining read is soft clipped\&. If after trimming, the length of the read is greater than the minimum length specified(Default: 30), the read is written to the new trimmed BAM file\&.
 .PP
-To sort and index an aligned BAM file, the following command can be used,
+Please note that the strand is taken into account while doing the trimming so forward primers are trimmed only from forward strand and reverse primers are trimmed from reverse strand\&.
+.PP
+To sort and index an aligned BAM file (OPTIONAL, if index is not present iVar will create one), the following command can be used,
 .PP
 .PP
 .nf
@@ -115,7 +117,7 @@ Output Options   Description
 Example Usage: 
 .PP
 .nf
-samtools mpileup -A -d 600000 -B -Q 0 test\&.trimmed\&.bam | ivar variants -p test -q 20 -t 0\&.03 -r test_reference\&.fa -g test\&.gff
+samtools mpileup -aa -A -d 600000 -B -Q 0 test\&.trimmed\&.bam | ivar variants -p test -q 20 -t 0\&.03 -r test_reference\&.fa -g test\&.gff
 
 .fi
 .PP
@@ -216,93 +218,141 @@ Minimum frequency threshold  Consensus   0  T   0\&.5  T   0\&.6  T   0\&.7  D(A
 .PP
 The output of the command is a fasta file with the consensus sequence and a \&.txt file with the average quality of every base used to generate the consensus at each position\&. \fIFor insertions, the quality is set to be the minimum quality threshold since mpileup doesn't give the quality of bases in insertions\&.\fP
 .PP
-Command: ``` ivar consensus
+Command:
 .PP
-Usage: samtools mpileup -aa -A -d 0 -Q 0 <input\&.bam> | ivar consensus -p <prefix>
-.PP
-Note : samtools mpileup output must be piped into \fCivar consensus\fP
-.PP
-Input Options Description -q Minimum quality score threshold to count base (Default: 20) -t Minimum frequency threshold(0 - 1) to call consensus\&. (Default: 0) Frequently used thresholds  Description   0  Majority or most common base   0\&.2  Bases that make up atleast 20% of the depth at a position   0\&.5  Strict or bases that make up atleast 50% of the depth at a position   0\&.9  Strict or bases that make up atleast 90% of the depth at a position   1  Identical or bases that make up 100% of the depth at a position\&. Will have highest ambiguities   -m Minimum depth to call consensus(Default: 10) -k If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence\&. Using '-k' will override any option specified using -n -n (N/-) Character to print in regions with less than minimum coverage(Default: N)
-.PP
-Output Options Description -p (Required) Prefix for the output fasta file and quality file 
 .PP
 .nf
-Example Usage:
+ivar consensus
+
+Usage: samtools mpileup -aa -A -d 0 -Q 0 <input\&.bam> | ivar consensus -p <prefix> 
+
+Note : samtools mpileup output must be piped into ivar consensus
+
+Input Options    Description
+           -q    Minimum quality score threshold to count base (Default: 20)
+           -t    Minimum frequency threshold(0 - 1) to call consensus\&. (Default: 0)
+                 Frequently used thresholds | Description
+                 ---------------------------|------------
+                                          0 | Majority or most common base
+                                        0\&.2 | Bases that make up atleast 20% of the depth at a position
+                                        0\&.5 | Strict or bases that make up atleast 50% of the depth at a position
+                                        0\&.9 | Strict or bases that make up atleast 90% of the depth at a position
+                                          1 | Identical or bases that make up 100% of the depth at a position\&. Will have highest ambiguities
+           -m    Minimum depth to call consensus(Default: 10)
+           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence\&. Using '-k' will override any option specified using -n 
+           -n    (N/-) Character to print in regions with less than minimum coverage(Default: N)
+
+Output Options   Description
+           -p    (Required) Prefix for the output fasta file and quality file
+.fi
+.PP
+.PP
+Example Usage: 
+.PP
+.nf
+samtools mpileup -d 1000 -A -Q 0 test\&.bam | ivar consensus -p test -q 20 -t 0
 
 .fi
 .PP
- samtools mpileup -d 1000 -A -Q 0 test\&.bam | ivar consensus -p test -q 20 -t 0 
 .PP
-.nf
 The command above will produce a test\&.fa fasta file with the consensus sequence and a test\&.qual\&.txt with the average quality of each base in the consensus sequence\&.
-
-Get primers with mismatches to the reference sequence
-----
-
+.SS "Get primers with mismatches to the reference sequence"
 iVar uses a \&.tsv file with variants to get the zero based indices(based on the BED file) of mismatched primers\&. This command requires another \&.tsv file with each line containing the left and right primer names separated by a tab\&. This is used to get both the primers for an amplicon with a single mismatched primer\&. The output is a text file with the zero based primer indices delimited by a space\&. The output is written to a a text file using the prefix provided\&.
+.PP
+Command: 
+.PP
+.nf
+ivar getmasked
+Usage: ivar getmasked -i <input-filtered\&.tsv> -b <primers\&.bed> -f <primer_pairs\&.tsv> -p <prefix>
+Note: This step is used only for amplicon-based sequencing\&.
 
-Command:
+Input Options    Description
+           -i    (Required) Input filtered variants tsv generated from 'ivar filtervariants'
+           -b    (Required) BED file with primer sequences and positions
+           -f    (Required) Primer pair information file containing left and right primer names for the same amplicon separated by a tab
+Output Options   Description
+           -p    (Required) Prefix for the output text file
 
 .fi
 .PP
- ivar getmasked Usage: ivar getmasked -i <input-filtered\&.tsv> -b <primers\&.bed> -f <primer_pairs\&.tsv> -p <prefix> Note: This step is used only for amplicon-based sequencing\&.
 .PP
-Input Options Description -i (Required) Input filtered variants tsv generated from 'ivar filtervariants' -b (Required) BED file with primer sequences and positions -f (Required) Primer pair information file containing left and right primer names for the same amplicon separated by a tab Output Options Description -p (Required) Prefix for the output text file
-.PP
-.PP
-.nf
 Example BED file
-.fi
 .PP
- Puerto 28 52 400_1_out_L 60 + Puerto 482 504 400_1_out_R 60 - Puerto 359 381 400_2_out_L 60 + Puerto 796 818 400_2_out_R 60 - Puerto 658 680 400_3_out_L* 60 + Puerto 1054 1076 400_3_out_R* 60 -
 .PP
 .nf
-Example primer pair information file
+Puerto  28  52  400_1_out_L 60  +
+Puerto  482 504 400_1_out_R 60  -
+Puerto  359 381 400_2_out_L 60  +
+Puerto  796 818 400_2_out_R 60  -
+Puerto  658 680 400_3_out_L*    60  +
+Puerto  1054    1076    400_3_out_R*    60  -
+\&.
+\&.
+\&.
+\&.
+.fi
+.PP
+.PP
+Example primer pair information file 
+.PP
+.nf
+400_1_out_L    400_1_out_R
+400_2_out_L    400_2_out_R
+400_3_out_L    400_3_out_R
+\&.
+\&.
+\&.
+\&.
 
 .fi
 .PP
- 400_1_out_L 400_1_out_R 400_2_out_L 400_2_out_R 400_3_out_L 400_3_out_R
+.PP
+Example Usage: 
 .PP
 .nf
-Example Usage:
+ivar getmasked -i test\&.filtered\&.tsv -b primers\&.bed -f pair_information\&.tsv -p test\&.masked\&.txt
 
 .fi
 .PP
- ivar getmasked -i test\&.filtered\&.tsv -b primers\&.bed -f pair_information\&.tsv -p test\&.masked\&.txt 
 .PP
-.nf
 The command above produces an output file - test\&.masked\&.txt\&.
-
+.PP
 Example Output:
-
-.fi
-.PP
- 1 2 7 8 
-.PP
-.nf
-Remove reads associated with mismatched primer indices
-----
-
-This command accepts an aligned and sorted BAM file trimmed using `ivar trim` and removes the reads corresponding to the supplied primer indices, which is the output of `ivar getmasked` command\&. Under the hood, `ivar trim` adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read\&. Hence, ivar removereads will only work on BAM files that have been trimmed using `ivar trim`\&.
-
-Command:
-
-.fi
-.PP
- ivar removereads
-.PP
-Usage: ivar removereads -i <input\&.trimmed\&.bam> -p <prefix> -t <text-file-with-primer-indices> Note: This step is used only for amplicon-based sequencing\&.
-.PP
-Input Options Description -i (Required) Input BAM file trimmed with ivar trim\&. Must be sorted and indexed, which can be done using sort_index_bam\&.sh -t (Required) Text file with primer indices separated by spaces\&. This is the output of getmasked command\&.
-.PP
-Output Options Description -p (Required) Prefix for the output filtered BAM file
 .PP
 .PP
 .nf
-Example Usage:
+1 2 7 8
 .fi
 .PP
- ivar trim -i test\&.bam -p test\&.trimmed ivar removereads -i test\&.trimmed\&.bam -p test\&.trimmed\&.masked\&.bam -t test\&.masked\&.txt ```
+.SS "Remove reads associated with mismatched primer indices"
+This command accepts an aligned and sorted BAM file trimmed using \fCivar trim\fP and removes the reads corresponding to the supplied primer indices, which is the output of \fCivar getmasked\fP command\&. Under the hood, \fCivar trim\fP adds the zero based primer index(based on the BED file) to the BAM auxillary data for every read\&. Hence, ivar removereads will only work on BAM files that have been trimmed using \fCivar trim\fP\&.
+.PP
+Command: 
+.PP
+.nf
+ivar removereads
+
+Usage: ivar removereads -i <input\&.trimmed\&.bam> -p <prefix> -t <text-file-with-primer-indices>
+Note: This step is used only for amplicon-based sequencing\&.
+
+Input Options    Description
+           -i    (Required) Input BAM file  trimmed with ivar trim\&. Must be sorted and indexed, which can be done using sort_index_bam\&.sh
+           -t    (Required) Text file with primer indices separated by spaces\&. This is the output of getmasked command\&.
+
+Output Options   Description
+           -p    (Required) Prefix for the output filtered BAM file
+
+.fi
+.PP
+.PP
+Example Usage: 
+.PP
+.nf
+ivar trim -i test\&.bam -p test\&.trimmed
+ivar removereads -i test\&.trimmed\&.bam -p test\&.trimmed\&.masked\&.bam -t test\&.masked\&.txt
+
+.fi
+.PP
 .PP
 The \fCivar trim\fP command above trims test\&.bam and produced test\&.trimmed\&.bam with the primer indice data added\&. The \fCivar removereads\fP command produces an output file - test\&.trimmed\&.masked\&.bam after removing all the reads corresponding to primer indices - 1,2,7 and 8\&.
 .SS "(Experimental) trimadapter"

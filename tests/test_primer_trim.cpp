@@ -105,7 +105,7 @@ int main(){
       }
       // Condense cigar
       std::cout << std::endl << "Condensing cigar ... " << std::endl;
-      t = condense_cigar(t.cigar, t.nlength);
+      condense_cigar(&t);
       replace_cigar(aln, t.nlength, t.cigar);
       cigar = bam_get_cigar(aln);
       print_cigar(cigar, t.nlength);
@@ -120,11 +120,19 @@ int main(){
 	}
       }
       primer_ctr++;
+      free_cigar(t);
     }
     ctr++;
     std::cout << " ---- " << std::endl;
   }
   // Check if primers found at all
   success = (primer_ctr > 0) ? success : -1;
+
+  bam_destroy1(aln);
+  bam_itr_destroy(iter);
+  sam_hdr_destroy(header);
+  hts_idx_destroy(idx);
+  hts_close(in);
+
   return success;
 }
