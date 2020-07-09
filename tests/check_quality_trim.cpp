@@ -15,8 +15,8 @@ int main(){
   iter  = sam_itr_querys(idx, header, region_.c_str());
   bam1_t *aln = bam_init1();
   cigar_ t;
-  int lengths[6] = {150,100,100, 25,146,144}, ctr = 0;
-  int start_pos_rev[6] = {19, 113, 208, 324, 199, 231};
+  int lengths[6] = {150,99,99, 24,146,144}, ctr = 0;
+  int start_pos_rev[6] = {19, 114, 209, 325, 199, 231};
   while(sam_itr_next(in, iter, aln) >= 0) {
     t = quality_trim(aln, 20, 4);
     std::cout << bam_get_qname(aln) << std::endl;

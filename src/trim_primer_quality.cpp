@@ -84,8 +84,9 @@ cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window){
   int del_len, cig, temp;
   uint32_t i = 0, j = 0;
   cigar_ t;
-  while(m >= qual_threshold && (i < (uint32_t)r->core.l_qseq)){
+  while(i < (uint32_t)r->core.l_qseq){
     m = mean_quality(qual, i, i+sliding_window);
+  if (m < qual_threshold) break;
     i++;
     if(i > (uint32_t)r->core.l_qseq - sliding_window)
       sliding_window--;
