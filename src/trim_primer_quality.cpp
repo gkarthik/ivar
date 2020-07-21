@@ -317,7 +317,7 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   (*hdr)->l_text = len-1;
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, int min_length = 30){
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool mark_qcfail_flag, int min_length = 30) {
   std::vector<primer> primers;
   if(!bed.empty()){
     primers = populate_from_file(bed);
@@ -492,6 +492,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	}
       } else {
 	if((primers.size() == 0 || write_no_primer_reads) && !unmapped_flag){ // Write mapped reads to BAM if -e flag given
+          if (mark_qcfail_flag) aln->core.flag |= BAM_FQCFAIL;
 	  if(bam_write1(out, aln) < 0){
 	    std::cout << "Not able to write to BAM" << std::endl;
 	    hts_itr_destroy(iter);
@@ -507,6 +508,19 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       }
     } else {
       low_quality++;
+      if (mark_qcfail_flag) {
+        aln->core.flag |= BAM_FQCFAIL;
+	if (bam_write1(out, aln) < 0){
+	  std::cout << "Not able to write to BAM" << std::endl;
+	  hts_itr_destroy(iter);
+	  hts_idx_destroy(idx);
+	  bam_destroy1(aln);
+	  bam_hdr_destroy(header);
+	  sam_close(in);
+	  bgzf_close(out);
+	  return -1;
+	}
+      }
     }
     ctr++;
     if(ctr % log_skip == 0){
@@ -520,9 +534,16 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << cit->get_name() << "\t" << cit->get_read_count() << std::endl;
   }
   std::cout << std::endl << "Trimmed primers from " << round_int(primer_trim_count, mapped) << "% (" << primer_trim_count <<  ") of reads." << std::endl;
-  std::cout << round_int( low_quality, mapped) << "% (" << low_quality << ") of reads were quality trimmed below the minimum length of " << min_length << " bp and were not writen to file." << std::endl;
+  std::cout << round_int( low_quality, mapped) << "% (" << low_quality << ") of reads were quality trimmed below the minimum length of " << min_length << " bp and were ";
+  if (mark_qcfail_flag) {
+    std::cout << "marked as failed" << std::endl;
+  } else {
+    std::cout << "not written to file." << std::endl;
+  }
   if(write_no_primer_reads){
-    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since the -e flag was given, these reads were written to file." << std::endl;
+    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since the -e flag was given, these reads were written to file";
+    if (mark_qcfail_flag) std::cout << " and the BAM_QCFAIL flag set";
+    std::cout << "." << std::endl;
   } else if (primers.size() == 0) {
     std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since there were no primers found in BED file, these reads were written to file." << std::endl;
   } else {
