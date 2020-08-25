@@ -22,6 +22,7 @@ struct args_t {
   std::string bam;		// -i
   std::string bed;		// -b
   std::string text;		// -t
+  std::string input_id; // -i for consensus
   std::string prefix;		// -p
   std::string ref;		// -r
   std::string region;		// -R
@@ -162,7 +163,7 @@ void print_version_info(){
 
 static const char *trim_opt_str = "i:b:p:m:q:s:efh?";
 static const char *variants_opt_str = "p:t:q:m:r:g:h?";
-static const char *consensus_opt_str = "p:q:t:m:n:kh?";
+static const char *consensus_opt_str = "i:p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
 static const char *filtervariants_opt_str = "p:t:f:h?";
 static const char *getmasked_opt_str = "i:b:f:p:h?";
@@ -323,6 +324,9 @@ int main(int argc, char* argv[]){
       case 't':
 	g_args.min_threshold = atof(optarg);
 	break;
+      case 'i':
+  g_args.input_id = optarg;
+  break;
       case 'p':
 	g_args.prefix = optarg;
 	break;
@@ -366,7 +370,7 @@ int main(int argc, char* argv[]){
       std::cout << "Regions with depth less than minimum depth will not added to consensus" << std::endl;
     else
       std::cout << "Regions with depth less than minimum depth covered by: " << g_args.gap << std::endl;
-    res = call_consensus_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage);
+    res = call_consensus_from_plup(std::cin, g_args.input_id, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage);
   } else if (cmd.compare("removereads") == 0){
     opt = getopt( argc, argv, removereads_opt_str);
     while( opt != -1 ) {
