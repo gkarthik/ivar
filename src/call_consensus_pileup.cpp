@@ -130,13 +130,17 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
   return t;
 }
 
-int call_consensus_from_plup(std::istream &cin, std::string out_file, uint8_t min_qual, double threshold, uint8_t min_depth, char gap, bool min_coverage_flag){
+int call_consensus_from_plup(std::istream &cin, std::string seq_id, std::string out_file, uint8_t min_qual, double threshold, uint8_t min_depth, char gap, bool min_coverage_flag){
   std::string line, cell;
   std::ofstream fout((out_file+".fa").c_str());
   std::ofstream tmp_qout((out_file+".qual.txt").c_str());
   char *o = new char[out_file.length() + 1];
   strcpy(o, out_file.c_str());
-  fout << ">Consensus_" << basename(o) << "_threshold_" << threshold << "_quality_" << (uint16_t) min_qual  <<std::endl;
+  if(seq_id.empty()) {
+    fout << ">Consensus_" << basename(o) << "_threshold_" << threshold << "_quality_" << (uint16_t) min_qual  <<std::endl;
+  } else {
+    fout << ">" << seq_id <<std::endl;
+  }
   delete [] o;
   int ctr = 0, mdepth = 0;
   uint32_t prev_pos = 0, pos = 0;
