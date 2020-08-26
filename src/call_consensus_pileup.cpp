@@ -136,7 +136,12 @@ int call_consensus_from_plup(std::istream &cin, std::string input_id, std::strin
   std::ofstream tmp_qout((out_file+".qual.txt").c_str());
   char *o = new char[out_file.length() + 1];
   strcpy(o, out_file.c_str());
-  fout << ">" << input_id <<std::endl;
+  if(input_id.empty()) {
+    fout << ">Consensus_" << basename(o) << "_threshold_" << threshold << "_quality_" << (uint16_t) min_qual  <<std::endl;
+    
+  } else {
+    fout << ">" << input_id <<std::endl;
+  }
   delete [] o;
   int ctr = 0, mdepth = 0;
   uint32_t prev_pos = 0, pos = 0;
