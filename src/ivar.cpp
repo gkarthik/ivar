@@ -314,6 +314,7 @@ int main(int argc, char* argv[]){
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.ref, g_args.gff);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
+    g_args.input_id = "";
     g_args.min_threshold = 0;
     g_args.min_depth = 10;
     g_args.gap = 'N';
