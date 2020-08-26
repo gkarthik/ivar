@@ -22,7 +22,7 @@ struct args_t {
   std::string bam;		// -i
   std::string bed;		// -b
   std::string text;		// -t
-  std::string input_id; // -i for consensus
+  std::string seq_id; // -i for consensus
   std::string prefix;		// -p
   std::string ref;		// -r
   std::string region;		// -R
@@ -314,7 +314,7 @@ int main(int argc, char* argv[]){
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.ref, g_args.gff);
   } else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
-    g_args.input_id = "";
+    g_args.seq_id = "";
     g_args.min_threshold = 0;
     g_args.min_depth = 10;
     g_args.gap = 'N';
@@ -326,7 +326,7 @@ int main(int argc, char* argv[]){
 	g_args.min_threshold = atof(optarg);
 	break;
       case 'i':
-  g_args.input_id = optarg;
+  g_args.seq_id = optarg;
   break;
       case 'p':
 	g_args.prefix = optarg;
@@ -371,7 +371,7 @@ int main(int argc, char* argv[]){
       std::cout << "Regions with depth less than minimum depth will not added to consensus" << std::endl;
     else
       std::cout << "Regions with depth less than minimum depth covered by: " << g_args.gap << std::endl;
-    res = call_consensus_from_plup(std::cin, g_args.input_id, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage);
+    res = call_consensus_from_plup(std::cin, g_args.seq_id, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage);
   } else if (cmd.compare("removereads") == 0){
     opt = getopt( argc, argv, removereads_opt_str);
     while( opt != -1 ) {
