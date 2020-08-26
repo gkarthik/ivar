@@ -4,7 +4,7 @@
 #include "../src/call_consensus_pileup.h"
 #include "../src/allele_functions.h"
 
-int call_cns_check_outfile(std::string input_id, std::string prefix, std::string cns, char gap, bool call_min_depth, int min_depth){
+int call_cns_check_outfile(std::string input_id, std::string prefix, char gap, bool call_min_depth, int min_depth){
   std::string path = "../data/test.gap.sorted.mpileup";
   std::string expctd_hdr = "";
   std::ifstream mplp(path);
@@ -27,11 +27,11 @@ int call_cns_check_outfile(std::string input_id, std::string prefix, std::string
 int main() {
   int num_success = 0;
   std::string c_ = "CTGCTGGGTCATGGGCCCATCATGATGGTCTTGGCGATTCTAGCCTTTTTGAGATTCACGGCAATCAAGCCATCACTGGGTCTCATCAATAGATGGGGTTCAGTGGGGAAAAAAGAGGCTATGGAAACAATAAAGAAGTTCAAGAAAGAT------------------------------AGGAAGGAGAAGAAGAGACGWGGCGCAGATACTAGTGTCGGAATTGTTGGMCTCCTGCTGACCACAGCTATGGMAGCGGAGGTCACKAGACGTGGGAGTGCATACTATATGTACTTGGACWGAAACGATGCKGGGGAGGCCATATCTTTTCCAACCACATTGGGGTTGAATAAGTG";
-  num_success = call_cns_check_outfile("TESTID", "../data/test.gap", c_, '-', true, 0);
+  num_success = call_cns_check_outfile("TESTID", "../data/test.gap", '-', true, 0);
   std::cout << num_success << std::endl;
-  num_success += call_cns_check_outfile("", "../data/test.gap", c_, 'N', true, 0);
+  num_success += call_cns_check_outfile("", "../data/test.gap", 'N', true, 0);
   std::cout << num_success << std::endl;
-  num_success += call_cns_check_outfile("TESTID2", "../data/test.gap", c_, 'N', false, 0);
+  num_success += call_cns_check_outfile("TESTID2", "../data/test.gap", 'N', false, 0);
   std::cout << num_success << std::endl;
   if(num_success == 0)
     return 0;
