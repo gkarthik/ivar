@@ -155,7 +155,6 @@ std::vector<primer> populate_from_file(std::string path){
 
 if(primers.size() == 0){
     print_bed_format();
-    std::cout << "Found 0 primers in BED file" << std::endl;
   }
   std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
   return primers;
