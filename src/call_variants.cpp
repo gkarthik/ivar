@@ -86,12 +86,19 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       }
       ctr++;
     }
-    if(mdepth < min_depth) {	// Check for minimum depth
+    ad = update_allele_depth(ref, bases, qualities, min_qual);
+    if(ad.size() == 0){
       line_stream.clear();
       continue;
     }
-    ad = update_allele_depth(ref, bases, qualities, min_qual);
-    if(ad.size() == 0){
+    // Get ungapped depth
+    pdepth = 0;
+    for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
+      if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
+	continue;
+      pdepth += it->depth;
+    }
+    if(pdepth < min_depth) {	// Check for minimum depth
       line_stream.clear();
       continue;
     }
@@ -104,13 +111,6 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       a.mean_qual = 0;
       ad.push_back(a);
       ref_it = ad.end() - 1;
-    }
-    // Get ungapped coverage
-    pdepth = 0;
-    for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-      if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
-	continue;
-      pdepth += it->depth;
     }
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((*it == *ref_it) || it->nuc[0]=='*')

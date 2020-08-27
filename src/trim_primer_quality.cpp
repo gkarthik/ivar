@@ -324,12 +324,14 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   std::vector<primer> primers;
   if(!bed.empty()){
     primers = populate_from_file(bed);
+    if(primers.size() == 0){
+      std::cout << "Exiting." << std::endl;
+      return -1;
+    }
   }
-  // if(primers.size() == 0){
-  //   return 0;
-  // }
+  
   if(bam.empty()){
-    std::cout << "Bam file in empty." << std::endl;
+    std::cout << "Bam file is empty." << std::endl;
     return -1;
   }
   bam_out += ".bam";
