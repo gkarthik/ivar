@@ -86,6 +86,7 @@ void print_bed_format(){
   std::cout << "It requires the following columns delimited by a tab: chrom, chromStart, chromEnd, name, score, strand" << std::endl;
 }
 
+
 std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path.c_str());
   std::string line;
@@ -127,9 +128,9 @@ std::vector<primer> populate_from_file(std::string path){
 	if(std::all_of(cell.begin(), cell.end(), ::isdigit)) {
 	  p.set_score(stoi(cell));
 	} else {
-	  print_bed_format();
-	  primers.clear();
-	  return primers;
+	  print_bed_format();  // score is missing, send warning but continue populating
+    std::cout << "\nWARNING: The BED file provided did not have the expected score column, but iVar will ignore this and continue trimming regardless\n" << std::endl;
+    p.set_score(-1);
 	}
 	break;
       case 5:
@@ -151,12 +152,15 @@ std::vector<primer> populate_from_file(std::string path){
     primers.push_back(p);
     indice++;
   }
-  std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
-  if(primers.size() == 0){
+
+if(primers.size() == 0){
     print_bed_format();
+    std::cout << "Found 0 primers in BED file" << std::endl;
   }
+  std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
   return primers;
 }
+
 
 std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos){
   std::vector<primer> primers_with_mismatches;
