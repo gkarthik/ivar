@@ -80,12 +80,10 @@ void primer::add_read_count(uint32_t rc){
   read_count += rc;
 }
 
-
 void print_bed_format(){
   std::cout << "iVar uses the standard 6 column BED format as defined here - https://genome.ucsc.edu/FAQ/FAQformat.html#format1." << std::endl;
   std::cout << "It requires the following columns delimited by a tab: chrom, chromStart, chromEnd, name, score, strand" << std::endl;
 }
-
 
 std::vector<primer> populate_from_file(std::string path){
   std::ifstream  data(path.c_str());
@@ -129,7 +127,7 @@ std::vector<primer> populate_from_file(std::string path){
 	  p.set_score(stoi(cell));
 	} else {
 	  print_bed_format();  // score is missing, send warning but continue populating
-    std::cout << "\nWARNING: The BED file provided did not have the expected score column, but iVar will ignore this and continue trimming regardless\n" << std::endl;
+    std::cout << "\nWARNING: The BED file provided did not have the expected score column, but iVar will continue trimming\n" << std::endl;
     p.set_score(-1);
 	}
 	break;
@@ -152,14 +150,9 @@ std::vector<primer> populate_from_file(std::string path){
     primers.push_back(p);
     indice++;
   }
-
-if(primers.size() == 0){
-    print_bed_format();
-  }
   std::cout << "Found " << primers.size() << " primers in BED file" << std::endl;
   return primers;
 }
-
 
 std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos){
   std::vector<primer> primers_with_mismatches;
@@ -221,7 +214,6 @@ primer get_min_start(std::vector<primer> primers){
   auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer lhs, primer rhs) {return lhs.get_start() < rhs.get_start();});
   return *(minmax_start.first);
 }
-
 
 primer get_max_end(std::vector<primer> primers){
   auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer lhs, primer rhs) {return lhs.get_end() < rhs.get_end();});

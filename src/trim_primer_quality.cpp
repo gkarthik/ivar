@@ -329,7 +329,6 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       return -1;
     }
   }
-  
   if(bam.empty()){
     std::cout << "Bam file is empty." << std::endl;
     return -1;
