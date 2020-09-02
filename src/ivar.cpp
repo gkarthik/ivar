@@ -117,7 +117,8 @@ void print_consensus_usage(){
     "           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n \n"
     "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: N)\n\n"
     "Output Options   Description\n"
-    "           -p    (Required) Prefix for the output fasta file and quality file\n";
+    "           -p    (Required) Prefix for the output fasta file and quality file\n"
+    "           -i    (Optional) Name of fasta header. By default, the prefix is used to create the fasta header in the following format, Consensus_<prefix>_threshold_<frequency-threshold>_quality_<minimum-quality>\n";
 }
 
 void print_removereads_usage(){
@@ -326,8 +327,8 @@ int main(int argc, char* argv[]){
 	g_args.min_threshold = atof(optarg);
 	break;
       case 'i':
-  g_args.seq_id = optarg;
-  break;
+	g_args.seq_id = optarg;
+	break;
       case 'p':
 	g_args.prefix = optarg;
 	break;
