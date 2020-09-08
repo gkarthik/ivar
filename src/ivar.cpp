@@ -192,7 +192,7 @@ int main(int argc, char* argv[]){
     return -1;
   }
   std::stringstream cl_cmd;
-  cl_cmd << "@PG\tID:ivar-" << argv[1]  <<  "\tPN:ivar\tVN:1.0.0\tCL:" << argv[0] << " ";
+  cl_cmd << "@PG\tID:ivar-" << argv[1]  <<  "\tPN:ivar\tVN:" << VERSION << "\tCL:" << argv[0] << " ";
   for (int i = 1; i < argc; ++i) {
     cl_cmd << argv[i];
     if(i != argc-1)
