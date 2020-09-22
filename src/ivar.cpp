@@ -39,8 +39,8 @@ struct args_t {
   std::string primer_pair_file;	// -f
   std::string file_list;		// -f
   bool write_no_primers_flag;	// -e
-  bool mark_qcfail_flag;    // -f
   std::string gff;		// -g
+  bool keep_for_reanalysis;     // -k
 } g_args;
 
 void print_usage(){
@@ -69,7 +69,8 @@ void print_trim_usage(){
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n"
     "           -e    Include reads with no primers. By default, reads with no primers are excluded\n"
-    "           -f    Mark reads as QCFAIL instead of excluding them\n\n"
+    "           -k    keep reads to allow for reanalysis: keep reads which would be dropped by\n"
+    "                 alignment length filter or primer requirements, but mark them QCFAIL\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output BAM file\n";
 }
@@ -162,7 +163,7 @@ void print_version_info(){
     "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
-static const char *trim_opt_str = "i:b:p:m:q:s:efh?";
+static const char *trim_opt_str = "i:b:p:m:q:s:ekh?";
 static const char *variants_opt_str = "p:t:q:m:r:g:h?";
 static const char *consensus_opt_str = "i:p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
@@ -214,7 +215,7 @@ int main(int argc, char* argv[]){
     g_args.sliding_window = 4;
     g_args.min_length = 30;
     g_args.write_no_primers_flag = false;
-    g_args.mark_qcfail_flag = false;
+    g_args.keep_for_reanalysis = false;
     g_args.bed = "";
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
@@ -240,8 +241,8 @@ int main(int argc, char* argv[]){
       case 'e':
 	g_args.write_no_primers_flag = true;
 	break;
-      case 'f':
-        g_args.mark_qcfail_flag = true;
+      case 'k':
+        g_args.keep_for_reanalysis = true;
         break;
       case 'h':
       case '?':
@@ -256,7 +257,7 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.mark_qcfail_flag, g_args.min_length);
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.keep_for_reanalysis, g_args.min_length);
   } else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;
