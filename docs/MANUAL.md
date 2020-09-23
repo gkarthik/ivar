@@ -51,6 +51,8 @@ Input Options    Description
            -q    Minimum quality threshold for sliding window to pass (Default: 20)
            -s    Width of sliding window (Default: 4)
            -e    Include reads with no primers. By default, reads with no primers are excluded
+           -k    Keep reads to allow for reanalysis: keep reads which would be dropped by
+                 alignment length filter or primer requirements, but mark them QCFAIL
 
 Output Options   Description
            -p    (Required) Prefix for the output BAM file

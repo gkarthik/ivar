@@ -69,7 +69,7 @@ void print_trim_usage(){
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n"
     "           -e    Include reads with no primers. By default, reads with no primers are excluded\n"
-    "           -k    keep reads to allow for reanalysis: keep reads which would be dropped by\n"
+    "           -k    Keep reads to allow for reanalysis: keep reads which would be dropped by\n"
     "                 alignment length filter or primer requirements, but mark them QCFAIL\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output BAM file\n";
