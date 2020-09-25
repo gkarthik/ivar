@@ -320,7 +320,8 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   (*hdr)->l_text = len-1;
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool mark_qcfail_flag, int min_length = 30) {
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30) {
+  int retval = 0;
   std::vector<primer> primers;
   if(!bed.empty()){
     primers = populate_from_file(bed);
@@ -484,46 +485,25 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       if(primer_trimmed){	// Write to BAM only if primer found.
 	int16_t cand_ind = cand_primer.get_indice();
 	bam_aux_append(aln, "XA", 's', sizeof(cand_ind), (uint8_t*) &cand_ind);
-	if(bam_write1(out, aln) < 0){
-	  std::cout << "Not able to write to BAM" << std::endl;
-	  hts_itr_destroy(iter);
-	  hts_idx_destroy(idx);
-	  bam_destroy1(aln);
-	  bam_hdr_destroy(header);
-	  sam_close(in);
-	  bgzf_close(out);
-	  return -1;
-	}
-      } else {
-	if((primers.size() == 0 || write_no_primer_reads) && !unmapped_flag){ // Write mapped reads to BAM if -e flag given
-          if (mark_qcfail_flag) aln->core.flag |= BAM_FQCFAIL;
-	  if(bam_write1(out, aln) < 0){
-	    std::cout << "Not able to write to BAM" << std::endl;
-	    hts_itr_destroy(iter);
-	    hts_idx_destroy(idx);
-	    bam_destroy1(aln);
-	    bam_hdr_destroy(header);
-	    sam_close(in);
-	    bgzf_close(out);
-	    return -1;
-	  }
-	}
+	if(bam_write1(out, aln) < 0) { retval = -1; goto error; }
+      } else {  // no primer found
+        if (keep_for_reanalysis) {   // -k (keep) option
+          if((primers.size() == 0 || !write_no_primer_reads) && !unmapped_flag){ // -k only option
+            aln->core.flag |= BAM_FQCFAIL;
+          }
+	  if (bam_write1(out, aln) < 0) { retval = -1; goto error; }
+	} else {        // no -k option
+          if((primers.size() == 0 || write_no_primer_reads) && !unmapped_flag){ // -e only option
+	    if (bam_write1(out, aln) < 0) { retval = -1; goto error; }
+          }
+        }
 	no_primer_counter++;
       }
     } else {
       low_quality++;
-      if (mark_qcfail_flag) {
+      if (keep_for_reanalysis) {
         aln->core.flag |= BAM_FQCFAIL;
-	if (bam_write1(out, aln) < 0){
-	  std::cout << "Not able to write to BAM" << std::endl;
-	  hts_itr_destroy(iter);
-	  hts_idx_destroy(idx);
-	  bam_destroy1(aln);
-	  bam_hdr_destroy(header);
-	  sam_close(in);
-	  bgzf_close(out);
-	  return -1;
-	}
+	if (bam_write1(out, aln) < 0) { retval = -1; goto error; }
       }
     }
     ctr++;
@@ -539,28 +519,40 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   }
   std::cout << std::endl << "Trimmed primers from " << round_int(primer_trim_count, mapped) << "% (" << primer_trim_count <<  ") of reads." << std::endl;
   std::cout << round_int( low_quality, mapped) << "% (" << low_quality << ") of reads were quality trimmed below the minimum length of " << min_length << " bp and were ";
-  if (mark_qcfail_flag) {
+  if (keep_for_reanalysis) {
     std::cout << "marked as failed" << std::endl;
   } else {
     std::cout << "not written to file." << std::endl;
   }
   if(write_no_primer_reads){
-    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since the -e flag was given, these reads were written to file";
-    if (mark_qcfail_flag) std::cout << " and the BAM_QCFAIL flag set";
+    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ")"
+              << " of reads started outside of primer regions. Since the "
+              << (keep_for_reanalysis ? "-ek flags were " : "-e flag was ")
+              << "given, these reads were written to file";
     std::cout << "." << std::endl;
   } else if (primers.size() == 0) {
     std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads started outside of primer regions. Since there were no primers found in BED file, these reads were written to file." << std::endl;
   } else {
-    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter << ") of reads that started outside of primer regions were not written to file." << std::endl;
+    std::cout << round_int(no_primer_counter, mapped) << "% ("  << no_primer_counter
+              << ") of reads that started outside of primer regions were ";
+    if (keep_for_reanalysis) {
+      std::cout << "written to file and marked as failed";
+    } else {
+      std::cout << "not written to file";
+    }
+    std::cout << std::endl;
   }
   if(unmapped_counter > 0){
     std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
   }
+
+error:
+  if (retval) std::cout << "Not able to write to BAM" << std::endl;
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
   bam_destroy1(aln);
   bam_hdr_destroy(header);
   sam_close(in);
   bgzf_close(out);
-  return 0;
+  return retval;
 }
