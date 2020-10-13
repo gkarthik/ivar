@@ -166,15 +166,15 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool unpaired_rev = false){
   uint32_t i = 0, j = 0;
   int max_del_len = 0, cig, temp, del_len = 0;
   bool reverse = false;
-  if((r->core.flag&BAM_FPAIRED) != 0){ // If paired
-    if (bam_is_rev(r)){
+  if((r->core.flag&BAM_FPAIRED) != 0 && !(abs(r->core.isize) <= abs(r->core.l_qseq))){ // If paired and isize > read length
+    if (bam_is_rev(r)){ // If -ve strand (?)
       max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
       reverse_cigar(cigar, r->core.n_cigar);
       reverse = true;
     } else {
       max_del_len = get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos);
     }
-  } else {			// Unpaired
+  } else {			// trim without considering pairing
     if(unpaired_rev){
       max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
       reverse_cigar(cigar, r->core.n_cigar);
@@ -206,7 +206,7 @@ cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool unpaired_rev = false){
 	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
       } else if (del_len < n && del_len > 0){
 	ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
-      } else if (del_len == 0) {	// Ading insertions before start position of read
+      } else if (del_len == 0) {	// Adding insertions before start position of read
 	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
 	j++;
 	i++;
@@ -409,24 +409,32 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   init_cigar(&t);
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
   bool unmapped_flag = false;
+  uint32_t failed_frag_size = 0;
   uint32_t unmapped_counter = 0;
   primer cand_primer;
   std::vector<primer> overlapping_primers;
   std::vector<primer>::iterator cit;
   bool primer_trimmed = false;
+  //Iterate through reads
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
     primer_trimmed = false;
-    if((aln->core.flag&BAM_FUNMAP) == 0){
-      if((aln->core.flag&BAM_FPAIRED) != 0){ // If paired
+    if((aln->core.flag&BAM_FUNMAP) == 0){ // If mapped
+      if((aln->core.flag&BAM_FPAIRED) != 0 && !(abs(aln->core.isize) <= abs(aln->core.l_qseq))){ // If paired
+      /*
+        if((abs(aln->core.isize) <= abs(aln->core.l_qseq))){
+          failed_frag_size++;
+          continue;
+        }
+      */
 	get_overlapping_primers(aln, primers, overlapping_primers);
-	if(overlapping_primers.size() > 0){
+	if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
 	  primer_trimmed = true;
 	  if(bam_is_rev(aln)){	// Reverse
-	    cand_primer = get_min_start(overlapping_primers);
+	    cand_primer = get_min_start(overlapping_primers); // fetch reverse primer (?)
 	    t = primer_trim(aln, cand_primer.get_start() - 1, false);
 	  } else {		// Forward
-	    cand_primer = get_max_end(overlapping_primers);
+	    cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)
 	    t = primer_trim(aln, cand_primer.get_end() + 1, false);
 	    aln->core.pos += t.start_pos;
 	  }
@@ -438,7 +446,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    cit->add_read_count(1);
 	}
 	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-	if(bam_is_rev(aln))
+	if(bam_is_rev(aln))  // if reverse strand
 	  aln->core.pos = t.start_pos;
 	condense_cigar(&t);
 	// aln->core.pos += t.start_pos;
@@ -450,6 +458,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  primer_trimmed = true;
 	  cand_primer = get_max_end(overlapping_primers);
 	  t = primer_trim(aln, cand_primer.get_end() + 1, false);
+    // Update read's left-most coordinate (?)
 	  aln->core.pos += t.start_pos;
 	  replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
@@ -544,6 +553,12 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   }
   if(unmapped_counter > 0){
     std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
+  }
+  if(failed_frag_size >= 0){
+    std::cout << round_int(failed_frag_size, mapped) 
+              << "% (" << failed_frag_size 
+              << ") of reads were ignored because their insert size was smaller than their length" 
+              << std::endl;
   }
 
 error:
