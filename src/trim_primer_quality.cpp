@@ -452,6 +452,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	// aln->core.pos += t.start_pos;
 	replace_cigar(aln, t.nlength, t.cigar);
       } else {			// Unpaired reads: Might be stitched reads
+  if(abs(aln->core.isize) <= abs(aln->core.l_qseq)){
+    failed_frag_size++;
+  }
 	// Forward primer
 	get_overlapping_primers(aln, primers, overlapping_primers, false);
 	if(overlapping_primers.size() > 0){
@@ -554,10 +557,10 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   if(unmapped_counter > 0){
     std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
   }
-  if(failed_frag_size >= 0){
+  if(failed_frag_size > 0){
     std::cout << round_int(failed_frag_size, mapped) 
               << "% (" << failed_frag_size 
-              << ") of reads were ignored because their insert size was smaller than their length" 
+              << ") of reads had their insert size smaller than their read length" 
               << std::endl;
   }
 
