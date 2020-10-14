@@ -452,9 +452,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	// aln->core.pos += t.start_pos;
 	replace_cigar(aln, t.nlength, t.cigar);
       } else {			// Unpaired reads: Might be stitched reads
-  if(abs(aln->core.isize) <= abs(aln->core.l_qseq)){
-    failed_frag_size++;
-  }
+        if(abs(aln->core.isize) <= abs(aln->core.l_qseq)){
+          failed_frag_size++;
+        }
 	// Forward primer
 	get_overlapping_primers(aln, primers, overlapping_primers, false);
 	if(overlapping_primers.size() > 0){
