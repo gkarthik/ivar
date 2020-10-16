@@ -6,11 +6,7 @@ int main(){
   std::string bam = "../data/primer_only/primer_edge_cases.bam";
   std::vector<primer> primers = populate_from_file("../data/test.bed");
   int max_primer_len = 0;
-  for (auto & p : primers) {
-    if(max_primer_len < p.get_length()){
-      max_primer_len = p.get_length();
-      }
-  }
+  max_primer_len = get_bigger_primer(primers);
   std::string region_;
   samFile *in = hts_open(bam.c_str(), "r");
   hts_idx_t *idx = sam_index_load(in, bam.c_str());

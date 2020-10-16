@@ -320,6 +320,16 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   (*hdr)->l_text = len-1;
 }
 
+int get_bigger_primer(std::vector<primer> primers){
+  int max_primer_len = 0;
+  for (auto & p : primers) {
+      if(max_primer_len < p.get_length()){
+      max_primer_len = p.get_length();
+      }
+    }
+  return max_primer_len;
+}
+
 int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30) {
   int retval = 0;
   std::vector<primer> primers;
@@ -331,11 +341,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       return -1;
     }
   }
-  for (auto & p : primers) {
-    if(max_primer_len < p.get_length()){
-      max_primer_len = p.get_length();
-      }
-  }
+  max_primer_len = get_bigger_primer(primers);
   if(bam.empty()){
     std::cout << "Bam file is empty." << std::endl;
     return -1;
@@ -426,6 +432,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
     primer_trimmed = false;
+    get_overlapping_primers(aln, primers, overlapping_primers);
     if((aln->core.flag&BAM_FUNMAP) == 0){ // If mapped
       isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
        // if reverse strand

@@ -21,8 +21,8 @@ int test_isize_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag
 
     std::string bam = "../data/test_isize.sorted.bam";
     std::string bed = "../data/test_isize.bed";
-    std::string prefix = "/tmp/trim_isize";
-    std::string bam_out = "/tmp/trim_isize.bam";
+    std::string prefix = "../data/trim_isize";
+    std::string bam_out = "../data/trim_isize.bam";
 
 
     std::string region_ = "";

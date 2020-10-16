@@ -44,5 +44,6 @@ void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar);
 void condense_cigar(cigar_ *t);
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapping_primers);
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapping_primers, bool unpaired_rev);
+int get_bigger_primer(std::vector<primer> primers);
 
 #endif
