@@ -7,6 +7,12 @@ int main(){
   int success = 0;
   std::string bam = "../data/test.unmapped.sorted.bam";
   std::vector<primer> primers = populate_from_file("../data/test.bed");
+  int max_primer_len = 0;
+  for (auto & p : primers) {
+    if(max_primer_len < p.get_length()){
+      max_primer_len = p.get_length();
+      }
+  }
   std::string region_;
   samFile *in = hts_open(bam.c_str(), "r");
   hts_idx_t *idx = sam_index_load(in, bam.c_str());
@@ -61,10 +67,12 @@ int main(){
   int ctr = 0;
   std::vector<primer> overlapping_primers;
   primer cand_primer;
+  bool isize_flag = false;
   while(sam_itr_next(in, iter, aln) >= 0) {
     if((aln->core.flag&BAM_FUNMAP) != 0){
       continue;
     }
+    isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
     std::cout << bam_get_qname(aln) << std::endl;
     get_overlapping_primers(aln, primers, overlapping_primers);
     if(overlapping_primers.size() != overlapping_primer_sizes[ctr]){
@@ -75,10 +83,10 @@ int main(){
       print_cigar(bam_get_cigar(aln), aln->core.n_cigar);
       if(bam_is_rev(aln)){
 	cand_primer = get_min_start(overlapping_primers);
-	t = primer_trim(aln, cand_primer.get_start() - 1, false);
+	t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false);
       } else {
 	cand_primer = get_max_end(overlapping_primers);
-	t = primer_trim(aln, cand_primer.get_end() + 1, false);
+	t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
 	aln->core.pos += t.start_pos;
       }
       if(cand_primer.get_indice() != primer_indices[primer_ctr]){

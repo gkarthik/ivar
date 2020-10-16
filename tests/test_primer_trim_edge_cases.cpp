@@ -5,6 +5,12 @@ int main(){
   int success = 0;
   std::string bam = "../data/primer_only/primer_edge_cases.bam";
   std::vector<primer> primers = populate_from_file("../data/test.bed");
+  int max_primer_len = 0;
+  for (auto & p : primers) {
+    if(max_primer_len < p.get_length()){
+      max_primer_len = p.get_length();
+      }
+  }
   std::string region_;
   samFile *in = hts_open(bam.c_str(), "r");
   hts_idx_t *idx = sam_index_load(in, bam.c_str());
@@ -33,10 +39,12 @@ int main(){
   int len = 0;
   std::vector<primer> overlapping_primers;
   primer cand_primer;
+  bool isize_flag = false;
   while(sam_itr_next(in, iter, aln) >= 0) {
     if((aln->core.flag&BAM_FUNMAP) != 0){
       continue;
     }
+    isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
     len = bam_cigar2qlen(aln->core.n_cigar, bam_get_cigar(aln));
     std::cout << bam_get_qname(aln) << std::endl;
     print_cigar(bam_get_cigar(aln), aln->core.n_cigar);
@@ -44,7 +52,7 @@ int main(){
     if(overlapping_primers.size() > 0){
       // Forward trim
       cand_primer = get_max_end(overlapping_primers);
-      t = primer_trim(aln, cand_primer.get_end() + 1, false);
+      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
       aln->core.pos += t.start_pos;
       // Replace cigar
       replace_cigar(aln, t.nlength, t.cigar);
@@ -56,7 +64,7 @@ int main(){
     get_overlapping_primers(aln, primers, overlapping_primers, true);
     if(overlapping_primers.size() > 0){
       cand_primer = get_min_start(overlapping_primers);
-      t = primer_trim(aln, cand_primer.get_start() - 1, true);
+      t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, true);
       aln->core.pos += t.start_pos;
       // Replace cigar
       replace_cigar(aln, t.nlength, t.cigar);

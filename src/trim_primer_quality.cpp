@@ -160,13 +160,13 @@ void print_cigar(uint32_t *cigar, int nlength){
   std::cout << std::endl;
 }
 
-cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool unpaired_rev = false){
+cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_rev = false){
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
   uint32_t i = 0, j = 0;
   int max_del_len = 0, cig, temp, del_len = 0;
   bool reverse = false;
-  if((r->core.flag&BAM_FPAIRED) != 0 && !(abs(r->core.isize) <= abs(r->core.l_qseq))){ // If paired and isize > read length
+  if((r->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired and isize > read length
     if (bam_is_rev(r)){ // If -ve strand (?)
       max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
       reverse_cigar(cigar, r->core.n_cigar);
@@ -323,12 +323,18 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
 int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30) {
   int retval = 0;
   std::vector<primer> primers;
+  int max_primer_len = 0;
   if(!bed.empty()){
     primers = populate_from_file(bed);
     if(primers.size() == 0){
       std::cout << "Exiting." << std::endl;
       return -1;
     }
+  }
+  for (auto & p : primers) {
+    if(max_primer_len < p.get_length()){
+      max_primer_len = p.get_length();
+      }
   }
   if(bam.empty()){
     std::cout << "Bam file is empty." << std::endl;
@@ -409,6 +415,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   init_cigar(&t);
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
   bool unmapped_flag = false;
+  bool isize_flag = true;
   uint32_t failed_frag_size = 0;
   uint32_t unmapped_counter = 0;
   primer cand_primer;
@@ -420,7 +427,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     unmapped_flag = false;
     primer_trimmed = false;
     if((aln->core.flag&BAM_FUNMAP) == 0){ // If mapped
-      if((aln->core.flag&BAM_FPAIRED) != 0 && !(abs(aln->core.isize) <= abs(aln->core.l_qseq))){ // If paired
+      isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
+       // if reverse strand
+      if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
       /*
         if((abs(aln->core.isize) <= abs(aln->core.l_qseq))){
           failed_frag_size++;
@@ -432,10 +441,10 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  primer_trimmed = true;
 	  if(bam_is_rev(aln)){	// Reverse
 	    cand_primer = get_min_start(overlapping_primers); // fetch reverse primer (?)
-	    t = primer_trim(aln, cand_primer.get_start() - 1, false);
+	    t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false);
 	  } else {		// Forward
 	    cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)
-	    t = primer_trim(aln, cand_primer.get_end() + 1, false);
+	    t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
 	    aln->core.pos += t.start_pos;
 	  }
 	  replace_cigar(aln, t.nlength, t.cigar);
@@ -460,7 +469,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	if(overlapping_primers.size() > 0){
 	  primer_trimmed = true;
 	  cand_primer = get_max_end(overlapping_primers);
-	  t = primer_trim(aln, cand_primer.get_end() + 1, false);
+	  t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
     // Update read's left-most coordinate (?)
 	  aln->core.pos += t.start_pos;
 	  replace_cigar(aln, t.nlength, t.cigar);
@@ -474,7 +483,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	if(overlapping_primers.size() > 0){
 	  primer_trimmed = true;
 	  cand_primer = get_min_start(overlapping_primers);
-	  t = primer_trim(aln, cand_primer.get_start() - 1, true);
+	  t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, true);
 	  replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);

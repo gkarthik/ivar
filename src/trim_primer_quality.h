@@ -39,7 +39,7 @@ void reverse_cigar(uint32_t *cigar, int l);
 double mean_quality(uint8_t *a, int s, int e);
 cigar_ quality_trim(bam1_t* r, uint8_t qual_threshold, uint8_t sliding_window);
 void print_cigar(uint32_t *cigar, int nlength);
-cigar_ primer_trim(bam1_t *r, int32_t new_pos, bool unpaired_rev);
+cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_rev);
 void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar);
 void condense_cigar(cigar_ *t);
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapping_primers);
