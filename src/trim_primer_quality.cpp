@@ -446,16 +446,16 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	get_overlapping_primers(aln, primers, overlapping_primers);
 	if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
 	  primer_trimmed = true;
-	  if(bam_is_rev(aln)){	// Reverse
+	  if(bam_is_rev(aln)){	// Reverse read
 	    cand_primer = get_min_start(overlapping_primers); // fetch reverse primer (?)
 	    t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false);
-	  } else {		// Forward
+	  } else {		// Forward read
 	    cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)
 	    t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
 	    aln->core.pos += t.start_pos;
 	  }
 	  replace_cigar(aln, t.nlength, t.cigar);
-      free(t.cigar);
+    free(t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);
 	  if(cit != primers.end())
@@ -477,7 +477,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  primer_trimmed = true;
 	  cand_primer = get_max_end(overlapping_primers);
 	  t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
-    // Update read's left-most coordinate (?)
+    // Update read's left-most coordinate
 	  aln->core.pos += t.start_pos;
 	  replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
@@ -498,6 +498,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    cit->add_read_count(1);
 	}
 	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
+  if(bam_is_rev(aln))  // if reverse strand
+	  aln->core.pos = t.start_pos;
 	condense_cigar(&t);
 	replace_cigar(aln, t.nlength, t.cigar);
       }
