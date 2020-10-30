@@ -65,6 +65,8 @@ void print_trim_usage(){
     "Input Options    Description\n"
     "           -i    (Required) Sorted bam file, with aligned reads, to trim primers and quality\n"
     "           -b    BED file with primer sequences and positions. If no BED file is specified, only quality trimming will be done.\n"
+    "           -f    Primer pair information file containing left and right primer names for the same amplicon separated by a tab\n"
+    "                 If provided, reads will be filtered based on their overlap with amplicons prior to trimming\n"
     "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n"
@@ -163,7 +165,7 @@ void print_version_info(){
     "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
-static const char *trim_opt_str = "i:b:p:m:q:s:ekh?";
+static const char *trim_opt_str = "i:b:f:p:m:q:s:ekh?";
 static const char *variants_opt_str = "p:t:q:m:r:g:h?";
 static const char *consensus_opt_str = "i:p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
@@ -210,6 +212,7 @@ int main(int argc, char* argv[]){
   argv[1] = argv[0];
   argv++;
   argc--;
+  // ivar trim 
   if (cmd.compare("trim") == 0){
     g_args.min_qual = 20;
     g_args.sliding_window = 4;
@@ -217,6 +220,7 @@ int main(int argc, char* argv[]){
     g_args.write_no_primers_flag = false;
     g_args.keep_for_reanalysis = false;
     g_args.bed = "";
+    g_args.primer_pair_file = "";
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -226,6 +230,9 @@ int main(int argc, char* argv[]){
       case 'b':
 	g_args.bed = optarg;
 	break;
+      case 'f':
+  g_args.primer_pair_file = optarg;
+  break;
       case 'p':
 	g_args.prefix = optarg;
 	break;
@@ -257,8 +264,10 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.keep_for_reanalysis, g_args.min_length);
-  } else if (cmd.compare("variants") == 0){
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.keep_for_reanalysis, g_args.min_length, g_args.primer_pair_file);
+  } 
+  // ivar variants
+  else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
     g_args.min_threshold = 0.03;
     g_args.min_depth = 0;
@@ -314,7 +323,9 @@ int main(int argc, char* argv[]){
       return -1;
     }
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.ref, g_args.gff);
-  } else if (cmd.compare("consensus") == 0){
+  } 
+  // ivar consensus
+  else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
     g_args.seq_id = "";
     g_args.min_threshold = 0;
