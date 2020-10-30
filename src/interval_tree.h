@@ -1,8 +1,7 @@
-#include <iostream> 
 using namespace std;
 
-#ifndef parse_gff
-#define parse_gff
+#ifndef interval_tree
+#define interval_tree
 
 // Structure to represent an interval 
 class Interval 
@@ -21,16 +20,16 @@ class ITNode
     Interval getData()const;
     ITNode getLeft()const;
     ITNode getRight()const;
-
     // Setters - access member functions
     void setLeft(ITNode *node);
     void setRight(ITNode *node);
     */
     public:
     ITNode(Interval value): data(new Interval(value)), left(nullptr), right(nullptr), max(value.high) {}  // constructor
-    int max; 
     Interval *data;  // pointer to node's interval data object
     ITNode *left, *right; // pointer to node's left & right child node objects
+    int max; 
+
 }; 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -55,5 +54,7 @@ public:
         void inOrder() {inOrder(_root);}
 
 };
+
+IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> primers);
 
 #endif

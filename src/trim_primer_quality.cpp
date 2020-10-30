@@ -1,4 +1,5 @@
 #include "trim_primer_quality.h"
+#include "interval_tree.h"
 
 #define round_int(x,total) ((int) (0.5 + ((float)x / float(total)) * 10000))/(float)100
 
@@ -330,7 +331,13 @@ int get_bigger_primer(std::vector<primer> primers){
   return max_primer_len;
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30) {
+bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
+  Interval read_length = Interval(r->core.pos, (r->core.pos + r->core.l_qseq));
+  bool amplicon_flag = amplicons.overlapSearch(read_length);
+  return amplicon_flag;
+}
+
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30, std::string pair_info = "") {
   int retval = 0;
   std::vector<primer> primers;
   int max_primer_len = 0;
@@ -342,6 +349,11 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     }
   }
   max_primer_len = get_bigger_primer(primers);
+  IntervalTree amplicons;
+  if(!pair_info.empty()){
+    amplicons = populate_amplicons(pair_info, primers);
+  }
+  
   if(bam.empty()){
     std::cout << "Bam file is empty." << std::endl;
     return -1;
@@ -421,6 +433,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   init_cigar(&t);
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
   bool unmapped_flag = false;
+  bool amplicon_flag = false;
   bool isize_flag = true;
   uint32_t failed_frag_size = 0;
   uint32_t unmapped_counter = 0;
@@ -433,6 +446,12 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     unmapped_flag = false;
     primer_trimmed = false;
     get_overlapping_primers(aln, primers, overlapping_primers);
+    if(!pair_info.empty()){
+      amplicon_flag = amplicon_filter(amplicons, aln);
+      if(!amplicon_flag){
+        continue;
+      }
+    }
     if((aln->core.flag&BAM_FUNMAP) == 0){ // If mapped
       isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
        // if reverse strand

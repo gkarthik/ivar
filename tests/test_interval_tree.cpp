@@ -1,5 +1,7 @@
 #include <iostream> 
+#include "../src/primer_bed.h"
 #include "../src/interval_tree.h"
+
 
 int test_itree_overlap(IntervalTree tree, Interval queries[], int num_tests, bool expected[]){
     int result = 0;
@@ -9,7 +11,7 @@ int test_itree_overlap(IntervalTree tree, Interval queries[], int num_tests, boo
         if (result != expected[i])
         {
             std::cout << "Interval Tree overlap behavior incorrect for interval " << queries[i].low << ":" << queries[i].high 
-            << " - " << "Expected: " << expected[i] << "Got: " << result << endl;
+            << " - " << "Expected: " << expected[i] << "Got: " << result << std::endl;
             return 1;
         }
     }
@@ -28,11 +30,11 @@ int main()
     {
         tree.insert(ints[i]);
     }
-    std::cout << "In order traversal of Interval Tree:" << endl;
+    std::cout << "In order traversal of Interval Tree:" << std::endl;
     tree.inOrder();
 
     Interval queries[4] = {Interval(15, 20), Interval(9, 30), Interval(31, 38), Interval(7, 22)};
-    bool expected[4] = {false, true, false, true};
+    bool expected[4] = {true, false, true, false};
     int num_tests = sizeof(queries) / sizeof(queries[0]);
     result = test_itree_overlap(tree, queries, num_tests, expected);
     return result;

@@ -99,6 +99,27 @@ void IntervalTree::inOrder(ITNode *root)
     inOrder(root->right); 
 } 
 
+IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> primers)
+{
+    int amplicon_start = -1;
+    int amplicon_end = -1;
+    IntervalTree tree = IntervalTree();
+    std::cout << "Total Number of primers: " << primers.size() << std::endl;
+    populate_pair_indices(primers, pair_info_file);
+    for (auto & p : primers) {
+        if (p.get_strand() == '+')
+        {
+            if (p.get_pair_indice() != -1){
+                amplicon_start = p.get_start();
+                amplicon_end = primers[p.get_pair_indice()].get_end();
+                std::cout << amplicon_start << ":" << amplicon_end << std::endl;
+                tree.insert(Interval(amplicon_start, amplicon_end));
+
+            }
+        }
+    }
+    return tree;
+}
 
 
 /*
@@ -106,28 +127,22 @@ void IntervalTree::inOrder(ITNode *root)
 Interval ITNode::getData()const{
     return data;
 }
-
 // Simple access functions to retrieve node's left child
 ITNode ITNode::getLeft()const{
     return left;
 }
-
 // Simple access functions to retrieve node's right child
 ITNode ITNode::getRight()const{
     return right;
 }
-
-
 // Simple access functions to set node's left child
 void ITNode::setLeft(ITNode *node){
     left = node;
 }
-
 // Simple access functions to set node's right child
 void ITNode::setRight(ITNode *node){
     right = node;
 }
-*/
 
 int main()
 {
@@ -150,3 +165,4 @@ for (int i = 0; i < num_tests; i++)
 }
 return 0;
 }
+*/
