@@ -1,3 +1,5 @@
+#include <iostream> 
+#include "primer_bed.h"
 using namespace std;
 
 #ifndef interval_tree

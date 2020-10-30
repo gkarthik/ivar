@@ -1,6 +1,7 @@
 #include<iostream>
 #include "../src/trim_primer_quality.h"
 #include "../src/primer_bed.h"
+#include "../src/interval_tree.h"
 #include "htslib/sam.h"
 
 int main(){

@@ -1,5 +1,4 @@
 #include "trim_primer_quality.h"
-#include "interval_tree.h"
 
 #define round_int(x,total) ((int) (0.5 + ((float)x / float(total)) * 10000))/(float)100
 
@@ -321,6 +320,7 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
   (*hdr)->l_text = len-1;
 }
 
+// get the length of the longest primer
 int get_bigger_primer(std::vector<primer> primers){
   int max_primer_len = 0;
   for (auto & p : primers) {
@@ -331,6 +331,7 @@ int get_bigger_primer(std::vector<primer> primers){
   return max_primer_len;
 }
 
+// check if read overlaps with any of the amplicons
 bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
   Interval read_length = Interval(r->core.pos, (r->core.pos + r->core.l_qseq));
   bool amplicon_flag = amplicons.overlapSearch(read_length);
@@ -349,11 +350,11 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     }
   }
   max_primer_len = get_bigger_primer(primers);
+  // get coordinates of each amplicon
   IntervalTree amplicons;
   if(!pair_info.empty()){
     amplicons = populate_amplicons(pair_info, primers);
   }
-  
   if(bam.empty()){
     std::cout << "Bam file is empty." << std::endl;
     return -1;
@@ -437,6 +438,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   bool isize_flag = true;
   uint32_t failed_frag_size = 0;
   uint32_t unmapped_counter = 0;
+  uint32_t amplicon_flag_ctr = 0;
   primer cand_primer;
   std::vector<primer> overlapping_primers;
   std::vector<primer>::iterator cit;
@@ -446,13 +448,16 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     unmapped_flag = false;
     primer_trimmed = false;
     get_overlapping_primers(aln, primers, overlapping_primers);
-    if(!pair_info.empty()){
-      amplicon_flag = amplicon_filter(amplicons, aln);
-      if(!amplicon_flag){
-        continue;
-      }
-    }
     if((aln->core.flag&BAM_FUNMAP) == 0){ // If mapped
+      // if primer pair info provided, check if read correctly overlaps with atleast one amplicon
+      if(!pair_info.empty()){
+        amplicon_flag = amplicon_filter(amplicons, aln);
+        // if not, ignore the read
+        if(!amplicon_flag){
+          amplicon_flag_ctr++;
+          continue;
+          }
+      }
       isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
        // if reverse strand
       if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
@@ -593,6 +598,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   }
   if(unmapped_counter > 0){
     std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
+  }
+  if(amplicon_flag_ctr > 0){
+    std::cout << amplicon_flag_ctr << " reads were ignored because they did not overlap with any amplicon" << std::endl;
   }
   if(failed_frag_size > 0){
     std::cout << round_int(failed_frag_size, mapped) 

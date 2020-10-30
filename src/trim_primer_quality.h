@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "primer_bed.h"
+#include "interval_tree.h"
 
 #ifndef trim_primer_quality
 #define trim_primer_quality
@@ -30,7 +31,7 @@ inline void free_cigar(cigar_ t) { if (t.free_cig) free(t.cigar); }
 void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd);
 
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool mark_qcfail_flag, int min_length);
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool mark_qcfail_flag, int min_length, std::string pair_info);
 void free_cigar(cigar_ t);
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start);
 int32_t get_pos_on_reference(uint32_t *cigar, uint32_t ncigar, uint32_t pos, uint32_t ref_start);
@@ -45,5 +46,6 @@ void condense_cigar(cigar_ *t);
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapping_primers);
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapping_primers, bool unpaired_rev);
 int get_bigger_primer(std::vector<primer> primers);
+bool amplicon_filter(IntervalTree amplicons, bam1_t* r);
 
 #endif

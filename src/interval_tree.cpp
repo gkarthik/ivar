@@ -1,7 +1,4 @@
-#include <iostream> 
 #include "interval_tree.h"
-using namespace std;
-
 
 // Constructor for initializing an Interval Tree
 IntervalTree::IntervalTree()
@@ -86,7 +83,7 @@ bool IntervalTree::overlapSearch(ITNode *root, Interval i)
     return overlapSearch(root->right, i);
 }
 
-
+// A helper function for inorder traversal of the tree
 void IntervalTree::inOrder(ITNode *root) 
 { 
     if (root == NULL) return; 
@@ -97,14 +94,15 @@ void IntervalTree::inOrder(ITNode *root)
          << " max = " << root->max << endl; 
   
     inOrder(root->right); 
-} 
+}
 
+// A stand-alone function to create a tree containing the coordinates of each amplicon
+// based on user-specified primer pairs
 IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> primers)
 {
     int amplicon_start = -1;
     int amplicon_end = -1;
     IntervalTree tree = IntervalTree();
-    std::cout << "Total Number of primers: " << primers.size() << std::endl;
     populate_pair_indices(primers, pair_info_file);
     for (auto & p : primers) {
         if (p.get_strand() == '+')
@@ -112,7 +110,6 @@ IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> 
             if (p.get_pair_indice() != -1){
                 amplicon_start = p.get_start();
                 amplicon_end = primers[p.get_pair_indice()].get_end();
-                std::cout << amplicon_start << ":" << amplicon_end << std::endl;
                 tree.insert(Interval(amplicon_start, amplicon_end));
 
             }

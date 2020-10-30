@@ -53,7 +53,7 @@ int main(){
     tree = test_populate_amplicons(pair_indice, bed);
     tree.inOrder();
     Interval queries[6] = {Interval(8, 380), Interval(230, 679), Interval(10, 250), Interval(10, 390), Interval(220, 600), Interval(240, 680)};
-    bool expected[6] = {true, true, false, false, false, false};
+    bool expected[6] = {true, true, true, false, false, false};
     int num_tests = sizeof(queries) / sizeof(queries[0]);
     result = test_itree_overlap(tree, queries, num_tests, expected);
     return result;
