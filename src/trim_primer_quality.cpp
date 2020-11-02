@@ -337,10 +337,9 @@ bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
   if(r->core.isize > 0){
     fragment_coords.low = r->core.pos;
     fragment_coords.high = r->core.pos + r->core.isize;
-  }
-  else{
-    fragment_coords.low = r->core.pos + r->core.l_qseq + r->core.isize;
-    fragment_coords.high = r->core.pos + r->core.l_qseq;
+  } else {
+    fragment_coords.low = r->core.pos + bam_endpos(r) + r->core.isize;
+    fragment_coords.high = r->core.pos + bam_endpos(r);
   }
   bool amplicon_flag = amplicons.overlapSearch(fragment_coords);
   return amplicon_flag;
@@ -611,9 +610,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << amplicon_flag_ctr << " reads were ignored because they did not overlap with any amplicon" << std::endl;
   }
   if(failed_frag_size > 0){
-    std::cout << round_int(failed_frag_size, mapped) 
-              << "% (" << failed_frag_size 
-              << ") of reads had their insert size smaller than their read length" 
+    std::cout << round_int(failed_frag_size, mapped)
+              << "% (" << failed_frag_size
+              << ") of reads had their insert size smaller than their read length"
               << std::endl;
   }
 
