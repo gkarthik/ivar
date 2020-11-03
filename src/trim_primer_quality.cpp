@@ -338,8 +338,8 @@ bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
     fragment_coords.low = r->core.pos;
     fragment_coords.high = r->core.pos + r->core.isize;
   } else {
-    fragment_coords.low = r->core.pos + bam_endpos(r) + r->core.isize;
-    fragment_coords.high = r->core.pos + bam_endpos(r);
+    fragment_coords.low = bam_endpos(r) + r->core.isize;
+    fragment_coords.high = bam_endpos(r);
   }
   bool amplicon_flag = amplicons.overlapSearch(fragment_coords);
   return amplicon_flag;
