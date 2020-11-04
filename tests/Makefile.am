@@ -21,4 +21,4 @@ check_unpaired_trim_SOURCES = test_unpaired_trim.cpp ../src/trim_primer_quality.
 check_primer_trim_edge_cases_SOURCES = test_primer_trim_edge_cases.cpp ../src/trim_primer_quality.cpp ../src/primer_bed.cpp ../src/interval_tree.cpp
 check_isize_trim_SOURCES = test_isize_trim.cpp ../src/trim_primer_quality.cpp ../src/primer_bed.cpp ../src/interval_tree.cpp
 check_interval_tree_SOURCES = test_interval_tree.cpp ../src/primer_bed.cpp ../src/interval_tree.cpp
-check_amplicon_search_SOURCES = test_amplicon_search.cpp ../src/primer_bed.cpp ../src/interval_tree.cpp
+check_amplicon_search_SOURCES = test_amplicon_search.cpp ../src/trim_primer_quality.cpp ../src/primer_bed.cpp ../src/interval_tree.cpp
