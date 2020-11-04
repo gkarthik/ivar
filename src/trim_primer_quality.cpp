@@ -341,6 +341,8 @@ bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
     fragment_coords.low = bam_endpos(r) + r->core.isize;
     fragment_coords.high = bam_endpos(r);
   }
+  // debugging
+  //std::cout << "frag coords: " << fragment_coords.low << ":" << fragment_coords.high << endl;
   bool amplicon_flag = amplicons.overlapSearch(fragment_coords);
   return amplicon_flag;
 }
@@ -459,6 +461,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       // if primer pair info provided, check if read correctly overlaps with atleast one amplicon
       if(!pair_info.empty()){
         amplicon_flag = amplicon_filter(amplicons, aln);
+        // debugging
+        //std::cout << "test amplicon control flow " << amplicon_flag << endl;
         // if not, ignore the read
         if(!amplicon_flag){
           amplicon_flag_ctr++;
