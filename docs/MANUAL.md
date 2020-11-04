@@ -47,6 +47,8 @@ Usage: ivar trim -i <input.bam> -b <primers.bed> -p <prefix> [-m <min-length>] [
 Input Options    Description
            -i    (Required) Sorted bam file, with aligned reads, to trim primers and quality
            -b    (Required) BED file with primer sequences and positions
+           -f    Primer pair information file containing left and right primer names for the same amplicon separated by a tab
+                 If provided, reads will be filtered based on their overlap with amplicons prior to trimming
            -m    Minimum length of read to retain after trimming (Default: 30)
            -q    Minimum quality threshold for sliding window to pass (Default: 20)
            -s    Width of sliding window (Default: 4)
