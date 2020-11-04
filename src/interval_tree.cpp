@@ -16,18 +16,21 @@ void IntervalTree::insert(ITNode *root, Interval data){
   } else {
     // Get low value of interval at root
     int l = root->data->low;
-    // If root's low value is smaller, then new interval goes to
+    // If root's low value is greater, then new interval goes to
     // left subtree
     if (data.low < l){
       if(!root->left){
 	ITNode *tmpNode = new ITNode(data);
+  //std::cout << data.low << ":" << data.high << "->insertLeft" << std::endl;
 	root->left = tmpNode;
       } else {
 	insert(root->left, data);
       }
-    } else {
+    } 
+    else {
       if(!root->right){
 	ITNode *tmpNode = new ITNode(data);
+  //std::cout << data.low << ":" << data.high << "->insertRight" << std::endl;
 	root->right = tmpNode;
       } else {
 	insert(root->right, data);
@@ -35,8 +38,8 @@ void IntervalTree::insert(ITNode *root, Interval data){
     }
   }
   // update max value of ancestor node
-  if(root->max < data.high)
-    root->max = data.high;
+  if(root->max < data.low)
+    root->max = data.low;
 }
 
 
@@ -52,6 +55,7 @@ bool doOverlap(Interval i1, Interval i2){
 // Interval Tree.
 bool IntervalTree::overlapSearch(ITNode *root, Interval i){
   // Base Case, tree is empty
+  //std::cout << root->data->low << ":" << root->data->high << std::endl;
   if (root == NULL) return false;
 
   // If given interval overlaps with root
@@ -89,7 +93,7 @@ IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> 
       {
 	if (p.get_pair_indice() != -1){
 	  amplicon_start = p.get_start();
-	  amplicon_end = primers[p.get_pair_indice()].get_end();
+	  amplicon_end = primers[p.get_pair_indice()].get_end() + 1;
 	  tree.insert(Interval(amplicon_start, amplicon_end));
 	}
       }

@@ -25,7 +25,7 @@ class ITNode{
     void setRight(ITNode *node);
     */
     public:
-    ITNode(Interval value): data(new Interval(value)), left(nullptr), right(nullptr), max(value.high) {}  // constructor
+    ITNode(Interval value): data(new Interval(value)), left(nullptr), right(nullptr), max(value.low) {}  // constructor
     Interval *data;  // pointer to node's interval data object
     ITNode *left, *right; // pointer to node's left & right child node objects
     int max;
