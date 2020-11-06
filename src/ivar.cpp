@@ -16,7 +16,7 @@
 #include "suffix_tree.h"
 #include "get_common_variants.h"
 
-const std::string VERSION = "1.2.5";
+const std::string VERSION = "1.3";
 
 struct args_t {
   std::string bam;		// -i
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]){
     if(i != argc-1)
       cl_cmd << " ";
   }
-  cl_cmd << "\n\0";  
+  cl_cmd << "\n\0";
   std::string cmd(argv[1]);
   if(cmd.compare("-v") == 0){
     print_version_info();
@@ -212,7 +212,7 @@ int main(int argc, char* argv[]){
   argv[1] = argv[0];
   argv++;
   argc--;
-  // ivar trim 
+  // ivar trim
   if (cmd.compare("trim") == 0){
     g_args.min_qual = 20;
     g_args.sliding_window = 4;
@@ -265,7 +265,7 @@ int main(int argc, char* argv[]){
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
     res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.keep_for_reanalysis, g_args.min_length, g_args.primer_pair_file);
-  } 
+  }
   // ivar variants
   else if (cmd.compare("variants") == 0){
     g_args.min_qual = 20;
@@ -323,7 +323,7 @@ int main(int argc, char* argv[]){
       return -1;
     }
     res = call_variants_from_plup(std::cin, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.ref, g_args.gff);
-  } 
+  }
   // ivar consensus
   else if (cmd.compare("consensus") == 0){
     opt = getopt( argc, argv, consensus_opt_str);
@@ -494,7 +494,7 @@ int main(int argc, char* argv[]){
 	break;
       case 'f':
 	g_args.primer_pair_file = optarg;
-	break;	
+	break;
       case 'p':
 	g_args.prefix = optarg;
 	break;
