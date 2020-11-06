@@ -235,9 +235,9 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
   }
   return {
     ncigar,
-      true,
-      j,
-      start_pos
+    true,
+    j,
+    start_pos
   };
 }
 
@@ -324,10 +324,10 @@ void add_pg_line_to_header(bam_hdr_t** hdr, char *cmd){
 int get_bigger_primer(std::vector<primer> primers){
   int max_primer_len = 0;
   for (auto & p : primers) {
-      if(max_primer_len < p.get_length()){
+    if(max_primer_len < p.get_length()){
       max_primer_len = p.get_length();
-      }
     }
+  }
   return max_primer_len;
 }
 
@@ -342,7 +342,6 @@ bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
     fragment_coords.high = bam_endpos(r);
   }
   // debugging
-  //std::cout << "frag coords: " << fragment_coords.low << ":" << fragment_coords.high << endl;
   bool amplicon_flag = amplicons.overlapSearch(fragment_coords);
   return amplicon_flag;
 }
@@ -461,23 +460,18 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       // if primer pair info provided, check if read correctly overlaps with atleast one amplicon
       if(!pair_info.empty()){
         amplicon_flag = amplicon_filter(amplicons, aln);
-        // debugging
-        //std::cout << "test amplicon control flow " << amplicon_flag << endl;
-        // if not, ignore the read
         if(!amplicon_flag){
+	  if (keep_for_reanalysis) {   // -k (keep) option
+	    aln->core.flag |= BAM_FQCFAIL;
+	    if (bam_write1(out, aln) < 0) { retval = -1; goto error; }
+          }
           amplicon_flag_ctr++;
           continue;
-          }
+	}
       }
       isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
-       // if reverse strand
+      // if reverse strand
       if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
-      /*
-        if((abs(aln->core.isize) <= abs(aln->core.l_qseq))){
-          failed_frag_size++;
-          continue;
-        }
-      */
 	get_overlapping_primers(aln, primers, overlapping_primers);
 	if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
 	  primer_trimmed = true;
@@ -490,7 +484,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    aln->core.pos += t.start_pos;
 	  }
 	  replace_cigar(aln, t.nlength, t.cigar);
-    free(t.cigar);
+	  free(t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);
 	  if(cit != primers.end())
@@ -512,7 +506,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	  primer_trimmed = true;
 	  cand_primer = get_max_end(overlapping_primers);
 	  t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
-    // Update read's left-most coordinate
+	  // Update read's left-most coordinate
 	  aln->core.pos += t.start_pos;
 	  replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
@@ -533,7 +527,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	    cit->add_read_count(1);
 	}
 	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-  if(bam_is_rev(aln))  // if reverse strand
+	if(bam_is_rev(aln))  // if reverse strand
 	  aln->core.pos = t.start_pos;
 	condense_cigar(&t);
 	replace_cigar(aln, t.nlength, t.cigar);
@@ -611,7 +605,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
   }
   if(amplicon_flag_ctr > 0){
-    std::cout << amplicon_flag_ctr << " reads were ignored because they did not overlap with any amplicon" << std::endl;
+    std::cout << amplicon_flag_ctr << " reads were ignored because they did not fall within an amplicon" << std::endl;
   }
   if(failed_frag_size > 0){
     std::cout << round_int(failed_frag_size, mapped)
@@ -620,7 +614,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
               << std::endl;
   }
 
-error:
+ error:
   if (retval) std::cout << "Not able to write to BAM" << std::endl;
   hts_itr_destroy(iter);
   hts_idx_destroy(idx);
