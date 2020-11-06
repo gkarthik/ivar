@@ -21,16 +21,16 @@ void IntervalTree::insert(ITNode *root, Interval data){
     if (data.low < l){
       if(!root->left){
 	ITNode *tmpNode = new ITNode(data);
-  //std::cout << data.low << ":" << data.high << "->insertLeft" << std::endl;
+	//std::cout << data.low << ":" << data.high << "->insertLeft" << std::endl;
 	root->left = tmpNode;
       } else {
 	insert(root->left, data);
       }
-    } 
+    }
     else {
       if(!root->right){
 	ITNode *tmpNode = new ITNode(data);
-  //std::cout << data.low << ":" << data.high << "->insertRight" << std::endl;
+	//std::cout << data.low << ":" << data.high << "->insertRight" << std::endl;
 	root->right = tmpNode;
       } else {
 	insert(root->right, data);
