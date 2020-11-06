@@ -1,6 +1,5 @@
 #include<iostream>
 #include "../src/trim_primer_quality.h"
-#include "../src/primer_bed.h"
 #include "htslib/sam.h"
 
 /*
@@ -11,7 +10,7 @@ typedef struct {
 */
 
 
-int test_isize_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag, bool keep_for_reanalysis, int min_length, std::string testname, uint8_t cigar_flag[12][3], uint32_t cigar_len[12][3]){
+int test_isize_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag, bool keep_for_reanalysis, int min_length, std::string testname, uint8_t cigar_flag[14][3], uint32_t cigar_len[14][3]){
 
     int success = 0;
     int res;
@@ -21,15 +20,16 @@ int test_isize_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag
 
     std::string bam = "../data/test_isize.sorted.bam";
     std::string bed = "../data/test_isize.bed";
-    std::string prefix = "/tmp/trim_isize";
-    std::string bam_out = "/tmp/trim_isize.bam";
+    std::string pair_info = "";
+    std::string prefix = "../data/trim_isize";
+    std::string bam_out = "../data/trim_isize.bam";
 
 
     std::string region_ = "";
     std::string cmd = "@PG\tID:ivar-trim\tPN:ivar\tVN:1.0.0\tCL:ivar trim\n";
 
     // Test and check result
-    res = trim_bam_qual_primer(bam, bed, prefix, region_, min_qual, sliding_window, cmd, no_write_flag, keep_for_reanalysis, min_length);
+    res = trim_bam_qual_primer(bam, bed, prefix, region_, min_qual, sliding_window, cmd, no_write_flag, keep_for_reanalysis, min_length, pair_info);
 
     if (res) {
         success = -1;
@@ -79,7 +79,7 @@ int main() {
     int success = 0;
     int test_res = 0;
 
-    uint8_t cigar_flag[12][3] = {
+    uint8_t cigar_flag[14][3] = {
         {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CSOFT_CLIP},
         {BAM_CSOFT_CLIP, BAM_CMATCH},
         {BAM_CSOFT_CLIP, BAM_CMATCH},
@@ -87,6 +87,8 @@ int main() {
         {BAM_CSOFT_CLIP, BAM_CMATCH},
         {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CSOFT_CLIP},
         {BAM_CSOFT_CLIP, BAM_CMATCH},
+        {BAM_CMATCH, BAM_CSOFT_CLIP},
+        {BAM_CMATCH, BAM_CSOFT_CLIP},
         {BAM_CMATCH, BAM_CSOFT_CLIP},
         {BAM_CMATCH, BAM_CSOFT_CLIP},
         {BAM_CMATCH, BAM_CSOFT_CLIP},
@@ -94,7 +96,7 @@ int main() {
         {BAM_CMATCH, BAM_CSOFT_CLIP}
     };
 
-    uint32_t cigar_len[12][3] = {
+    uint32_t cigar_len[14][3] = {
         {24, 363, 24},
         {24, 155},
         {24, 155},
@@ -106,7 +108,9 @@ int main() {
         {156, 24},
         {156, 24},
         {64, 24},
-        {64, 24}
+        {64, 24},
+        {137, 10},
+        {137, 11}
     };
 
     test_res = test_isize_trim(20, 4, false, false, 30, "default paramaters", cigar_flag, cigar_len);
