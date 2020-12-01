@@ -363,6 +363,8 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   if(!pair_info.empty()){
     amplicons = populate_amplicons(pair_info, primers);
   }
+  std::cout << "Amplicons detected: " << std::endl;
+  amplicons.inOrder();
   if(bam.empty()){
     std::cout << "Bam file is empty." << std::endl;
     return -1;
@@ -605,7 +607,10 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     std::cout << unmapped_counter << " unmapped reads were not written to file." << std::endl;
   }
   if(amplicon_flag_ctr > 0){
-    std::cout << amplicon_flag_ctr << " reads were ignored because they did not fall within an amplicon" << std::endl;
+    std::cout << round_int(amplicon_flag_ctr, mapped) 
+              << "% (" << amplicon_flag_ctr 
+              << ") reads were ignored because they did not fall within an amplicon" 
+              << std::endl;
   }
   if(failed_frag_size > 0){
     std::cout << round_int(failed_frag_size, mapped)
