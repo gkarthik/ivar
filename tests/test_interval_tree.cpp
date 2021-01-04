@@ -7,7 +7,7 @@ int test_itree_overlap(IntervalTree tree, Interval queries[], int num_tests, boo
     int result = 0;
     for (int i = 0; i < num_tests; i++)
     {
-        result = tree.overlapSearch(queries[i]);
+        result = tree.envelopSearch(queries[i]);
         if (result != expected[i])
         {
             std::cout << "Interval Tree overlap behavior incorrect for interval " << queries[i].low << ":" << queries[i].high 

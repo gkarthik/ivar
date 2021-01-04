@@ -331,7 +331,7 @@ int get_bigger_primer(std::vector<primer> primers){
   return max_primer_len;
 }
 
-// check if read overlaps with any of the amplicons
+// check if read is enveloped by any of the amplicons
 bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
   Interval fragment_coords = Interval(0, 1);
   if(r->core.isize > 0){
@@ -342,7 +342,7 @@ bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
     fragment_coords.high = bam_endpos(r);
   }
   // debugging
-  bool amplicon_flag = amplicons.overlapSearch(fragment_coords);
+  bool amplicon_flag = amplicons.envelopSearch(fragment_coords);
   return amplicon_flag;
 }
 
