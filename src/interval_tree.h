@@ -25,7 +25,7 @@ class ITNode{
     void setRight(ITNode *node);
   */
 public:
-  ITNode(Interval value): data(new Interval(value)), left(nullptr), right(nullptr), max(value.low) {}  // constructor
+  ITNode(Interval value): data(new Interval(value)), left(nullptr), right(nullptr), max(value.high) {}  // constructor
   Interval *data;  // pointer to node's interval data object
   ITNode *left, *right; // pointer to node's left & right child node objects
   int max;
@@ -38,13 +38,13 @@ class IntervalTree{
 private:
   ITNode *_root;
   void insert(ITNode *root, Interval data);
-  bool overlapSearch(ITNode *root, Interval data);
+  bool envelopSearch(ITNode *root, Interval data);
   void inOrder(ITNode * root);
 
 public:
   IntervalTree();  // constructor
   void insert(Interval data){ insert(_root, data);}
-  bool overlapSearch(Interval data){ return overlapSearch(_root, data);}
+  bool envelopSearch(Interval data){ return envelopSearch(_root, data);}
   void inOrder() {inOrder(_root);}
 };
 
