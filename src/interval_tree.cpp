@@ -38,13 +38,13 @@ void IntervalTree::insert(ITNode *root, Interval data){
     }
   }
   // update max value of ancestor node
-  if(root->max < data.low)
-    root->max = data.low;
+  if(root->max < data.high)
+    root->max = data.high;
 }
 
 
-// A utility function to check if given two intervals overlap
-bool doOverlap(Interval i1, Interval i2){
+// A utility function to check if the 1st interval envelops the second
+bool doEnvelop(Interval i1, Interval i2){
   if(i1.low <= i2.low && i1.high >= i2.high)
     return true;
   return false;
@@ -53,23 +53,23 @@ bool doOverlap(Interval i1, Interval i2){
 
 // The main function that searches an interval i in a given
 // Interval Tree.
-bool IntervalTree::overlapSearch(ITNode *root, Interval i){
+bool IntervalTree::envelopSearch(ITNode *root, Interval i){
   // Base Case, tree is empty
   //std::cout << root->data->low << ":" << root->data->high << std::endl;
   if (root == NULL) return false;
 
   // If given interval overlaps with root
-  if (doOverlap(*(root->data), i))
+  if (doEnvelop(*(root->data), i))
     return true;
 
   // If left child of root is present and max of left child is
   // greater than or equal to given interval, then i may
-  // overlap with an interval in left subtree
-  if (root->left != NULL && root->left->max >= i.low)
-    return overlapSearch(root->left, i);
+  // be enveloped by an amplicon in left subtree
+  if (root->left != NULL && root->left->max >= i.high)
+    return envelopSearch(root->left, i);
 
-  // Else interval can only overlap with right subtree
-  return overlapSearch(root->right, i);
+  // Else interval can only be enveloped by amplicon in right subtree
+  return envelopSearch(root->right, i);
 }
 
 // A helper function for inorder traversal of the tree
