@@ -85,7 +85,7 @@ void print_bed_format(){
   std::cout << "It requires the following columns delimited by a tab: chrom, chromStart, chromEnd, name, score, strand" << std::endl;
 }
 
-std::vector<primer> populate_from_file(std::string path){
+std::vector<primer> populate_from_file(std::string path, int32_t offset = 0){
   std::ifstream  data(path.c_str());
   std::string line;
   std::vector<primer> primers;
@@ -103,7 +103,7 @@ std::vector<primer> populate_from_file(std::string path){
 	break;
       case 1:
 	if(std::all_of(cell.begin(), cell.end(), ::isdigit)) {
-	  p.set_start(std::stoul(cell));
+	  p.set_start(std::stoul(cell) - offset);
 	} else {
 	  print_bed_format();
 	  primers.clear();
@@ -112,7 +112,7 @@ std::vector<primer> populate_from_file(std::string path){
 	break;
       case 2:
 	if(std::all_of(cell.begin(), cell.end(), ::isdigit)) {
-	  p.set_end(std::stoul(cell)-1); // Bed format - End is not 0 based
+	  p.set_end(std::stoul(cell) - 1 + offset); // Bed format - End is not 0 based
 	} else {
 	  print_bed_format();
 	  primers.clear();
