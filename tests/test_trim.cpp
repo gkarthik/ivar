@@ -21,6 +21,7 @@ int test_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag, bool
   std::string bam = "../data/test.unmapped.sorted.bam";
   std::string bed = "../data/test.bed";
   std::string pair_info = "";
+  int32_t primer_offset = 0;
   std::string prefix = "/tmp/trim";
   std::string bam_out = "/tmp/trim.bam";
 
@@ -28,7 +29,7 @@ int test_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag, bool
   std::string cmd = "@PG\tID:ivar-trim\tPN:ivar\tVN:1.0.0\tCL:ivar trim\n";
 
   // Test and check result
-  res = trim_bam_qual_primer(bam, bed, prefix, region_, min_qual, sliding_window, cmd, no_write_flag, keep_for_reanalysis, min_length, pair_info);
+  res = trim_bam_qual_primer(bam, bed, prefix, region_, min_qual, sliding_window, cmd, no_write_flag, keep_for_reanalysis, min_length, pair_info, primer_offset);
   if (res) {
     success = -1;
     std::cerr << testname << " failed: trim_bam_qual_primer() returned " << res << std::endl;

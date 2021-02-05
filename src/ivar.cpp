@@ -16,7 +16,7 @@
 #include "suffix_tree.h"
 #include "get_common_variants.h"
 
-const std::string VERSION = "1.3";
+const std::string VERSION = "1.3.1";
 
 struct args_t {
   std::string bam;		// -i
@@ -37,6 +37,7 @@ struct args_t {
   char gap;			// -n
   bool keep_min_coverage;	// -k
   std::string primer_pair_file;	// -f
+  int32_t primer_offset; // -x
   std::string file_list;		// -f
   bool write_no_primers_flag;	// -e
   std::string gff;		// -g
@@ -67,6 +68,7 @@ void print_trim_usage(){
     "           -b    BED file with primer sequences and positions. If no BED file is specified, only quality trimming will be done.\n"
     "           -f    [EXPERIMENTAL] Primer pair information file containing left and right primer names for the same amplicon separated by a tab\n"
     "                 If provided, reads that do not fall within atleat one amplicon will be ignored prior to primer trimming.\n"
+    "           -x    Primer position offset (Default: 0). Reads that occur at the specified offset positions relative to primer positions will also be trimmed.\n"
     "           -m    Minimum length of read to retain after trimming (Default: 30)\n"
     "           -q    Minimum quality threshold for sliding window to pass (Default: 20)\n"
     "           -s    Width of sliding window (Default: 4)\n"
@@ -165,7 +167,7 @@ void print_version_info(){
     "\nPlease raise issues and bug reports at https://github.com/andersen-lab/ivar/\n\n";
 }
 
-static const char *trim_opt_str = "i:b:f:p:m:q:s:ekh?";
+static const char *trim_opt_str = "i:b:f:x:p:m:q:s:ekh?";
 static const char *variants_opt_str = "p:t:q:m:r:g:h?";
 static const char *consensus_opt_str = "i:p:q:t:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
@@ -221,6 +223,7 @@ int main(int argc, char* argv[]){
     g_args.keep_for_reanalysis = false;
     g_args.bed = "";
     g_args.primer_pair_file = "";
+    g_args.primer_offset = 0;
     opt = getopt( argc, argv, trim_opt_str);
     while( opt != -1 ) {
       switch( opt ) {
@@ -232,6 +235,9 @@ int main(int argc, char* argv[]){
 	break;
       case 'f':
   g_args.primer_pair_file = optarg;
+  break;
+      case 'x':
+  g_args.primer_offset = std::stoi(optarg);
   break;
       case 'p':
 	g_args.prefix = optarg;
@@ -264,7 +270,7 @@ int main(int argc, char* argv[]){
       return -1;
     }
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
-    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.keep_for_reanalysis, g_args.min_length, g_args.primer_pair_file);
+    res = trim_bam_qual_primer(g_args.bam, g_args.bed, g_args.prefix, g_args.region, g_args.min_qual, g_args.sliding_window, cl_cmd.str(), g_args.write_no_primers_flag, g_args.keep_for_reanalysis, g_args.min_length, g_args.primer_pair_file, g_args.primer_offset);
   }
   // ivar variants
   else if (cmd.compare("variants") == 0){

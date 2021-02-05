@@ -346,12 +346,12 @@ bool amplicon_filter(IntervalTree amplicons, bam1_t* r){
   return amplicon_flag;
 }
 
-int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30, std::string pair_info = "") {
+int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, std::string region_, uint8_t min_qual, uint8_t sliding_window, std::string cmd, bool write_no_primer_reads, bool keep_for_reanalysis, int min_length = 30, std::string pair_info = "", int32_t primer_offset = 0) {
   int retval = 0;
   std::vector<primer> primers;
   int max_primer_len = 0;
   if(!bed.empty()){
-    primers = populate_from_file(bed);
+    primers = populate_from_file(bed, primer_offset);
     if(primers.size() == 0){
       std::cout << "Exiting." << std::endl;
       return -1;

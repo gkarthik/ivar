@@ -21,6 +21,7 @@ int test_isize_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag
     std::string bam = "../data/test_isize.sorted.bam";
     std::string bed = "../data/test_isize.bed";
     std::string pair_info = "";
+    int32_t primer_offset = 0;
     std::string prefix = "../data/trim_isize";
     std::string bam_out = "../data/trim_isize.bam";
 
@@ -29,7 +30,7 @@ int test_isize_trim(uint8_t min_qual, uint8_t sliding_window, bool no_write_flag
     std::string cmd = "@PG\tID:ivar-trim\tPN:ivar\tVN:1.0.0\tCL:ivar trim\n";
 
     // Test and check result
-    res = trim_bam_qual_primer(bam, bed, prefix, region_, min_qual, sliding_window, cmd, no_write_flag, keep_for_reanalysis, min_length, pair_info);
+    res = trim_bam_qual_primer(bam, bed, prefix, region_, min_qual, sliding_window, cmd, no_write_flag, keep_for_reanalysis, min_length, pair_info, primer_offset);
 
     if (res) {
         success = -1;
