@@ -47,6 +47,7 @@ class primer {
 };
 
 std::vector<primer> populate_from_file(std::string path, int32_t offset);
+std::vector<primer> populate_from_file(std::string path);
 std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos);
 int get_primer_indice(std::vector<primer> p, std::string name);
 int populate_pair_indices(std::vector<primer> &primers, std::string path);

@@ -1,8 +1,7 @@
 #include "get_masked_amplicons.h"
 
 int get_primers_with_mismatches(std::string bed, std::string vpath, std::string out, std::string primer_pair_file){
-  int32_t primer_offset = 0;
-  std::vector<primer> primers = populate_from_file(bed, primer_offset);
+  std::vector<primer> primers = populate_from_file(bed);
   std::vector<primer> mismatches_primers;
   std::vector<primer> tmp;
   if(primers.size() == 0){
