@@ -1,7 +1,8 @@
 #include "remove_reads_from_amplicon.h"
 
 int rmv_reads_from_amplicon(std::string bam, std::string region_, std::string bam_out, std::vector<std::string> amp, std::string bed, std::string cmd){
-  std::vector<primer> primers = populate_from_file(bed);
+  int32_t primer_offset = 0;
+  std::vector<primer> primers = populate_from_file(bed, primer_offset);
   if(primers.size() == 0){
     return 0;
   }
