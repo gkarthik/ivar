@@ -119,7 +119,7 @@ void print_consensus_usage(){
     "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
-    "           -c    Minimum insertion frequency threshold(0 - 1) to call consensus. (Default: 0)\n"
+    "           -c    Minimum insertion frequency threshold(0 - 1) to call consensus. (Default: 0.8)\n"
     "                 Frequently used thresholds | Description\n"
     "                 ---------------------------|------------\n"
     "                                          0 | Allow insertion if it appears even once\n"
@@ -348,7 +348,7 @@ int main(int argc, char* argv[]){
     g_args.gap = 'N';
     g_args.min_qual = 20;
     g_args.keep_min_coverage = true;
-    g_args.min_insert_threshold = 0;
+    g_args.min_insert_threshold = 0.8;
     while( opt != -1 ) {
       switch( opt ) {
       case 't':
