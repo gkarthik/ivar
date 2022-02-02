@@ -29,6 +29,7 @@ struct args_t {
   uint8_t min_qual;		// -q
   uint8_t sliding_window;	// -s
   double min_threshold;	// -t
+  double min_insert_threshold; // -c
   int min_length;		// -m
   std::string f1;		// -1
   std::string f2;		// -2
@@ -118,12 +119,20 @@ void print_consensus_usage(){
     "                                        0.5 | Strict or bases that make up atleast 50% of the depth at a position\n"
     "                                        0.9 | Strict or bases that make up atleast 90% of the depth at a position\n"
     "                                          1 | Identical or bases that make up 100% of the depth at a position. Will have highest ambiguities\n"
+    "           -c    Minimum insertion frequency threshold(0 - 1) to call consensus. (Default: 0)\n"
+    "                 Frequently used thresholds | Description\n"
+    "                 ---------------------------|------------\n"
+    "                                          0 | Allow insertion if it appears even once\n"
+    "                                        0.2 | Insertions with at least 20% of the depth at a position\n"
+    "                                        0.5 | Insertion with at least 50% of the depth at a position\n"
+    "                                        0.9 | Insertions with at least 90% of the depth at a position\n"
+    "                                          1 | Insertion with 100% of the depth at a position. Will have highest ambiguities\n"
     "           -m    Minimum depth to call consensus(Default: 10)\n"
     "           -k    If '-k' flag is added, regions with depth less than minimum depth will not be added to the consensus sequence. Using '-k' will override any option specified using -n \n"
     "           -n    (N/-) Character to print in regions with less than minimum coverage(Default: N)\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output fasta file and quality file\n"
-    "           -i    (Optional) Name of fasta header. By default, the prefix is used to create the fasta header in the following format, Consensus_<prefix>_threshold_<frequency-threshold>_quality_<minimum-quality>\n";
+    "           -i    (Optional) Name of fasta header. By default, the prefix is used to create the fasta header in the following format, Consensus_<prefix>_threshold_<frequency-threshold>_quality_<minimum-quality>_<min-insert-threshold>\n";
 }
 
 void print_removereads_usage(){
@@ -169,7 +178,7 @@ void print_version_info(){
 
 static const char *trim_opt_str = "i:b:f:x:p:m:q:s:ekh?";
 static const char *variants_opt_str = "p:t:q:m:r:g:h?";
-static const char *consensus_opt_str = "i:p:q:t:m:n:kh?";
+static const char *consensus_opt_str = "i:p:q:t:c:m:n:kh?";
 static const char *removereads_opt_str = "i:p:t:b:h?";
 static const char *filtervariants_opt_str = "p:t:f:h?";
 static const char *getmasked_opt_str = "i:b:f:p:h?";
@@ -339,12 +348,16 @@ int main(int argc, char* argv[]){
     g_args.gap = 'N';
     g_args.min_qual = 20;
     g_args.keep_min_coverage = true;
+    g_args.min_insert_threshold = 0;
     while( opt != -1 ) {
       switch( opt ) {
       case 't':
 	g_args.min_threshold = atof(optarg);
 	break;
-      case 'i':
+      case 'c':
+	g_args.min_insert_threshold = atof(optarg);
+	break;
+       case 'i':
 	g_args.seq_id = optarg;
 	break;
       case 'p':
@@ -386,11 +399,12 @@ int main(int argc, char* argv[]){
     std::cout <<"Minimum Quality: " << (uint16_t) g_args.min_qual << std::endl;
     std::cout << "Threshold: " << g_args.min_threshold << std::endl;
     std::cout << "Minimum depth: " << (unsigned) g_args.min_depth << std::endl;
+    std::cout << "Minimum Insert Threshold: " << g_args.min_insert_threshold << std::endl;
     if(!g_args.keep_min_coverage)
       std::cout << "Regions with depth less than minimum depth will not added to consensus" << std::endl;
     else
       std::cout << "Regions with depth less than minimum depth covered by: " << g_args.gap << std::endl;
-    res = call_consensus_from_plup(std::cin, g_args.seq_id, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage);
+    res = call_consensus_from_plup(std::cin, g_args.seq_id, g_args.prefix, g_args.min_qual, g_args.min_threshold, g_args.min_depth, g_args.gap, g_args.keep_min_coverage, g_args.min_insert_threshold);
   } else if (cmd.compare("removereads") == 0){
     opt = getopt( argc, argv, removereads_opt_str);
     while( opt != -1 ) {
@@ -428,6 +442,7 @@ int main(int argc, char* argv[]){
     fin.close();
     g_args.prefix = get_filename_without_extension(g_args.prefix,".bam");
     res = rmv_reads_from_amplicon(g_args.bam, g_args.region, g_args.prefix, amp, g_args.bed, cl_cmd.str());
+    
   } else if(cmd.compare("filtervariants") == 0){
     opt = getopt( argc, argv, filtervariants_opt_str);
     g_args.min_threshold = 1;
