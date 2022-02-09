@@ -51,7 +51,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
   uint32_t i = 0, n =0, j = 0, q_ind = 0;
   bool beg, end;
   uint8_t q;
-  bool b1 { false };
+  
   //iterate the bases
   while (i < bases.length()){
     beg = false;
