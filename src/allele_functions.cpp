@@ -110,7 +110,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       
       b = bases[i] + indel;	// + for Insertion and - for Deletion
       i += n + j;
-      b1=true;
+      
       // making sure it's an alphabetic char
       if(indel[0]>=97 && indel[0] <= 122)
 	  forward=false;
