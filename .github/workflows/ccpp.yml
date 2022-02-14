@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-18.04, ubuntu-latest]
+        os: [ubuntu-18.04, ubuntu-20.04]
 
     steps:
     - uses: actions/checkout@master
@@ -23,7 +23,7 @@ jobs:
       run: tar xf 1.10.2.tar.gz
     - name: install htslib
       env:
-        CC: gcc-7
+        CC: gcc-8
       run: |
         cd htslib-1.10.2/
         autoheader
@@ -34,23 +34,23 @@ jobs:
         sudo ldconfig
     - name: autotools
       env:
-        CC: gcc-7
+        CC: gcc-8
       run: ./autogen.sh
     - name: configure
       env:
-        CC: gcc-7
+        CC: gcc-8
       run: ./configure
     - name: make
       env:
-        CC: gcc-7
+        CC: gcc-8
       run: make
     - name: make check
       env:
-        CC: gcc-7
+        CC: gcc-8
       run: make check
     - name: make install
       env:
-        CC: gcc-7
+        CC: gcc-8
       run: sudo make install
 
   build-macos:
