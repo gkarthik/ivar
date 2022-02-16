@@ -13,12 +13,14 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04]
+        os: [ubuntu-18.04, ubuntu-20.04]
 
     steps:
     - uses: actions/checkout@master
     - name: download htslib
-      run: wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
+      run: |
+        wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
+        sudo apt-get install gcc-7
     - name: untar
       run: tar xf 1.10.2.tar.gz
     - name: install htslib
@@ -60,7 +62,12 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: install GNU autotools
-      run: brew install autoconf automake libtool
+      run: |
+        curl -O http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz
+        tar zxvf autoconf-2.69.tar.gz
+        cd autoconf-2.69
+        ./configure && make && sudo make install
+        brew install automake libtool
     - name: download htslib
       run: wget https://github.com/samtools/htslib/archive/1.10.2.tar.gz
     - name: untar

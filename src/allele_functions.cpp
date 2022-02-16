@@ -24,6 +24,7 @@ int check_allele_exists(std::string n, std::vector<allele> ad){
       return it - ad.begin();
     }
   }
+  //allele does not exist
   return -1;
 }
 
@@ -38,15 +39,25 @@ int find_ref_in_allele(std::vector<allele> ad, char ref){
   return -1;
 }
 
+//ad means the number of reads that support the reported alleles
 std::vector<allele> update_allele_depth(char ref,std::string bases, std::string qualities, uint8_t min_qual){
+  //ref always starts as 'N' ?
+  //bases seems to print all bases found at a position but is both lower and upper case
+  //qualities is phred quality
+  //min qual is blank
   std::vector<allele> ad;
+  //print_allele_depths(ad);
   std::string indel;
   uint32_t i = 0, n =0, j = 0, q_ind = 0;
   bool beg, end;
   uint8_t q;
+  
+  //iterate the bases
   while (i < bases.length()){
     beg = false;
     end = false;
+    
+    //not sure why either of these would be true?
     if(bases[i] == '^'){
       i += 2;			// Skip mapping quality as well (i+1) - 33
       continue;
@@ -55,10 +66,13 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       i++;
       continue;
     }
+    //ascii conversion 33
     q = qualities[q_ind] - 33;
     std::string b;
     allele tmp;
     bool forward= true;
+
+    //in case the bases aren't a number for some reason?
     switch(bases[i]){
     case '.':
       b = ref;
@@ -74,21 +88,36 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
     case '*':
       b = bases[i];
       break;
+    //we have an insertion or deletion
     case '+': case '-':
-      j = i+1;
+      j = i+1;  
+      // think j and i are coordinates for where insertion/deletion begins
+      // 'N' means deletion 'any other letter' is insertion in bases
+      // syntax -5nnnnn
       while(isdigit(bases[j])){
-	j++;
+      j++;
       }
+      
       j = j - (i+1);
+      //this slices like in python
+      // n = how many bases
+      // indel = the substring
       n = stoi(bases.substr(i+1, j));
       indel = bases.substr(i+1+j, n);
+     
+      // make it upper case
       transform(indel.begin(), indel.end(), indel.begin(),::toupper);
+      
       b = bases[i] + indel;	// + for Insertion and - for Deletion
       i += n + j;
+      
+      // making sure it's an alphabetic char
       if(indel[0]>=97 && indel[0] <= 122)
-	forward=false;
+	  forward=false;
       q = min_qual;		// For insertions and deletion ust use minimum quality.
       break;
+    
+    //the default assumption is no insertion or deletion
     default:
       int asc_val = bases[i];
       if(asc_val >= 65 && asc_val <= 90){
@@ -100,10 +129,15 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       end = (bases[i+1] == '$');
       beg = (bases[i+1] == '^');
     }
+    
+    // end base switch 
     int ind = check_allele_exists(b, ad);
+    //print_allele_depths(ad);
+    // meet our quality min
     if(q >= min_qual){
+      // allele does not exist making it an insertion or deletion (and the first one seen)
       if (ind==-1){
-	tmp.nuc = b;
+    tmp.nuc = b;
 	tmp.depth = 1;
 	tmp.tmp_mean_qual = q;
 	if(!forward)
@@ -120,6 +154,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
 	  tmp.end = 0;
 	ad.push_back(tmp);
       } else {
+    //this executes when this allele has been seen at this position before
 	ad.at(ind).tmp_mean_qual = (ad.at(ind).tmp_mean_qual * ad.at(ind).depth + q)/(ad.at(ind).depth + 1);
 	ad.at(ind).depth += 1;
 	if(beg)

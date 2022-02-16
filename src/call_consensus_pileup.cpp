@@ -15,7 +15,8 @@ bool compare_allele_depth(const allele &a, const allele &b){
   return b.depth < a.depth;
 }
 
-ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold, char gap){
+ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double threshold, char gap, double min_insert_threshold){
+  //print_allele_depths(ad);
   ret_t t;
   t.nuc=gap;
   t.q = min_qual+33;
@@ -95,6 +96,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
       // }
       it++;
     }
+    
     // Sort nuc_pos by depth of alleles
     std::sort(nuc_pos.begin(), nuc_pos.end(), compare_allele_depth);
     it=nuc_pos.begin();
@@ -117,8 +119,14 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
     }
     if(max_depth < cur_threshold) // If depth still less than threshold
       n = 'N';
-    if(i > 0)
-      gap_depth = (total_indel_depth > cur_depth) ? total_indel_depth - cur_depth : 0;
+
+    if(i > 0){
+      //print_allele_depths(ad);
+      //std::cout << "\n";
+      //gap_depth = (total_indel_depth > cur_depth) ? total_indel_depth - cur_depth : 0;
+      gap_depth = min_insert_threshold * total_max_depth;
+      //std::cout << max_depth << " " << gap_depth << " " << min_insert_threshold << " " << total_max_depth<<" \n";
+    }    
     else
       gap_depth = 0;			  // For first position of allele
     if(n!='*' && max_depth >= gap_depth){ // TODO: Check what to do when equal.{
@@ -130,7 +138,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
   return t;
 }
 
-int call_consensus_from_plup(std::istream &cin, std::string seq_id, std::string out_file, uint8_t min_qual, double threshold, uint8_t min_depth, char gap, bool min_coverage_flag){
+int call_consensus_from_plup(std::istream &cin, std::string seq_id, std::string out_file, uint8_t min_qual, double threshold, uint8_t min_depth, char gap, bool min_coverage_flag, double min_insert_threshold){
   std::string line, cell;
   std::ofstream fout((out_file+".fa").c_str());
   std::ofstream tmp_qout((out_file+".qual.txt").c_str());
@@ -188,7 +196,7 @@ int call_consensus_from_plup(std::istream &cin, std::string seq_id, std::string 
     ret_t t;
     if(mdepth >= min_depth){
       ad = update_allele_depth(ref, bases, qualities, min_qual);
-      t = get_consensus_allele(ad, min_qual, threshold, gap);
+      t = get_consensus_allele(ad, min_qual, threshold, gap, min_insert_threshold);
       fout << t.nuc;
       tmp_qout << t.q;
     } else{
