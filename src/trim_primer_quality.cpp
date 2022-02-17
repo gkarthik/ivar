@@ -256,6 +256,49 @@ void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
   } else memcpy(b->data + b->core.l_qname, cigar, n * 4);
 }
 
+void print_primers(std::vector<primer> primers){
+  for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
+    std::cout << "Get Start " << it->get_start() << "\n";
+    std::cout << "End " << it->get_end() << "\n";
+  }
+}
+/*
+int binarySearch(std::vector<primer> primers, uint32_t item, uint32_t low, uint32_t high){
+  if(high <= low){
+    return(item > primers[low].get_start() ?
+        (low + 1) : low); 
+  }
+  uint32_t mid = (low + high) / 2;
+  
+  if(item == primers[mid].get_start()){
+    return(mid+1);
+  }
+  
+  if(item > primers[mid].get_start()){
+    return binarySearch(primers, item, mid+1, high);
+  }
+
+  return binarySearch(primers, item, low, mid-1);
+
+}
+
+void insertionSort(std::vector<primer> primers, uint32_t n){
+  uint32_t i, loc, j, k;
+  std::vector<primer> selected;
+
+  for (i=1; i < n; ++i){
+    j = i-1;
+    selected = primers[i];
+    loc = binarySearch(primers, primers[i].get_start(), 0, j);
+    
+    while(j >= loc){
+      primers[j+1] = primers[j];
+      j--;
+    }
+    primers[j+1] = selected;
+  }
+}
+
 // For paired reads
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers){
   overlapped_primers.clear();
@@ -267,10 +310,22 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
   } else {
     start_pos = r->core.pos;
   }
-  for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-    if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() || it->get_strand() == 0))
-      overlapped_primers.push_back(*it);
-  }
+    
+  insertionSort(primers, primers.size());  
+  //std::cout << typeid(primers[0]).name() << "\n"; 
+  //print_primers(overlapped_primers);
+ //std::cout << "END\n";
+ //for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
+ //   std::cout << "Start " << it->get_start() << "\n";
+ //   std::cout << "End " << it->get_end() << "\n";
+ //   std::cout << "Strand " << strand << "\n";
+ //   std::cout << "Start Position " << start_pos << "\n";
+    //we want it start pos to be between get start and get end
+    // and it to be the same strand type, and the strand type to bot be 0
+    //if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() || it->get_strand() == 0))
+    //  overlapped_primers.push_back(*it);
+  //}
+  //print_primers(overlapped_primers);
 }
 
 // For unpaired reads
