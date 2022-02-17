@@ -259,44 +259,44 @@ void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
 void print_primers(std::vector<primer> primers){
   for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
     std::cout << "Get Start " << it->get_start() << "\n";
-    std::cout << "End " << it->get_end() << "\n";
+    std::cout << "Get End " << it->get_end() << "\n";
+    std::cout << "Index " << it->get_indice() << "\n";
   }
 }
-/*
-int binarySearch(std::vector<primer> primers, uint32_t item, uint32_t low, uint32_t high){
-  if(high <= low){
-    return(item > primers[low].get_start() ?
-        (low + 1) : low); 
-  }
-  uint32_t mid = (low + high) / 2;
-  
-  if(item == primers[mid].get_start()){
-    return(mid+1);
-  }
-  
-  if(item > primers[mid].get_start()){
-    return binarySearch(primers, item, mid+1, high);
-  }
 
-  return binarySearch(primers, item, low, mid-1);
-
+int binarySearch(std::vector<primer> primers, uint32_t item, int low, int high){
+  while (low <= high) {
+    int mid = low + (high-low)/2;
+    if (item == primers[mid].get_start()){
+        return mid+1;
+    } else if (item > primers[mid].get_start()){
+        low = mid + 1;
+    } else {
+        high = mid -1;
+    }
+  }
+  return low;
 }
 
-void insertionSort(std::vector<primer> primers, uint32_t n){
-  uint32_t i, loc, j, k;
-  std::vector<primer> selected;
-
+std::vector<primer> insertionSort(std::vector<primer> primers, uint32_t n){
+  //std::cout << "in insertion sort length: " << n << "\n";
+  uint32_t i = 0;
+  int loc = 0;
+  int j = 0;
+ 
+  //iterate over vector of primers
   for (i=1; i < n; ++i){
     j = i-1;
-    selected = primers[i];
-    loc = binarySearch(primers, primers[i].get_start(), 0, j);
+    primer selected = primers[i];
     
+    loc = binarySearch(primers, primers[i].get_start(), 0, j);
     while(j >= loc){
       primers[j+1] = primers[j];
       j--;
     }
     primers[j+1] = selected;
   }
+  return primers;
 }
 
 // For paired reads
@@ -310,22 +310,24 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
   } else {
     start_pos = r->core.pos;
   }
-    
-  insertionSort(primers, primers.size());  
-  //std::cout << typeid(primers[0]).name() << "\n"; 
+   
+  //print_primers(primers);
+  //sort it first
+  std::vector<primer> test = insertionSort(primers, primers.size());  
+  //std::cout << test.size() << "\n";
+  //then we iterate and push what fits
+  for(std::vector<primer>::iterator it = test.begin(); it != test.end(); ++it) {
+    //if we've passed the end, we're going to find no more matches
+    if(start_pos < it->get_start()){
+        //std::cout << "break start_pos: " << start_pos << " start:  " << it->get_end() << " end: " << it->get_start() << "\n";
+        break;
+    }
+    if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() || it->get_strand() == 0))
+      //std::cout << it->get_start() << " " << start_pos << "\n";
+      overlapped_primers.push_back(*it);
+  }
   //print_primers(overlapped_primers);
- //std::cout << "END\n";
- //for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
- //   std::cout << "Start " << it->get_start() << "\n";
- //   std::cout << "End " << it->get_end() << "\n";
- //   std::cout << "Strand " << strand << "\n";
- //   std::cout << "Start Position " << start_pos << "\n";
-    //we want it start pos to be between get start and get end
-    // and it to be the same strand type, and the strand type to bot be 0
-    //if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() || it->get_strand() == 0))
-    //  overlapped_primers.push_back(*it);
-  //}
-  //print_primers(overlapped_primers);
+  //std::cout << "break\n";
 }
 
 // For unpaired reads
