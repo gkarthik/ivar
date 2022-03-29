@@ -221,7 +221,8 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
 	ncigar[j] = bam_cigar_gen(n, cig);
 	j++;
       }
-      if(del_len ==0 && (bam_cigar_type(ncigar[j-1]) & 1) && (bam_cigar_type(ncigar[j-1]) & 2)){ // After soft clipping of query complete, keep incrementing start_pos until first base that consumes both query and ref
+      if (del_len ==0 && (bam_cigar_type(ncigar[j-1])&1)){
+      //if(del_len ==0 && (bam_cigar_type(ncigar[j-1]) & 1) && (bam_cigar_type(ncigar[j-1]) & 2)){ // After soft clipping of query complete, keep incrementing start_pos until first base that consumes both query and ref
       	pos_start = true;
       }
     }
