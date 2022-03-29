@@ -99,7 +99,7 @@ void print_filtervariants_usage(){
     "Usage: ivar filtervariants -p <prefix> replicate-one.tsv replicate-two.tsv ... OR ivar filtervariants -p <prefix> -f <text file with one variant file per line> \n"
     "Input: Variant tsv files for each replicate/sample\n\n"
     "Input Options    Description\n"
-    "           -t    Minimum fration of files required to contain the same variant. Specify value within [0,1]. (Default: 1)\n"
+    "           -t    Minimum fraction of files required to contain the same variant. Specify value within [0,1]. (Default: 1)\n"
     "           -f    A text file with one variant file per line.\n\n"
     "Output Options   Description\n"
     "           -p    (Required) Prefix for the output filtered tsv file\n";
