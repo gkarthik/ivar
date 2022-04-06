@@ -121,7 +121,7 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
   for(it = features.begin(); it != features.end(); it++){
     fout << line_stream.str();
     //add in gene level info, control for case it's not present
-    std::string gene = it->get_attribute("Parent");
+    std::string gene = it->get_attribute("gene");
     if (gene.empty()){
         fout << it->get_attribute("ID") << "\t";
     } else {
