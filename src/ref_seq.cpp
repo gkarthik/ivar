@@ -109,6 +109,7 @@ ref_antd::~ref_antd()
   if (this->fai) fai_destroy(this->fai);
 }
 
+//used to add codon info to variants output
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
   if(features.size() == 0){	// No matching CDS
@@ -118,8 +119,9 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
   std::vector<gff3_feature>::iterator it;
   char *ref_codon, *alt_codon;
   for(it = features.begin(); it != features.end(); it++){
+    //std::cout << it->get_attribute("Parent") << "\n";
     fout << line_stream.str();
-    fout << it->get_attribute("ID") << "\t";
+    fout << it->get_attribute("Parent") + ":" + it->get_attribute("ID") << "\t";
     ref_codon = this->get_codon(pos, region, *it);
     fout << ref_codon[0] << ref_codon[1] << ref_codon[2] << "\t";
     fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
