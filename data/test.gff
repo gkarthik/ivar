@@ -1,7 +1,7 @@
 ## GFF3 file format
 test	Genbank	primer_binding_site	2	290	.	+	.	ID=id-test1;Note=daft punk;Parent=geneFragmentsOfTime;
 test	Genbank	long_terminal_repeat	1	55	.	+	.	ID=id-test2;Note=random access memories;Parent=geneGetLucky;
-test	Genbank	CDS	2	292	.	+	.	ID=id-test3;Note=eluvite;Parent=KatyPerry;
-test	Genbank	CDS	1	55	.	+	.	ID=id-test4;Note=ategnato;Parent=KatyPerry;
-test	Genbank	CDS	2	292	.	+	.	ID=id-testedit1;Note=PinkFloyd;EditPosition=100;EditSequence=A;Parent=TaylorSwift;
-test	Genbank	CDS	2	292	.	+	.	ID=id-testedit2;Note=AnotherBrickInTheWall;EditPosition=102;EditSequence=AA;Parent=TaylorSwift;
+test	Genbank	CDS	2	292	.	+	.	ID=id-test3;Note=eluvite;Parent=geneKatyPerry;
+test	Genbank	CDS	1	55	.	+	.	ID=id-test4;Note=ategnato;Parent=geneKatyPerry;
+test	Genbank	CDS	2	292	.	+	.	ID=id-testedit1;Note=PinkFloyd;EditPosition=100;EditSequence=A;
+test	Genbank	CDS	2	292	.	+	.	ID=id-testedit2;Note=AnotherBrickInTheWall;EditPosition=102;EditSequence=AA;Parent=geneTaylorSwift;
