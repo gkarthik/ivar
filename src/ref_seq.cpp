@@ -113,7 +113,7 @@ ref_antd::~ref_antd()
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
   if(features.size() == 0){	// No matching CDS
-    fout << line_stream.str() << "NA\tNA\tNA\tNA\tNA" << std::endl;
+    fout << line_stream.str() << "NA\tNA\tNA\tNA\tNA\tNA" << std::endl;
     return 0;
   }
   std::vector<gff3_feature>::iterator it;
@@ -132,7 +132,12 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
     fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
     alt_codon = this->get_codon(pos, region, *it, alt);
     fout << alt_codon[0] << alt_codon[1] << alt_codon[2] << "\t";
-    fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]);
+    fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]) << "\t";
+    
+    //adding amino acid position
+    int64_t start = it->get_start();
+    int64_t aa_pos = ((pos - start) / 3)+1;
+    fout << aa_pos << "\t";
     fout << std::endl;
 
     delete[] ref_codon;

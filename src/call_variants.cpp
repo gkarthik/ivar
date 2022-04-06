@@ -28,6 +28,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
   ref_antd refantd(ref_path, gff_path);
   std::ostringstream out_str;
   std::ofstream fout((out_file+".tsv").c_str());
+  //make columns in the file
   fout << "REGION"
     "\tPOS"
     "\tREF"
@@ -47,6 +48,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     "\tREF_AA"
     "\tALT_CODON"
     "\tALT_AA"
+    "\tPOS_AA"
        << std::endl;
   int ctr = 0;
   int64_t pos = 0;
@@ -118,6 +120,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       freq_depth = get_frequency_depth(*it, pdepth, mdepth);
       if(freq_depth[0] < min_threshold)
 	continue;
+      //this only adds the first bit of the information to the tsv
       out_str << region << "\t";
       out_str << pos << "\t";
       out_str << ref << "\t";
@@ -135,6 +138,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
 	Exp | Error | Err free |
 	Obs | AD    | RD       |
        */
+      //adding pvalue related info
       err = pow(10, ( -1 * (it->mean_qual)/10));
       kt_fisher_exact((err * mdepth), (1-err) * mdepth, it->depth, ref_it->depth, &pval_left, &pval_right, &pval_twotailed);
       out_str << pval_left << "\t";
@@ -143,10 +147,11 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       } else {
 	out_str << "FALSE" << "\t";
       }
+      //adding codon related info, can add gene info here too
       if(it->nuc[0] != '+' && it->nuc[0] != '-'){
 	refantd.codon_aa_stream(region, out_str, fout, pos, it->nuc[0]);
       } else {
-	fout << out_str.str() << "NA\tNA\tNA\tNA\tNA" << std::endl;
+	fout << out_str.str() << "NA\tNA\tNA\tNA\tNA\tNA" << std::endl;
       }
       out_str.str("");
       out_str.clear();
