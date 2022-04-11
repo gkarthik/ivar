@@ -109,23 +109,35 @@ ref_antd::~ref_antd()
   if (this->fai) fai_destroy(this->fai);
 }
 
+//used to add codon info to variants output
 int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_stream, std::ofstream &fout, int64_t pos, char alt){
   std::vector<gff3_feature> features = gff.query_features(pos, "CDS");
   if(features.size() == 0){	// No matching CDS
-    fout << line_stream.str() << "NA\tNA\tNA\tNA\tNA" << std::endl;
+    fout << line_stream.str() << "NA\tNA\tNA\tNA\tNA\tNA" << std::endl;
     return 0;
   }
   std::vector<gff3_feature>::iterator it;
   char *ref_codon, *alt_codon;
   for(it = features.begin(); it != features.end(); it++){
     fout << line_stream.str();
-    fout << it->get_attribute("ID") << "\t";
+    //add in gene level info, control for case it's not present
+    std::string gene = it->get_attribute("gene");
+    if (gene.empty()){
+        fout << it->get_attribute("ID") << "\t";
+    } else {
+        fout << gene + ":" + it->get_attribute("ID") << "\t";
+    }
     ref_codon = this->get_codon(pos, region, *it);
     fout << ref_codon[0] << ref_codon[1] << ref_codon[2] << "\t";
     fout << codon2aa(ref_codon[0], ref_codon[1], ref_codon[2]) << "\t";
     alt_codon = this->get_codon(pos, region, *it, alt);
     fout << alt_codon[0] << alt_codon[1] << alt_codon[2] << "\t";
-    fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]);
+    fout << codon2aa(alt_codon[0], alt_codon[1], alt_codon[2]) << "\t";
+    
+    //adding amino acid position
+    int64_t start = it->get_start();
+    int64_t aa_pos = ((pos - start) / 3)+1;
+    fout << aa_pos;
     fout << std::endl;
 
     delete[] ref_codon;
