@@ -137,7 +137,7 @@ int ref_antd::codon_aa_stream(std::string region, std::ostringstream &line_strea
     //adding amino acid position
     int64_t start = it->get_start();
     int64_t aa_pos = ((pos - start) / 3)+1;
-    fout << aa_pos << "\t";
+    fout << aa_pos;
     fout << std::endl;
 
     delete[] ref_codon;
