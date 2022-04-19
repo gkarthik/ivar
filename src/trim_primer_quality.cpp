@@ -187,7 +187,7 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
   int32_t n, start_pos = 0, ref_add = 0;
   bool pos_start = false;
   del_len = max_del_len;
-  
+   
   while(i < r->core.n_cigar){
     if (del_len == 0 && pos_start){ // No more bases on query to soft clip
       ncigar[j] = cigar[i];
@@ -255,15 +255,15 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     i++;
   }
 
-  uint32_t p=0;
+  /*uint32_t p=0;
   while(p < j){
     std::cout << bam_cigar_op(ncigar[p]) << " " << bam_cigar_oplen(ncigar[p]) <<"\n";
     p++;
-  }
-  /*std::cout << "start pos " << start_pos << "\n";
+  }*/
+  //std::cout << "start pos " << start_pos << "\n";
   if(reverse){
     reverse_cigar(ncigar, j);
-  }*/
+  }
   
   return {
     ncigar,
