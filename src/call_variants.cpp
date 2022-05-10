@@ -86,16 +86,7 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       }
       ctr++;
     }
-    //test code
-    if (pos >= 11286 && pos <= 11297){
-      std::cout << "POS " << pos << "\n";
-      ad = update_allele_depth(ref, bases, qualities, min_qual);
-      std::cout << "\n";
-    }
-    if(pos > 11297){
-        break;
-    }
-
+    ad = update_allele_depth(ref, bases, qualities, min_qual);
     if(ad.size() == 0){
       line_stream.clear();
       continue;
@@ -103,8 +94,9 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     // Get ungapped depth
     pdepth = 0;
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
-      if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
-	continue;
+      //commenting these two lines gets the gapped depth
+      //if(it->nuc[0]=='*' || it->nuc[0] == '+' || it->nuc[0] == '-')
+	//continue;
       pdepth += it->depth;
     }
     if(pdepth < min_depth) {	// Check for minimum depth
@@ -124,9 +116,14 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
     for(std::vector<allele>::iterator it = ad.begin(); it != ad.end(); ++it) {
       if((*it == *ref_it) || it->nuc[0]=='*')
 	continue;
-      freq_depth = get_frequency_depth(*it, pdepth, mdepth);
+      //use gapped depth if we're looking at insertion or deletion
+      if (it->nuc[0] == '+' || it->nuc[0] == '-'){
+        freq_depth = get_frequency_depth(*it, pdepth, pdepth);
+      }else{
+        freq_depth = get_frequency_depth(*it, pdepth, mdepth);
+      }
       if(freq_depth[0] < min_threshold)
-	continue;
+	continue; 
       out_str << region << "\t";
       out_str << pos << "\t";
       out_str << ref << "\t";
