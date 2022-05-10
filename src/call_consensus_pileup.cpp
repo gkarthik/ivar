@@ -195,8 +195,15 @@ int call_consensus_from_plup(std::istream &cin, std::string seq_id, std::string 
     }
     ret_t t;
     if(mdepth >= min_depth){
+      if(total_bases >= 11286 && total_bases <= 11297){
+      std::cout << "POS " << total_bases << "\n";
       ad = update_allele_depth(ref, bases, qualities, min_qual);
+      std::cout << "\n";
       t = get_consensus_allele(ad, min_qual, threshold, gap, min_insert_threshold);
+      }
+      if(pos > 11297){
+        break;
+      }
       fout << t.nuc;
       tmp_qout << t.q;
     } else{

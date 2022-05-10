@@ -86,7 +86,16 @@ int call_variants_from_plup(std::istream &cin, std::string out_file, uint8_t min
       }
       ctr++;
     }
-    ad = update_allele_depth(ref, bases, qualities, min_qual);
+    //test code
+    if (pos >= 11286 && pos <= 11297){
+      std::cout << "POS " << pos << "\n";
+      ad = update_allele_depth(ref, bases, qualities, min_qual);
+      std::cout << "\n";
+    }
+    if(pos > 11297){
+        break;
+    }
+
     if(ad.size() == 0){
       line_stream.clear();
       continue;
