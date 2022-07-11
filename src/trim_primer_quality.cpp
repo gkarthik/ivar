@@ -187,6 +187,7 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
   int32_t n, start_pos = 0, ref_add = 0;
   bool pos_start = false;
   del_len = max_del_len;
+   
   while(i < r->core.n_cigar){
     if (del_len == 0 && pos_start){ // No more bases on query to soft clip
       ncigar[j] = cigar[i];
@@ -200,7 +201,18 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
       pos_start = true;
       continue;
     }
+    
+    //add the condition that we have a leading deletion
+    if(cig == 2 && del_len == 0){
+        ncigar[j] = cigar[i];
+        pos_start = true;
+        i++;
+        j++;
+        continue;    
+    }
+
     ref_add = n;
+    
     if ((bam_cigar_type(cig) & 1)){ // Consumes Query
       if(del_len >= n ){
 	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
@@ -221,18 +233,38 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
 	ncigar[j] = bam_cigar_gen(n, cig);
 	j++;
       }
+     //add the condition that we have a leading deletion
+    if(cig == 2 && del_len == 0){
+        ncigar[j] = cigar[i];
+        pos_start = true;
+        i++;
+        j++;
+     }
+   
       if(del_len ==0 && (bam_cigar_type(ncigar[j-1]) & 1) && (bam_cigar_type(ncigar[j-1]) & 2)){ // After soft clipping of query complete, keep incrementing start_pos until first base that consumes both query and ref
-      	pos_start = true;
+        pos_start = true;
       }
     }
+
+    //deletions consume the reference but not the query,
+    //insertions consume the query but not the reference
     if((bam_cigar_type(cig) & 2)) { // Consumes reference but not query
+      //std::cout << "ref add " << ref_add << " " << start_pos << " " << cig << "\n";
       start_pos += ref_add;
     }
     i++;
   }
+
+  /*uint32_t p=0;
+  while(p < j){
+    std::cout << bam_cigar_op(ncigar[p]) << " " << bam_cigar_oplen(ncigar[p]) <<"\n";
+    p++;
+  }*/
+  //std::cout << "start pos " << start_pos << "\n";
   if(reverse){
     reverse_cigar(ncigar, j);
   }
+  
   return {
     ncigar,
     true,

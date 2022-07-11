@@ -37,29 +37,29 @@ int main(){
   int primer_indices[] = {0, 0, 7, 7, 6};
   uint8_t cigar_flag[5][11] = {
     {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH},
-    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CMATCH},
-    {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CDEL, BAM_CPAD, BAM_CDEL, BAM_CMATCH},
+    {BAM_CMATCH, BAM_CPAD, BAM_CDEL, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
     {BAM_CMATCH, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP, BAM_CSOFT_CLIP},
     {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
   };
   uint32_t cigar_len[5][11] = {
     {6, 5, 1, 139},
-    {24, 3, 1, 1, 4, 114},
-    {121, 4, 1, 1, 11, 6},
+    {24, 3, 1, 1, 4, 1, 1, 1,114}, //change this
+    {121, 1, 4, 4, 1, 1, 11, 6}, //change this
     {103, 1, 10,1,13, 24},
     {23, 18, 3, 57, 1, 10, 1, 39}
   };
   uint32_t read_start_pos[5] = {
-    30, 31, 231, 249, 274
+    30, 29, 231, 249, 274 //also change
   };
   uint8_t condense_cigar_flag[5][8] = {
     {BAM_CSOFT_CLIP, BAM_CMATCH},
-    {BAM_CSOFT_CLIP, BAM_CMATCH},
-    {BAM_CMATCH, BAM_CSOFT_CLIP},
+    {BAM_CSOFT_CLIP, BAM_CDEL, BAM_CPAD, BAM_CDEL, BAM_CMATCH}, //change this
+    {BAM_CMATCH, BAM_CPAD, BAM_CDEL, BAM_CSOFT_CLIP}, //change this
     {BAM_CMATCH, BAM_CSOFT_CLIP},
     {BAM_CSOFT_CLIP, BAM_CMATCH, BAM_CDEL, BAM_CMATCH, BAM_CPAD, BAM_CMATCH, BAM_CPAD, BAM_CMATCH}
   };
-  uint32_t condense_cigar_len[5][8] = {{12, 139}, {33, 114}, {121, 23}, {103, 49}, {23, 18,3, 57, 1, 10, 1, 39}};
+  uint32_t condense_cigar_len[5][8] = {{12, 139}, {33, 1,1,1,114}, {121, 1, 4, 23}, {103, 49}, {23, 18,3, 57, 1, 10, 1, 39}};
   unsigned int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
@@ -100,11 +100,12 @@ int main(){
       cigar = bam_get_cigar(aln);
       for (uint i = 0; i < t.nlength; ++i){
 	if(((cigar[i]) & BAM_CIGAR_MASK) != cigar_flag[primer_ctr][i]){
+      std::cout << bam_cigar_op(cigar[i]) << " " << bam_cigar_oplen(cigar[i]) << " i " << i << "\n";	
 	  success = -1;
 	  std::cout << "Cigar flag didn't match for " << cand_primer.get_indice()  <<  " ! Expected " <<  (uint) cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;
 	}
 	if((((cigar[i]) >> BAM_CIGAR_SHIFT)) != cigar_len[primer_ctr][i]){
-	  success = -1;
+      success = -1;
 	  std::cout << "Cigar length didn't match for " << bam_get_qname(aln)  <<  " ! Expected " << (uint) cigar_len[primer_ctr][i]  << " " << "Got " << ((cigar[i]) >> BAM_CIGAR_SHIFT) << std::endl;
 	}
       }
@@ -117,10 +118,10 @@ int main(){
       for (uint i = 0; i < t.nlength; ++i){
 	if(((cigar[i]) & BAM_CIGAR_MASK) != condense_cigar_flag[primer_ctr][i]){
 	  success = -1;
-	  std::cout << "Cigar flag didn't match! Expected " << condense_cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;
+      std::cout << "Cigar flag didn't match! Expected " << condense_cigar_flag[primer_ctr][i]  << " " << "Got " << ((cigar[i]) & BAM_CIGAR_MASK) << std::endl;
 	}
 	if((((cigar[i]) >> BAM_CIGAR_SHIFT)) != condense_cigar_len[primer_ctr][i]){
-	  success = -1;
+      success = -1;
 	  std::cout << "Cigar length didn't match after condense! Expected " << condense_cigar_len[primer_ctr][i]  << " " << "Got " << ((cigar[i]) >> BAM_CIGAR_SHIFT) << std::endl;
 	}
       }
