@@ -7,6 +7,7 @@
 #include<string>
 #include<regex>
 #include<libgen.h>
+#include<string.h>
 
 #include "allele_functions.h"
 
