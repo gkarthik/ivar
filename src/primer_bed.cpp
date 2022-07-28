@@ -233,22 +233,38 @@ std::vector<primer> get_primers(std::vector<primer> p, unsigned int pos){
   return primers_with_mismatches;
 }
 
+//function to trim trailing spaces 
+std::string& rtrim(std::string& str, const std::string& chars = "\t\n\v\f\r ")
+{
+    str.erase(str.find_last_not_of(chars) + 1);
+    return str;
+}
+
 // Assumes unique primer names in BED file
+//returns the index of a primer by name
 int get_primer_indice(std::vector<primer> p, std::string name){
+  //iterate through the primers from the bed file
   for(std::vector<primer>::iterator it = p.begin(); it != p.end(); ++it) {
-    if(it->get_name().compare(name) == 0){
+    //check if the two strings are the same
+    if(it->get_name().compare(rtrim(name)) == 0){
       return it - p.begin();
     }
   }
   return -1;
 }
 
+//function using the tab seperated primer pair file
 int populate_pair_indices(std::vector<primer> &primers, std::string path){
+  /*
+  * @param path the path to the primer pair file
+  */
+  //load primer pair file
   std::ifstream fin(path.c_str());
   std::string line, cell, p1,p2;
   std::stringstream line_stream;
   std::vector<primer>::iterator it;
   int32_t indice;
+  //iterate the primer pair file line by line
   while (std::getline(fin, line)){
     line_stream << line;
     std::getline(line_stream, cell, '\t');
@@ -259,7 +275,9 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
     line_stream.clear();
     if(!p1.empty() && !p2.empty()){
       for(it = primers.begin(); it != primers.end(); ++it) {
+    //search for primer name in pair file
 	if (it->get_name() == p1) {
+      //make sure it's pair exists
 	  indice = get_primer_indice(primers, p2);
 	  if (indice != -1)
 	    it->set_pair_indice(indice);
@@ -273,6 +291,8 @@ int populate_pair_indices(std::vector<primer> &primers, std::string path){
 	    std::cout << "Primer pair for " << p2 << " not found in BED file." << std::endl;
 	}
       }
+    } else {
+      std::cout << "Primer pair is empty." << std::endl;
     }
   }
   return 0;
