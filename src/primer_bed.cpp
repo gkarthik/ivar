@@ -311,6 +311,22 @@ primer get_max_end(std::vector<primer> primers){
   return *(minmax_start.second);
 }
 
+//give a primer index, find its pair and return the primer
+primer fetch_primer_pair(int16_t index, std::vector<primer> primers){
+  /*
+  * @param index: the pair index for the primer of interest
+  * @return pair_primer: the primer object that's pairs with the primer of interest
+  */
+  std::vector<primer>::iterator it;
+  primer pair_primer;
+  for(it = primers.begin(); it != primers.end(); ++it) {
+    if(it->get_indice() == index){
+        return *it;
+    }      
+  }
+  return(pair_primer);
+}
+
 void print_all_primer_info(std::vector<primer> primers){
   std::vector<primer>::iterator it;
   for(it = primers.begin(); it != primers.end(); ++it) {
