@@ -308,3 +308,20 @@ primer get_max_end(std::vector<primer> primers){
   auto minmax_start = std::minmax_element(primers.begin(), primers.end(), [] (primer lhs, primer rhs) {return lhs.get_end() < rhs.get_end();});
   return *(minmax_start.second);
 }
+
+void print_all_primer_info(std::vector<primer> primers){
+  std::vector<primer>::iterator it;
+  for(it = primers.begin(); it != primers.end(); ++it) {
+    std::cout<< "Primer start: " << it->get_start() << std::endl; 
+    std::cout<< "Primer end: " << it->get_end() << std::endl; 
+    std::cout<< "Indice: " << it->get_indice() << std::endl; 
+    std::cout<< "Pair indice: " << it->get_pair_indice() << std::endl; 
+  }
+}
+
+void print_primer_info(primer primer){
+    std::cout<< "Primer start: " << primer.get_start() << std::endl; 
+    std::cout<< "Primer end: " << primer.get_end() << std::endl; 
+    std::cout<< "Indice: " << primer.get_indice() << std::endl; 
+    std::cout<< "Pair indice: " << primer.get_pair_indice() << std::endl; 
+}
