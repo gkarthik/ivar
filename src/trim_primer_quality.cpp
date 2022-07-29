@@ -160,7 +160,11 @@ void print_cigar(uint32_t *cigar, int nlength){
   std::cout << std::endl;
 }
 
-cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_rev = false){
+cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, int32_t end_pos=-1, bool unpaired_rev = false){
+  /*
+  * @param end_pos: the start of the opposite primer
+  */
+  std::cout << end_pos << "\n";
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
     *cigar = bam_get_cigar(r);
   uint32_t i = 0, j = 0;
@@ -452,6 +456,11 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   if(!pair_info.empty()){
     amplicons = populate_amplicons(pair_info, primers);
   }
+
+  //this call is technically redundant but it doesn't stick when
+  //called in populate _amplicons
+  populate_pair_indices(primers, pair_info);
+
   std::cout << "Amplicons detected: " << std::endl;
   amplicons.inOrder();
   if(bam.empty()){
@@ -562,35 +571,37 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       }
       isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
       // if reverse strand
-      if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
-	get_overlapping_primers(aln, primers, overlapping_primers);
-	if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
-	  primer_trimmed = true;
-	  if(bam_is_rev(aln)){	// Reverse read
-	    cand_primer = get_min_start(overlapping_primers); // fetch reverse primer (?)
-	    t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false);
-	  } else {		// Forward read
-	    cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)
-	    t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
-	    aln->core.pos += t.start_pos;
+    if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
+	  get_overlapping_primers(aln, primers, overlapping_primers);
+	  if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
+	    primer_trimmed = true;
+	    if(bam_is_rev(aln)){	// Reverse read
+	      cand_primer = get_min_start(overlapping_primers); // fetch reverse primer (?)
+          
+	      t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false);
+	    } else {		// Forward read
+	      cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)
+	      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
+	      aln->core.pos += t.start_pos;
+	    }
+	    replace_cigar(aln, t.nlength, t.cigar);
+	    free(t.cigar);
+	    // Add count to primer
+	    cit = std::find(primers.begin(), primers.end(), cand_primer);
+	    if(cit != primers.end())
+	      cit->add_read_count(1);
 	  }
+	  t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
+	  if(bam_is_rev(aln))  // if reverse strand
+	    aln->core.pos = t.start_pos;
+	  condense_cigar(&t);
+	  // aln->core.pos += t.start_pos;
 	  replace_cigar(aln, t.nlength, t.cigar);
-	  free(t.cigar);
-	  // Add count to primer
-	  cit = std::find(primers.begin(), primers.end(), cand_primer);
-	  if(cit != primers.end())
-	    cit->add_read_count(1);
-	}
-	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-	if(bam_is_rev(aln))  // if reverse strand
-	  aln->core.pos = t.start_pos;
-	condense_cigar(&t);
-	// aln->core.pos += t.start_pos;
-	replace_cigar(aln, t.nlength, t.cigar);
-      } else {			// Unpaired reads: Might be stitched reads
-        if(abs(aln->core.isize) <= abs(aln->core.l_qseq)){
-          failed_frag_size++;
-        }
+    } else {			// Unpaired reads: Might be stitched reads
+      if(abs(aln->core.isize) <= abs(aln->core.l_qseq)){
+        failed_frag_size++;
+      }
+
 	// Forward primer
 	get_overlapping_primers(aln, primers, overlapping_primers, false);
 	if(overlapping_primers.size() > 0){
