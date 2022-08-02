@@ -254,7 +254,7 @@ int get_primer_indice(std::vector<primer> p, std::string name){
 }
 
 //function using the tab seperated primer pair file
-void populate_pair_indices(std::vector<primer> &primers, std::string path){
+int populate_pair_indices(std::vector<primer> &primers, std::string path){
   /*
   * @param primers: the primer vector to add pair info to
   * @param path: the path to the primer pair file
@@ -275,29 +275,34 @@ void populate_pair_indices(std::vector<primer> &primers, std::string path){
     std::getline(line_stream, cell, '\t');
     p2 = cell;
     line_stream.clear();
+
+    p1 = rtrim(p1);
+    p2 = rtrim(p2); 
+
     if(!p1.empty() && !p2.empty()){
       for(it = primers.begin(); it != primers.end(); ++it) {
-    //search for primer name in pair file
-	if (it->get_name() == p1) {
-      //make sure it's pair exists
-	  indice = get_primer_indice(primers, p2);
-	  if (indice != -1){
-	    it->set_pair_indice(indice);
-      }else{
-	    std::cout << "Primer pair for " << p1 << " not found in BED file." <<std::endl;
-      }
-	} else if (it->get_name() == p2){
-	  indice = get_primer_indice(primers, p1);
+      //search for primer name in pair file
+	  if (it->get_name() == p1) {
+        //make sure it's pair exists
+	    indice = get_primer_indice(primers, p2);
+	    if (indice != -1){
+	      it->set_pair_indice(indice);
+        }else{
+	      std::cout << "Primer pair for " << p1 << " not found in BED file." <<std::endl;
+        }
+	  } else if (it->get_name() == p2){
+        indice = get_primer_indice(primers, p1);
 	  if(indice != -1)
 	    it->set_pair_indice(indice);
 	  else
 	    std::cout << "Primer pair for " << p2 << " not found in BED file." << std::endl;
-	}
+	  }
       }
     } else {
       std::cout << "Primer pair is empty." << std::endl;
     }
   }
+  return 0;
 }
 
 primer get_min_start(std::vector<primer> primers){
