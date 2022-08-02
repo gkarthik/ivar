@@ -2,13 +2,18 @@
 
 #define round_int(x,total) ((int) (0.5 + ((float)x / float(total)) * 10000))/(float)100
 
+//called from primer_trim
 int32_t get_pos_on_query(uint32_t *cigar, uint32_t ncigar, int32_t pos, int32_t ref_start){
+  /*
+  * @param cigar : cigar
+  * @param pos : starting position 
+  */
   int cig;
   int32_t n;
   int32_t ql = 0, rl = ref_start;
   for (uint32_t i = 0; i < ncigar; ++i){
-    cig  = bam_cigar_op(cigar[i]);
-    n = bam_cigar_oplen(cigar[i]);
+    cig  = bam_cigar_op(cigar[i]); // cigar op
+    n = bam_cigar_oplen(cigar[i]); //cigar len
     if (bam_cigar_type(cig) & 2) { // Reference consuming
       if (pos <= rl + n) {
 	if (bam_cigar_type(cig) & 1) // Query consuming
@@ -164,15 +169,18 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
   /*
   * @param r: alignment object
   * @param end_pos: the start of the opposite primer
+  * @param end_pos_2: the end of the opposite primer 
   */
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
   *cigar = bam_get_cigar(r);
   uint32_t i = 0, j = 0;
   int max_del_len = 0, cig, temp, del_len = 0;
   bool reverse = false;
-
-  //std::cout << "start pos " << new_pos << " end pos " << end_pos << "\n";
-
+  std::cout << "start pos " << new_pos << " end pos " << end_pos << " r core " << r->core.pos << "\n";
+  
+  //totality of what we're working with
+  std::cout << "cig length " << bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) << "\n";
+  std::cout << "quer pos "  << get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) << "\n";
   if((r->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired and isize > read length
     if (bam_is_rev(r)){ // If -ve strand (?)
       max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
@@ -191,13 +199,32 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     }
   }
   max_del_len = (max_del_len > 0) ? max_del_len : 0; // For cases where reads spans only primer region
-  int32_t n, start_pos = 0, ref_add = 0;
+  int32_t n, start_pos = 0, ref_add = 0, ref_track = 0;
   bool pos_start = false;
+  bool soft_clip_all = false;
   del_len = max_del_len;
-   
+  ref_track = new_pos; //track absolute position
+  int direction = 0;
+  //if reverse the direction we count changes
+  if(reverse) direction = -1;
+  else direction = 1;
+
+  //make it so that everytime we add a cigar, we add to start pos. if we exceed the start of the paired primer we chop  
+  //iterate the cigar string
   while(i < r->core.n_cigar){
+    if(soft_clip_all){
+        ncigar[j] = bam_cigar_gen(bam_cigar_oplen(cigar[i]), BAM_CSOFT_CLIP);
+        i++;
+        j++;
+        continue;
+    }
     if (del_len == 0 && pos_start){ // No more bases on query to soft clip
+      ref_track += (bam_cigar_oplen(cigar[i]) * direction);
       ncigar[j] = cigar[i];
+      std::cout << "ref track " << ref_track <<  " " << bam_cigar_op(cigar[i]) << " " << bam_cigar_oplen(cigar[i]) << std::endl;
+      if(ref_track > end_pos){
+        soft_clip_all = true;
+      }
       i++;
       j++;
       continue;
@@ -211,6 +238,7 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     
     //add the condition that we have a leading deletion
     if(cig == 2 && del_len == 0){
+        ref_track += (bam_cigar_oplen(cigar[i]) * direction);
         ncigar[j] = cigar[i];
         pos_start = true;
         i++;
@@ -222,14 +250,17 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     
     if ((bam_cigar_type(cig) & 1)){ // Consumes Query
       if(del_len >= n ){
-	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
+	    ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
+        ref_track += (n * direction);
       } else if (del_len < n && del_len > 0){
-	ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
+	    ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
+        ref_track += (del_len * direction);
       } else if (del_len == 0) {	// Adding insertions before start position of read
-	ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
-	j++;
-	i++;
-	continue;
+        ref_track += (n * direction);
+	    ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
+        j++;
+	    i++;
+	    continue;
       }
       j++;
       ref_add = std::min(del_len, n);
@@ -237,8 +268,9 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
       n = std::max(n - del_len, 0);
       del_len = std::max(del_len - temp, 0);
       if(n > 0){
-	ncigar[j] = bam_cigar_gen(n, cig);
-	j++;
+        ref_track += (n * direction);
+	    ncigar[j] = bam_cigar_gen(n, cig);
+        j++;
       }
      //add the condition that we have a leading deletion
     if(cig == 2 && del_len == 0){
@@ -256,18 +288,18 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     //deletions consume the reference but not the query,
     //insertions consume the query but not the reference
     if((bam_cigar_type(cig) & 2)) { // Consumes reference but not query
-      //std::cout << "ref add " << ref_add << " " << start_pos << " " << cig << "\n";
       start_pos += ref_add;
     }
     i++;
   }
-
-  /*uint32_t p=0;
+    
+  /*
+  uint32_t p=0;
   while(p < j){
     std::cout << bam_cigar_op(ncigar[p]) << " " << bam_cigar_oplen(ncigar[p]) <<"\n";
     p++;
-  }*/
-  //std::cout << "start pos " << start_pos << "\n";
+  } 
+  */
   if(reverse){
     reverse_cigar(ncigar, j);
   }
@@ -553,9 +585,6 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   std::vector<primer>::iterator cit;
   bool primer_trimmed = false;
 
-  //redundant since this should have been called earlier, but somehow necessary?
-  populate_pair_indices(primers, pair_info);
-
   //Iterate through reads
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
@@ -603,10 +632,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
               pair_start = pair.get_start();
             }
           }
-          //TEST LINES
-          //print_primer_info(cand_primer);
-          //print_primer_info(pair);
-            
+           
 	      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false, pair_start);
 	      aln->core.pos += t.start_pos;
 	    }
