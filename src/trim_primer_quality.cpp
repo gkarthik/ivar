@@ -587,13 +587,11 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   uint32_t primer_trim_count = 0, no_primer_counter = 0, low_quality = 0;
   bool unmapped_flag = false;
   bool amplicon_flag = false;
+  primer cand_primer;
   bool isize_flag = true;
   uint32_t failed_frag_size = 0;
   uint32_t unmapped_counter = 0;
   uint32_t amplicon_flag_ctr = 0;
-  uint32_t pair_start = -1; //the start of the paired primer
-  primer cand_primer;
-  primer pair; //the pair to the cand_primer
   std::vector<primer> overlapping_primers;
   std::vector<primer>::iterator cit;
   bool primer_trimmed = false;
@@ -602,8 +600,7 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
     primer_trimmed = false;
-    pair_start = -1;
- 
+
     get_overlapping_primers(aln, primers, overlapping_primers);
     //print_all_primer_info(primers);      
  
