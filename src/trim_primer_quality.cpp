@@ -165,22 +165,20 @@ void print_cigar(uint32_t *cigar, int nlength){
   std::cout << std::endl;
 }
 
-cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_rev = false, int32_t end_pos=-1){
+//the tricky function to change, edit with caution
+cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_rev = false){
   /*
   * @param r: alignment object
-  * @param end_pos: the start of the opposite primer
-  * @param end_pos_2: the end of the opposite primer 
+  * @param new_pos: the start pos on query
   */
+ 
   uint32_t *ncigar = (uint32_t*) malloc(sizeof(uint32_t) * (r->core.n_cigar + 1)), // Maximum edit is one more element with soft mask
   *cigar = bam_get_cigar(r);
   uint32_t i = 0, j = 0;
   int max_del_len = 0, cig, temp, del_len = 0;
   bool reverse = false;
-  std::cout << "start pos " << new_pos << " end pos " << end_pos << " r core " << r->core.pos << "\n";
-  
-  //totality of what we're working with
-  std::cout << "cig length " << bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) << "\n";
-  std::cout << "quer pos "  << get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) << "\n";
+  //test lines 
+
   if((r->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired and isize > read length
     if (bam_is_rev(r)){ // If -ve strand (?)
       max_del_len = bam_cigar2qlen(r->core.n_cigar, bam_get_cigar(r)) - get_pos_on_query(cigar, r->core.n_cigar, new_pos, r->core.pos) - 1;
@@ -199,32 +197,12 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     }
   }
   max_del_len = (max_del_len > 0) ? max_del_len : 0; // For cases where reads spans only primer region
-  int32_t n, start_pos = 0, ref_add = 0, ref_track = 0;
+  int32_t n, start_pos = 0, ref_add = 0;
   bool pos_start = false;
-  bool soft_clip_all = false;
   del_len = max_del_len;
-  ref_track = new_pos; //track absolute position
-  int direction = 0;
-  //if reverse the direction we count changes
-  if(reverse) direction = -1;
-  else direction = 1;
-
-  //make it so that everytime we add a cigar, we add to start pos. if we exceed the start of the paired primer we chop  
-  //iterate the cigar string
   while(i < r->core.n_cigar){
-    if(soft_clip_all){
-        ncigar[j] = bam_cigar_gen(bam_cigar_oplen(cigar[i]), BAM_CSOFT_CLIP);
-        i++;
-        j++;
-        continue;
-    }
     if (del_len == 0 && pos_start){ // No more bases on query to soft clip
-      ref_track += (bam_cigar_oplen(cigar[i]) * direction);
       ncigar[j] = cigar[i];
-      std::cout << "ref track " << ref_track <<  " " << bam_cigar_op(cigar[i]) << " " << bam_cigar_oplen(cigar[i]) << std::endl;
-      if(ref_track > end_pos){
-        soft_clip_all = true;
-      }
       i++;
       j++;
       continue;
@@ -238,7 +216,6 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     
     //add the condition that we have a leading deletion
     if(cig == 2 && del_len == 0){
-        ref_track += (bam_cigar_oplen(cigar[i]) * direction);
         ncigar[j] = cigar[i];
         pos_start = true;
         i++;
@@ -247,20 +224,18 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     }
 
     ref_add = n;
-    
+     
     if ((bam_cigar_type(cig) & 1)){ // Consumes Query
       if(del_len >= n ){
-	    ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
-        ref_track += (n * direction);
-      } else if (del_len < n && del_len > 0){
-	    ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
-        ref_track += (del_len * direction);
+        ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
+      } 
+      else if (del_len < n && del_len > 0){ //this doesn't work for reverse reads
+        ncigar[j] = bam_cigar_gen(del_len, BAM_CSOFT_CLIP);
       } else if (del_len == 0) {	// Adding insertions before start position of read
-        ref_track += (n * direction);
-	    ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
-        j++;
-	    i++;
-	    continue;
+      ncigar[j] = bam_cigar_gen(n, BAM_CSOFT_CLIP);
+	  j++;
+	  i++;
+	  continue;
       }
       j++;
       ref_add = std::min(del_len, n);
@@ -268,12 +243,11 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
       n = std::max(n - del_len, 0);
       del_len = std::max(del_len - temp, 0);
       if(n > 0){
-        ref_track += (n * direction);
-	    ncigar[j] = bam_cigar_gen(n, cig);
-        j++;
+         ncigar[j] = bam_cigar_gen(n, cig);
+	    j++;
       }
-     //add the condition that we have a leading deletion
-    if(cig == 2 && del_len == 0){
+      //add the condition that we have a leading deletion
+     if(cig == 2 && del_len == 0){
         ncigar[j] = cigar[i];
         pos_start = true;
         i++;
@@ -292,14 +266,15 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     }
     i++;
   }
-    
+
+  //test lines 
   /*
   uint32_t p=0;
   while(p < j){
     std::cout << bam_cigar_op(ncigar[p]) << " " << bam_cigar_oplen(ncigar[p]) <<"\n";
     p++;
-  } 
-  */
+  }*/
+  
   if(reverse){
     reverse_cigar(ncigar, j);
   }
@@ -311,6 +286,7 @@ cigar_ primer_trim(bam1_t *r, bool &isize_flag, int32_t new_pos, bool unpaired_r
     start_pos
   };
 }
+
 
 void replace_cigar(bam1_t *b, uint32_t n, uint32_t *cigar){
   if (n != b->core.n_cigar) {
@@ -370,6 +346,7 @@ std::vector<primer> insertionSort(std::vector<primer> primers, uint32_t n){
   return primers;
 }
 
+
 // For paired reads
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers){
   overlapped_primers.clear();
@@ -397,12 +374,48 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
       //std::cout << it->get_start() << " " << start_pos << "\n";
       overlapped_primers.push_back(*it);
   }
-  //print_primers(overlapped_primers);
-  //std::cout << "break\n";
 }
+
+
+//function to get overlapping primers for unpaired reads, using the actual read direction
+void get_overlapping_primers_better(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers, bool unpaired_rev_gt, bool return_rev){
+  /*
+  *  @param unpaired_rev_gt : whether or not the read is reverse
+  * @param return_rev : whether we're looking for the forward or reverse primers
+  */
+  overlapped_primers.clear();
+  uint32_t start_pos = -1;
+  char strand = '+';
+  if(unpaired_rev_gt){
+    start_pos = bam_endpos(r) - 1;
+    strand = '-';
+  } else {
+    start_pos = r->core.pos;
+  }
+  
+  //we either have a forward read && are looking for forward primers or we have a reverse read && are looking for reverse primers
+  if (unpaired_rev_gt == return_rev){
+    for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
+      if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() ||it->get_strand() == 0))
+        overlapped_primers.push_back(*it);
+    } 
+  } else {
+    //in this case we need to invert what we find by indice
+     for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
+      if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() ||it->get_strand() == 0)){
+        //if we have a paired primer
+        if(it->get_pair_indice() != -1){
+          overlapped_primers.push_back(fetch_primer_pair(it->get_pair_indice(), primers));
+        }
+      }
+    } 
+  }
+}
+
 
 // For unpaired reads
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers, bool unpaired_rev){
+  std::cout << "get overlapping primers " << unpaired_rev << std::endl;
   overlapped_primers.clear();
   uint32_t start_pos = -1;
   char strand = '+';
@@ -606,34 +619,21 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
           amplicon_flag_ctr++;
           continue;
 	    }
-      }
+    }
+   
     isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
     // if reverse strand
     if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
-	  get_overlapping_primers(aln, primers, overlapping_primers);
+	    get_overlapping_primers(aln, primers, overlapping_primers);
       if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
 	    primer_trimmed = true;
 	    if(bam_is_rev(aln)){	// Reverse read 
  	      cand_primer = get_min_start(overlapping_primers); // fetch reverse primer (?)
-          if(cand_primer.get_pair_indice() != -1){
-            pair = fetch_primer_pair(cand_primer.get_pair_indice(), primers);
-            //we returned a non empty object
-            if(pair.get_start() != 0){
-              pair_start = pair.get_end();
-            }
-          }
-	      t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false, pair_start);
+	      t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, false);
+          
 	    } else {		// Forward read
-	      cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)
-	      if(cand_primer.get_pair_indice() != -1){
-            pair = fetch_primer_pair(cand_primer.get_pair_indice(), primers);
-            //we returned a non empty object
-            if(pair.get_start() != 0){
-              pair_start = pair.get_start();
-            }
-          }
-           
-	      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false, pair_start);
+	      cand_primer = get_max_end(overlapping_primers); // fetch forward primer (?)       
+	      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
 	      aln->core.pos += t.start_pos;
 	    }
 	    replace_cigar(aln, t.nlength, t.cigar);
@@ -653,53 +653,50 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
       if(abs(aln->core.isize) <= abs(aln->core.l_qseq)){
         failed_frag_size++;
       }
-
-	// Forward primer
-	get_overlapping_primers(aln, primers, overlapping_primers, false);
+    
+    //handle the unpaired reads
+	//forward primer unpaired read
+    if (!pair_info.empty()){
+        get_overlapping_primers_better(aln, primers, overlapping_primers, bam_is_rev(aln), false);
+    }else{
+        get_overlapping_primers(aln, primers, overlapping_primers, false);
+    }
 	if(overlapping_primers.size() > 0){
 	  primer_trimmed = true;
-	  cand_primer = get_max_end(overlapping_primers);
-      if(cand_primer.get_pair_indice() != -1){
-        pair = fetch_primer_pair(cand_primer.get_pair_indice(), primers);
-        //we returned a non empty object
-        if(pair.get_start() != 0){
-          pair_start = pair.get_start();
-        }
-      }
-      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false, pair_start);
-	  // Update read's left-most coordinate
+      cand_primer = get_max_end(overlapping_primers);
+      t = primer_trim(aln, isize_flag, cand_primer.get_end() + 1, false);
+      // Update read's left-most coordinate
 	  aln->core.pos += t.start_pos;
 	  replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);
 	  if(cit != primers.end())
-	    cit->add_read_count(1);
-	}
-	// Reverse primer
-	get_overlapping_primers(aln, primers, overlapping_primers, true);
+	    cit->add_read_count(1); 
+	 }
+
+	//reverse primer unpaired read
+    if (!pair_info.empty()){
+	    get_overlapping_primers_better(aln, primers, overlapping_primers, bam_is_rev(aln), true);
+    }else{
+        get_overlapping_primers(aln, primers, overlapping_primers, true);
+    }
 	if(overlapping_primers.size() > 0){
 	  primer_trimmed = true;
 	  cand_primer = get_min_start(overlapping_primers);
-	  if(cand_primer.get_pair_indice() != -1){
-        pair = fetch_primer_pair(cand_primer.get_pair_indice(), primers);
-        //we returned a non empty object
-        if(pair.get_start() != 0){
-          pair_start = pair.get_end();
-        }
-      }
-      t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, true, pair_start);
-	  replace_cigar(aln, t.nlength, t.cigar);
+      t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, true);
+      replace_cigar(aln, t.nlength, t.cigar);
 	  // Add count to primer
 	  cit = std::find(primers.begin(), primers.end(), cand_primer);
 	  if(cit != primers.end())
 	    cit->add_read_count(1);
-	}
-	t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
-	if(bam_is_rev(aln))  // if reverse strand
-	  aln->core.pos = t.start_pos;
-	condense_cigar(&t);
-	replace_cigar(aln, t.nlength, t.cigar);
-      }
+	 }
+	  t = quality_trim(aln, min_qual, sliding_window);	// Quality Trimming
+	  if(bam_is_rev(aln))  // if reverse strand
+	    aln->core.pos = t.start_pos;
+	  condense_cigar(&t);
+	  replace_cigar(aln, t.nlength, t.cigar);
+    } //end handling unpaired reads
+
       if(primer_trimmed){
 	primer_trim_count++;
       }
