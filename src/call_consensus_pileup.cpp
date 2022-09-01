@@ -100,25 +100,29 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual, double thre
     // Sort nuc_pos by depth of alleles
     std::sort(nuc_pos.begin(), nuc_pos.end(), compare_allele_depth);
     it=nuc_pos.begin();
-    n = it->nuc[0];
-    q = it->mean_qual;
-    max_depth = it->depth;
-    it++;
-    ambg_n = 1;
-    if(i > 0){
-      cur_threshold = threshold * (double) total_indel_depth;
-    } else {
-      cur_threshold =  threshold * (double)total_max_depth;
-    }
-    while(it!=nuc_pos.end() && (max_depth < cur_threshold || it->depth == (it -1)->depth)){ // Iterate till end or till cross threshold and no more allele with same depth
-      n = gt2iupac(n, it->nuc[0]);
-      q = ((q * ambg_n) + it->mean_qual)/(ambg_n+1);
-      ambg_n += 1;
-      max_depth += it->depth;
-      it++;
-    }
-    if(max_depth < cur_threshold) // If depth still less than threshold
+    if(nuc_pos.size() == 0){ // For char at first position with only insertions or deletions (+/-)
       n = 'N';
+    } else {
+      n = it->nuc[0];
+      q = it->mean_qual;
+      max_depth = it->depth;
+      it++;
+      ambg_n = 1;
+      if(i > 0){
+        cur_threshold = threshold * (double) total_indel_depth;
+      } else {
+        cur_threshold =  threshold * (double)total_max_depth;
+      }
+      while(it!=nuc_pos.end() && (max_depth < cur_threshold || it->depth == (it -1)->depth)){ // Iterate till end or till cross threshold and no more allele with same depth
+        n = gt2iupac(n, it->nuc[0]);
+        q = ((q * ambg_n) + it->mean_qual)/(ambg_n+1);
+        ambg_n += 1;
+        max_depth += it->depth;
+        it++;
+      }
+      if(max_depth < cur_threshold) // If depth still less than threshold
+        n = 'N';
+    }
 
     if(i > 0){
       //print_allele_depths(ad);
