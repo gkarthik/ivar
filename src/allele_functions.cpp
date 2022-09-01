@@ -87,6 +87,7 @@ std::vector<allele> update_allele_depth(char ref,std::string bases, std::string 
       break;
     case '*':
       b = bases[i];
+      q = min_qual;
       break;
     //we have an insertion or deletion
     case '+': case '-':
