@@ -359,7 +359,6 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
     start_pos = r->core.pos;
   }
    
-  //print_primers(primers);
   //sort it first
   std::vector<primer> test = insertionSort(primers, primers.size());  
   //std::cout << test.size() << "\n";
@@ -377,45 +376,9 @@ void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector
 }
 
 
-//function to get overlapping primers for unpaired reads, using the actual read direction
-void get_overlapping_primers_better(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers, bool unpaired_rev_gt, bool return_rev){
-  /*
-  *  @param unpaired_rev_gt : whether or not the read is reverse
-  * @param return_rev : whether we're looking for the forward or reverse primers
-  */
-  overlapped_primers.clear();
-  uint32_t start_pos = -1;
-  char strand = '+';
-  if(unpaired_rev_gt){
-    start_pos = bam_endpos(r) - 1;
-    strand = '-';
-  } else {
-    start_pos = r->core.pos;
-  }
-  
-  //we either have a forward read && are looking for forward primers or we have a reverse read && are looking for reverse primers
-  if (unpaired_rev_gt == return_rev){
-    for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-      if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() ||it->get_strand() == 0))
-        overlapped_primers.push_back(*it);
-    } 
-  } else {
-    //in this case we need to invert what we find by indice
-     for(std::vector<primer>::iterator it = primers.begin(); it != primers.end(); ++it) {
-      if(start_pos >= it->get_start() && start_pos <= it->get_end() && (strand == it->get_strand() ||it->get_strand() == 0)){
-        //if we have a paired primer
-        if(it->get_pair_indice() != -1){
-          overlapped_primers.push_back(fetch_primer_pair(it->get_pair_indice(), primers));
-        }
-      }
-    } 
-  }
-}
-
 
 // For unpaired reads
 void get_overlapping_primers(bam1_t* r, std::vector<primer> primers, std::vector<primer> &overlapped_primers, bool unpaired_rev){
-  std::cout << "get overlapping primers " << unpaired_rev << std::endl;
   overlapped_primers.clear();
   uint32_t start_pos = -1;
   char strand = '+';
@@ -595,15 +558,15 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
   std::vector<primer> overlapping_primers;
   std::vector<primer>::iterator cit;
   bool primer_trimmed = false;
+  std::string test = "NB552570:188:HL75JAFX3:2:21105:7297:5549";
 
   //Iterate through reads
   while(sam_itr_next(in, iter, aln) >= 0) {
     unmapped_flag = false;
     primer_trimmed = false;
-
+    
     get_overlapping_primers(aln, primers, overlapping_primers);
-    //print_all_primer_info(primers);      
- 
+    
     if((aln->core.flag&BAM_FUNMAP) == 0){ // If mapped
       // if primer pair info provided, check if read correctly overlaps with atleast one amplicon
       if(!pair_info.empty()){
@@ -617,11 +580,14 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
           continue;
 	    }
     }
-   
+    
+    //isize is insert size
+    //l_qseq is the query length 
     isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
+    isize_flag = (abs(aln->core.isize) - max_primer_len) > 0;
     // if reverse strand
     if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
-	    get_overlapping_primers(aln, primers, overlapping_primers);
+    get_overlapping_primers(aln, primers, overlapping_primers);
       if(overlapping_primers.size() > 0){ // If read starts before overlapping regions (?)
 	    primer_trimmed = true;
 	    if(bam_is_rev(aln)){	// Reverse read 
@@ -651,13 +617,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
         failed_frag_size++;
       }
     
-    //handle the unpaired reads
+  //handle the unpaired reads
 	//forward primer unpaired read
-    if (!pair_info.empty()){
-        get_overlapping_primers_better(aln, primers, overlapping_primers, bam_is_rev(aln), false);
-    }else{
-        get_overlapping_primers(aln, primers, overlapping_primers, false);
-    }
+  get_overlapping_primers(aln, primers, overlapping_primers, false);
 	if(overlapping_primers.size() > 0){
 	  primer_trimmed = true;
       cand_primer = get_max_end(overlapping_primers);
@@ -672,12 +634,9 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
 	 }
 
 	//reverse primer unpaired read
-    if (!pair_info.empty()){
-	    get_overlapping_primers_better(aln, primers, overlapping_primers, bam_is_rev(aln), true);
-    }else{
-        get_overlapping_primers(aln, primers, overlapping_primers, true);
-    }
-	if(overlapping_primers.size() > 0){
+  get_overlapping_primers(aln, primers, overlapping_primers, true);
+
+  if(overlapping_primers.size() > 0){
 	  primer_trimmed = true;
 	  cand_primer = get_min_start(overlapping_primers);
       t = primer_trim(aln, isize_flag, cand_primer.get_start() - 1, true);
