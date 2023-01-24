@@ -584,7 +584,6 @@ int trim_bam_qual_primer(std::string bam, std::string bed, std::string bam_out, 
     //isize is insert size
     //l_qseq is the query length 
     isize_flag = (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
-    isize_flag = (abs(aln->core.isize) - max_primer_len) > 0;
     // if reverse strand
     if((aln->core.flag&BAM_FPAIRED) != 0 && isize_flag){ // If paired
     get_overlapping_primers(aln, primers, overlapping_primers);
