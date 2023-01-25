@@ -1,6 +1,6 @@
 LIBS = -lhts -lz -lpthread
 
-CXXFLAGS = -v -g -std=c++11 -Wall -Wextra -Werror -Wno-unused-parameter
+CXXFLAGS = -v -g -std=c++11 -Wall -Wno-unused-but-set-variable -Wextra -Werror
 
 # this lists the binaries to produce, the (non-PHONY, binary) targets in
 # the previous manual Makefile
