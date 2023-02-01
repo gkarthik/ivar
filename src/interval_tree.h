@@ -48,6 +48,6 @@ public:
   void inOrder() {inOrder(_root);}
 };
 
-IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> primers);
+IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> &primers);
 
 #endif

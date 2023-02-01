@@ -83,7 +83,7 @@ void IntervalTree::inOrder(ITNode *root){
 
 // A stand-alone function to create a tree containing the coordinates of each amplicon
 // based on user-specified primer pairs
-IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> primers){
+IntervalTree populate_amplicons(std::string pair_info_file, std::vector<primer> &primers){
   int amplicon_start = -1;
   int amplicon_end = -1;
   IntervalTree tree = IntervalTree();
