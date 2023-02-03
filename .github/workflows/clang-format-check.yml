@@ -8,4 +8,4 @@ jobs:
       - uses: RafikFarhad/clang-format-github-action@v3
         with:
           sources: "src/**/*.h,src/**/*.c,tests/**/*.c,src/**/*.cpp,tests/**/*.cpp"
-        style: "Google"
+          style: "Google"
