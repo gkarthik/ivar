@@ -13,11 +13,11 @@ class primer {
   uint32_t start;  // 0 based
   uint32_t end;    // 0 based
   std::string name;
-  int score;
+  int score = 0;
   char strand;
   int16_t pair_indice;
   int16_t indice;
-  uint32_t read_count;
+  uint32_t read_count = 0;
 
  public:
   std::string get_name();
