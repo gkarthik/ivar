@@ -33,8 +33,9 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual,
   std::vector<allele> nuc_pos;
   allele tmp_a;
   char n;
-  uint32_t max_l = 0, max_depth = 0, cur_depth = 0, tmp_depth = 0,
+  uint32_t max_l = 0, max_depth = 0, tmp_depth = 0,
            total_max_depth = 0, gap_depth = 0, total_indel_depth = 0;
+  // uint32_t cur_depth = 0;
   uint8_t ambg_n = 1, ctr = 0;
   double q = 0, tq = 0, cur_threshold = 0;
   std::vector<allele>::iterator it;
@@ -56,7 +57,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual,
     tq = 0;
     max_depth = 0;
     tmp_depth = 0;
-    cur_depth = 0;
+    // cur_depth = 0;
     // prev_depth = 0;
     ctr = 1;
     it = ad.begin();
@@ -84,7 +85,7 @@ ret_t get_consensus_allele(std::vector<allele> ad, uint8_t min_qual,
         it++;
         ctr++;
       }
-      cur_depth += tmp_depth;
+      // cur_depth += tmp_depth;
       tmp_a.nuc = it->nuc[i];
       tmp_a.mean_qual = tq;
       tmp_a.reverse = 0;  // Reverse reads not important for consensus
