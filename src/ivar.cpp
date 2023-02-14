@@ -17,7 +17,7 @@
 #include "suffix_tree.h"
 #include "trim_primer_quality.h"
 
-const std::string VERSION = "1.3.1";
+const std::string VERSION = "1.3.2";
 
 struct args_t {
   std::string bam;               // -i
