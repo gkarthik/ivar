@@ -70,6 +70,7 @@ int main() {
   unsigned int overlapping_primer_sizes[] = {0, 2, 2, 0, 0, 0, 0, 2, 2, 1};
   int ctr = 0;
   std::vector<primer> overlapping_primers;
+  std::vector<primer> sorted_primers = insertionSort(primers, primers.size());     
   primer cand_primer;
   bool isize_flag = false;
   while (sam_itr_next(in, iter, aln) >= 0) {
@@ -79,7 +80,7 @@ int main() {
     isize_flag =
         (abs(aln->core.isize) - max_primer_len) > abs(aln->core.l_qseq);
     std::cout << bam_get_qname(aln) << std::endl;
-    get_overlapping_primers(aln, primers, overlapping_primers);
+    get_overlapping_primers(aln, sorted_primers, overlapping_primers);
     if (overlapping_primers.size() != overlapping_primer_sizes[ctr]) {
       success = -1;
       std::cout << "Overlapping primer sizes for " << bam_get_qname(aln)
@@ -163,6 +164,5 @@ int main() {
   sam_hdr_destroy(header);
   hts_idx_destroy(idx);
   hts_close(in);
-
   return success;
 }
