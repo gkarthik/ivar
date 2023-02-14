@@ -64,5 +64,5 @@ void get_overlapping_primers(bam1_t *r, std::vector<primer> primers,
                              bool unpaired_rev);
 int get_bigger_primer(std::vector<primer> primers);
 bool amplicon_filter(IntervalTree amplicons, bam1_t *r);
-
+std::vector<primer> insertionSort(std::vector<primer> primers, uint32_t n);
 #endif
